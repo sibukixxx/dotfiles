@@ -1,0 +1,11 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =9
+let g:netrw_dirhist_1='/Users/takada_yuichi/workspace/ansible/playbook/mysql56/roles/mysql56'
+let g:netrw_dirhist_2='/Users/takada_yuichi/workspace/ansible/playbook/mysql56/roles/mysql56/vars'
+let g:netrw_dirhist_3='/Users/takada_yuichi/workspace/ansible/playbook/conoha_vps/ansible_conoha/roles/cron/tasks'
+let g:netrw_dirhist_4='/Users/takada_yuichi/.ghq/github.com/mattn/goji-wiki/view'
+let g:netrw_dirhist_5='/usr/local/go/etc/bash_completion.d'
+let g:netrw_dirhist_6='/Users/takada_yuichi/GOPATH/src/github.com/mattn/goji-wiki/assets'
+let g:netrw_dirhist_7='/Users/takada_yuichi/workspace/javascript'
+let g:netrw_dirhist_8='/Users/takada_yuichi/workspace/rails/rails_tutorial/app/views/static_pages'
+let g:netrw_dirhist_9='/Users/takada_yuichi/.tmux'

@@ -1,0 +1,11 @@
+ghcmod-vim
+neco-ghc
+neobundle.vim
+neocomplcache
+neocomplete
+neosnippet
+neosnippet-snippets
+unite.vim
+vim-textobj-user
+vim2hs
+vimproc
