@@ -59,3 +59,5 @@
   # grep関連
   gr = grep
   gn = grep -n
+  # Git でマージ済みのブランチを一括削除する
+  delete-merged-branches = !git branch --merged | grep -v \\* | xargs -I % git branch -d %
