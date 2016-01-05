@@ -1,12 +1,3 @@
-alias r=rails
-alias ll= ls-la
-alias be='bundle exec'
-alias bi='bundle install --path vendor/bundle'
-alias r='bundle exec rails'
-alias ww="cd ~/workspace/ "
-alias pu="pushd"
-alias po="popd"
-
 # prompt
 PS1="[@${HOST%%.*} %1~]%(!.#.$) "
 RPROMPT="%T"                      # 右側に時間を表示する
@@ -64,6 +55,14 @@ alias locate="locate -i"
 alias lv="lv -c -T8192"
 alias py=python
 
+alias be='bundle exec'
+alias bi='bundle install --path vendor/bundle'
+alias r='bundle exec rails'
+alias ww="cd ~/workspace/ "
+alias pu="pushd"
+alias po="popd"
+
+
 ## 補完関連
 # sudo でも頑張って補完
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
@@ -114,67 +113,9 @@ setopt auto_cd
 # タブキー連打で補完候補を順に表示
 setopt auto_menu
 
-
-WORKON_HOME=$HOME/venvs
-SCALA_HOME=/usr/local/share/scala 
-PATH=$HOME/local/py3/bin:$PATH
-
-#THIS MUST BE AT THE END OF THE FILE FOR GVM TO WORK!!!
-[[ -s "/Users/takada_yuichi/.gvm/bin/gvm-init.sh" ]] && source "/Users/takada_yuichi/.gvm/bin/gvm-init.sh"
-
-
-PATH=$HOME/local/py3/bin:$PATH
-WORKON_HOME=$HOME/venvs
-. ~/local/py3/bin/virtualenvwrapper.sh
-
-
-# GOLANG 用PATH設定 #############           
+# GOLANG環境設定 #############           
 if [ -x "`which go`" ]; then              
-export GOPATH=/Users/takada_yuichi/GOPATH/      
+export GOPATH=~/GOPATH/      
 export GOROOT=/usr/local/go                 
 export CC=clang # textql用                  
 fi                                          
-################################            
-
-export PATH=/Applications/Sublime\ Text\ 2.app/Contents/SharedSupport/bin:/usr/local/php5/bin:/Users/takada_yuichi/local/py3/bin:/usr/local/heroku/bin:/usr/local/bin:/Users/takada_yuichi/usr/local/hadoop/bin:/usr/local/bin:/Users/takada_yuichi/Library/Haskell/bin:/opt/local/bin:/opt/local/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:/usr/local/git/bin:/Users/takada_yuichi/Library/Haskell/bin:/Users/takada_yuichi/.rbenv/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin:/usr/local/git/bin:/usr/local/go/bin:/Applications/Sublime:/Users/takada_yuichi/GOPATH/bin
-
-
-## ghq + peco  #######################
-stty stop undef
-function peco-src () {
-    local selected_dir=$(ghq list --full-path | peco --query "$LBUFFER")
-    if [ -n "$selected_dir" ]; then
-        BUFFER="cd ${selected_dir}"
-        zle accept-line
-    fi
-    zle clear-screen
-}
-zle -N peco-src
-bindkey '^S' peco-src
-#########################################
-
-#######################################
-# peco hitory
-#######################################
-function peco-select-history() {
-    local tac
-    if which tac > /dev/null; then
-        tac=";tac";
-    else
-        tac=";tail -r";
-    fi
-    BUFFER=$(history -n 1|   \
-        eval $tac | \
-        peco --query "$LBUFFER";)
-    CURSOR=$#BUFFER
-    zle clear-screen
-}
-zle -N peco-select-history
-bindkey '^r' peco-select-history
-
-function vig {
-    STR="$1"
-    vim $(grep -n ${STR} **/*.go | grep -v "[0-9]:\s*//" | peco | awk -F ":" '{print "-c "$2" "$1}')
-}
-
-
