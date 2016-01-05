@@ -1,0 +1,14 @@
+Stylus@1.2.1
+Sublime-Style-Column-Selection@1.3.0
+autocomplete-paths@1.0.2
+color-picker@2.0.14
+docblockr@0.7.3
+emmet@2.3.17
+file-icons@1.6.13
+highlight-selected@0.11.1
+keybinding-cheatsheet@0.1.0
+language-babel@2.7.0
+linter@1.11.3
+open-recent@4.0.1
+pigments@0.19.5
+
