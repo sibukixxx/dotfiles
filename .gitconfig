@@ -24,6 +24,11 @@
   ci = commit -a           # modifiedなファイルを全てstageへ
   cam = commit -a --amend  # 直前のcommitを修正
   co = checkout
+  puhs = push
+  psuh = push
+  pus = push     
+  puh = push
+  pl = !git pull && git submodule update --init
   # branch関連
   br = branch
   ba = branch -a           # originも含めた全てのbranchを表示
@@ -59,3 +64,5 @@
   # grep関連
   gr = grep
   gn = grep -n
+  # Git でマージ済みのブランチを一括削除する
+  delete-merged-branches = !git branch --merged | grep -v \\* | xargs -I % git branch -d %
