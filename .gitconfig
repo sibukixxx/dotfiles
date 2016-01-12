@@ -45,6 +45,9 @@
   # logをtree表示
   graph = log --graph --date=short --pretty=format:'%Cgreen%h %cd %Cblue%cn %Creset%s'
   lga = log --graph --all --color --pretty='%x09%h %cn%x09%s %Cred%d%Creset'
+  # その他logオプション
+  # http://qiita.com/take4s5i/items/15d8648405f4e7ea3039
+
   # diff関連
   dm = diff master           # masterとのdiff
   dw = diff --color-words    # 単語単位でいろつけてdiff
