@@ -45,7 +45,8 @@
   oneline = log --pretty=oneline
   ranking = shortlog -s -n --no-merges
   # logをtree表示
-  graph = log --graph --date=short --pretty=format:'%Cgreen%h %cd %Cblue%cn %Creset%s'
+  gra1 = log --graph --date=short --pretty=format:'%Cgreen%h %cd %Cblue%cn %Creset%s'
+  gra2 = log --graph --all --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   lga = log --graph --all --color --pretty='%x09%h %cn%x09%s %Cred%d%Creset'
   # diff関連
   dm = diff master           # masterとのdiff
