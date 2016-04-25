@@ -62,6 +62,35 @@ alias ww="cd ~/workspace/ "
 alias pu="pushd"
 alias po="popd"
 
+# alias - Ocaml
+alias ocaml='rlwrap ocaml'
+
+if [[ -x `which colordiff` ]]; then
+  alias diff='colordiff -u'
+else
+  alias diff='diff -u'
+fi
+
+# vagrant
+alias v='vagrant version && vagrant global-status'
+alias vst='vagrant status'
+alias vup='vagrant up'
+alias vdo='vagrant halt'
+alias vssh='vagrant ssh'
+alias vkill='vagrant destroy'
+# laravel 
+alias pa="php artisan"
+alias par="php artisan routes"
+alias pam="php artisan migrate"
+alias pam:r="php artisan migrate:refresh"
+alias pam:roll="php artisan migrate:rollback"
+alias pam:rs="php artisan migrate:refresh --seed"
+alias pda="php artisan dumpautoload"
+alias cu="composer update"
+alias ci="composer install"
+alias cda="composer dump-autoload -o"
+
+
 
 ## 補完関連
 # sudo でも頑張って補完
