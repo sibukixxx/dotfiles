@@ -1,0 +1,10 @@
+escape ^B^B
+startup_message off
+bind , title
+hardstatus on
+hardstatus alwayslastline "screen |%c %m/%d | %w"
+vbell off
+encoding utf8
+defencoding utf8 utf8
+defscrollback 10000
+shelltitle "$ |bash"
