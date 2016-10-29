@@ -62,18 +62,8 @@
   d5 = diff HEAD~~~~~        # HEADから5つ前とdiff
   d10 = diff HEAD~~~~~~~~~~  # HEADから10前とdiff
   
-  # mergeの際にconflictが起きたファイルを編集
-  edit-unmerged = "!f() { git ls-files --unmerged | cut -f2 | sort -u ; }; vim `f`"
-  # mergeの際にconflictが起きたファイルをadd
-  add-unmerged = "!f() { git ls-files --unmerged | cut -f2 | sort -u ; }; git add `f`"
-  # grep関連
-  gr = grep
-  gn = grep -n
-  delete-merged-branches = !git branch --merged | grep -vE \"^\\*|master$|develop$\"|xargs -I % git branch -d %
- 
   # 1ファイルだけ別のブランチから持ってくる
-  ## git checkout <ブランチ名> -- <ファイル名>
-  
+  ## git checkout <ブランチ名> -- <ファイル名> 
   unstage = reset -q HEAD --
   discard = checkout --
   nevermind = !git reset --hard HEAD && git clean -d -f
