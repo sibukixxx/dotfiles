@@ -1,23 +1,20 @@
 \set PROMPT1 '%[%033[1m%]%M %n@%/%R%[%033[0m%]%# '
 \set PROMPT2 '[more] %R > '
 
--- デフォルトでは、NULLはスペースとして表示される
--- 空白なのかnullなのか？これで違いが見えるようになる
+-- display null 
 \pset null '[NULL]'
 
--- デフォルトでは表形式のフォーマット(1行目がヘッダ)になるが、
--- データが多い時はより読みやすいように拡張テーブル形式で表示
+-- デフォルト表形式のフォーマットを、拡張テーブル形式で表示
 \x auto
 
--- 詳しいエラー表示
+-- display detail error
 \set VERBOSITY verbose
 
--- データベースごとにヒストリファイルを作る
+-- create history file by database
 \set HISTFILE ~/.psql_history- :DBNAME
 
--- 1行で複数回コマンドが実行されたら、1回だけヒストリに保存
+-- save history one liner
 \set HISTCONTROL ignoredups
 
--- キーワード(SELECTなど)を、小文字で入力し始めたとしても
--- 大文字に自動変換
+-- auto change camel
 \set COMP_KEYWORD_CASE upper

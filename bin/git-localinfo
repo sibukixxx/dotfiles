@@ -1,0 +1,38 @@
+#!/bin/bash
+
+function show_git_status() {
+  path=$1
+  shift
+  status=`
+    cd $path
+    git -c color.ui=always status -s;
+    git -c color.ui=always stash list --oneline --decorate $*;
+    git -c color.ui=always log --branches --not --remotes --oneline --graph --decorate $*
+  `
+  if [ "$status" != "" ]; then
+    if [ "$path" != "" ]; then
+      branch=`git symbolic-ref --short HEAD`
+      echo -e "\e[92m$path\e[0m (\e[32m$branch\e[0m)"
+    fi
+    echo "$status"
+  fi
+}
+
+# parse options
+declare -a argv=()
+declare -a options=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -*) options=("${options[@]}" "$1");;
+    *)  argv=("${argv[@]}" "$1");;
+  esac
+  shift
+done
+if [ ${#argv[@]} -eq 0 ]; then
+  argv=(`pwd`)
+fi
+
+# show git status
+for path in ${argv[@]}; do
+  show_git_status $path ${options[@]}
+done
