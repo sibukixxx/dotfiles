@@ -61,7 +61,9 @@
   d4 = diff HEAD~~~~         # HEADから4つ前とdiff
   d5 = diff HEAD~~~~~        # HEADから5つ前とdiff
   d10 = diff HEAD~~~~~~~~~~  # HEADから10前とdiff
-
+  
+  # 1ファイルだけ別のブランチから持ってくる
+  ## git checkout <ブランチ名> -- <ファイル名> 
   unstage = reset -q HEAD --
   discard = checkout --
   nevermind = !git reset --hard HEAD && git clean -d -f
