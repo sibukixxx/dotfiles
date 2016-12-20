@@ -5,4 +5,3 @@
 #   eval "$(docker-machine env default)"
 #fi
 #eval "$(docker-machine env digitalocean-docker)"
-
