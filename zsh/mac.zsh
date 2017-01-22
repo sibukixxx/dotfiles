@@ -37,6 +37,5 @@ function timeset() {
 export EDITOR=/usr/local/bin/vim
 alias vim='env LANG=ja_JP.UTF-8 $EDITOR "$@"'
 
-alias rm="rmtrash"
 alias pwdpwd="pwd | tee >(pbcopy)"
 alias google_chrome="open -a Google\ Chrome"

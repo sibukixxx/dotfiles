@@ -63,10 +63,18 @@ setopt auto_menu
 
 # GOLANG環境設定 #############           
 if [ -x "`which go`" ]; then              
-export GOPATH=~/GOPATH/      
-export GOROOT=/usr/local/go                 
-export CC=clang # textql用                  
+export GOPATH=$HOME/godev
+export PATH=$GOPATH/bin:$PATH
+export GOROOT=/usr/local/opt/go/libexec # homebrew 
+export CC=clang # textql用 
+
+#Fot Appengine Go
+export PATH=$GOPATH/src/gae/go_appengine:$PATH
 fi                                          
+
+# For npm
+export PATH=$HOME/.nodebrew/current/bin:$PATH
+
 
 # git settings # vcs info
 autoload -Uz vcs_info
