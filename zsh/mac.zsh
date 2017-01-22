@@ -39,3 +39,16 @@ alias vim='env LANG=ja_JP.UTF-8 $EDITOR "$@"'
 
 alias pwdpwd="pwd | tee >(pbcopy)"
 alias google_chrome="open -a Google\ Chrome"
+
+
+function SELECT () {
+    mysql -uroot -e "SET NAMES utf8; SELECT $*"
+}
+
+
+function SHOW () {
+    mysql -uroot -e "SET NAMES utf8; SHOW $*"
+}
+
+alias SELECT="noglob SELECT"
+alias SHOW="noglob SHOW"
