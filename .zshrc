@@ -33,7 +33,7 @@ bindkey "^N" history-beginning-search-forward-end
 
 # export
 export EDITOR=/usr/local/bin/vim
-export PATH="/usr/local/bin:$PATH"
+export PATH="/usr/local/bin:~/.local/bin:$PATH"
 export LANG=ja_JP.UTF-8
 export LC_CTYPE=ja_JP.UTF-8
 export LS_COLORS='di=01;36'
