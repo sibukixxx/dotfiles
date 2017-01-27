@@ -22,3 +22,6 @@ alias ocaml='rlwrap ocaml'
 
 # for Go
 alias gopath='cd $GOPATH'
+
+# for iPython
+alias iPythonNotebook='cd ~/Dropbox/ipythondir;jupyter notebook'
