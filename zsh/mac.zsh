@@ -56,11 +56,8 @@ alias SHOW="noglob SHOW"
 ## For Haskell
 autoload -U +X compinit && compinit
 autoload -U +X bashcompinit && bashcompinit
-<<<<<<< HEAD
-eval "$(stack --bash-completion-script stack)"
 
 ## For C#
 source /usr/local/bin/dnvm.sh
-=======
+
 #eval "$(stack --bash-completion-script stack)"
->>>>>>> d75749577a50a1cc524e8abb2b0b431c87236cd4
