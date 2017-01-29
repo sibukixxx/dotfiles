@@ -53,7 +53,10 @@ function SHOW () {
 alias SELECT="noglob SELECT"
 alias SHOW="noglob SHOW"
 
-## For HAskell
+## For Haskell
 autoload -U +X compinit && compinit
 autoload -U +X bashcompinit && bashcompinit
 eval "$(stack --bash-completion-script stack)"
+
+## For C#
+source /usr/local/bin/dnvm.sh
