@@ -56,4 +56,4 @@ alias SHOW="noglob SHOW"
 ## For HAskell
 autoload -U +X compinit && compinit
 autoload -U +X bashcompinit && bashcompinit
-eval "$(stack --bash-completion-script stack)"
+#eval "$(stack --bash-completion-script stack)"
