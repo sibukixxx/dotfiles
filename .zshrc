@@ -39,7 +39,7 @@ export LC_CTYPE=ja_JP.UTF-8
 export LS_COLORS='di=01;36'
 
 ## export original variable
-export DOTFILES=/Users/shibukixxx/.ghq/github.com/sibukixxx/dotfiles
+export DOTFILES=$HOME/.ghq/github.com/sibukixxx/dotfiles
 #export DOTFILES=$HOME/dotfiles
 
 ## 補完関連
