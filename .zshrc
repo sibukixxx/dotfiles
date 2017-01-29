@@ -40,7 +40,9 @@ export LS_COLORS='di=01;36'
 
 ## export original variable
 export DOTFILES=$HOME/.ghq/github.com/sibukixxx/dotfiles
-#export DOTFILES=$HOME/dotfiles
+
+# zsh plugin 
+export ZPLUG_HOME=$HOME/.zplug
 
 ## 補完関連
 # sudo でも頑張って補完
