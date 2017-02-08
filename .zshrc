@@ -63,7 +63,7 @@ setopt auto_menu
 
 # GOLANG環境設定 #############           
 if [ -x "`which go`" ]; then              
-export GOPATH=$HOME/godev
+export GOPATH=$HOME/repo
 export PATH=$GOPATH/bin:$PATH
 export GOROOT=/usr/local/opt/go/libexec # homebrew 
 export CC=clang # textql用 
