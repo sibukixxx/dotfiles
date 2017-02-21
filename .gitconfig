@@ -15,6 +15,8 @@
 [core]
   excludesfile = ~/.gitignore  # globalな.gitignoreの指定
   autocrlf = input                 # CRLFを自動変換
+  precomposeunicode = true
+  editor = vim
 [alias]
   st = status
   sh = show
@@ -104,5 +106,15 @@
   gr = grep
   gn = grep -n
   delete-merged-branches = !git branch --merged | grep -vE \"^\\*|master$|develop$\"|xargs -I % git branch -d %
+  delete-merged-branches-list = !git branch --merged | grep -vE \"^\\*|master$|develop$\"
+[filter "lfs"]
+  clean = git-lfs clean %f
+  smudge = git-lfs smudge %f
+  required = true
 [commit]
-	template = /Users/yuichi.takada/.gitmessage.txt
+  #template = .gitmessage.txt
+[log]
+  decorate = true
+[rerere]
+  enabled = true
+

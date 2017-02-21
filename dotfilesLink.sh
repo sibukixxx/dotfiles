@@ -12,5 +12,6 @@ fi
 
 ln -sf ${DOTFILES_PATH}/.zshrc ~/.zshrc
 ln -sf ${DOTFILES_PATH}/.vimrc ~/.vimrc
+ln -sf ${DOTFILES_PATH}/.gitconfig ~/.gitconfig
 ln -sf ${DOTFILES_PATH}/.tmuxinatior ~/.tmuxinatior
 ln -sf ${DOTFILES_PATH}/.tmux.conf ~/.tmux.conf

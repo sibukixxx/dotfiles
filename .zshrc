@@ -65,7 +65,7 @@ setopt auto_menu
 
 # GOLANG環境設定 #############           
 if [ -x "`which go`" ]; then              
-export GOPATH=$HOME/repo
+export GOPATH=$HOME/godev
 export PATH=$GOPATH/bin:$PATH
 export GOROOT=/usr/local/opt/go/libexec # homebrew 
 export CC=clang # textql用 
@@ -117,3 +117,7 @@ fi
 [ -f '/usr/local/bin/google-cloud-sdk/path.zsh.inc' ] && source '/usr/local/bin/google-cloud-sdk/path.zsh.inc'
 # The next line enables shell command completion for gcloud.
 [ -f '/usr/local/bin/google-cloud-sdk/completion.zsh.inc' ] && source '/usr/local/bin/google-cloud-sdk/completion.zsh.inc'
+
+if (which zprof > /dev/null 2>&1) ;then
+  zprof
+fi
