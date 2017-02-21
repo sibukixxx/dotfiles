@@ -1,8 +1,8 @@
 [user]
-        name = sibukixxx
-        email = sibukixxx@gmail.com
+  name = sibukixxx
+  email = sibukixxx@gmail.com
 [url "git@github.com:sibukixxx/"]
-    insteadof = gh:
+  insteadof = gh:
 [color]
   # colorの設定(以下のコマンドは自動で色つける)
   status = auto
@@ -118,3 +118,6 @@
 [rerere]
   enabled = true
 
+[ghq]
+	root = ~/godev
+	root = ~/.ghq

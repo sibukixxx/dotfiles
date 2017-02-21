@@ -15,8 +15,8 @@ function peco-src () {
     local selected_dir=$(ghq list -p | peco --query "$LBUFFER")
     typeset selected_dir
 if [ -n "$selected_dir" ]; then
-        #selected_dir="$GOPATH/src/$selected_dir"
-        selected_dir="$selected_dir"
+        selected_dir="$GOPATH/src/$selected_dir"
+        #selected_dir="$selected_dir"
         BUFFER="cd ${selected_dir}"
         zle accept-line
     fi
