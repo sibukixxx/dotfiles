@@ -15,8 +15,7 @@ function peco-src () {
     local selected_dir=$(ghq list -p | peco --query "$LBUFFER")
     typeset selected_dir
 if [ -n "$selected_dir" ]; then
-        selected_dir="$GOPATH/src/$selected_dir"
-        #selected_dir="$selected_dir"
+        selected_dir="$selected_dir"
         BUFFER="cd ${selected_dir}"
         zle accept-line
     fi
@@ -42,4 +41,9 @@ bindkey '^v' peco-select-history
 # move to GPATH/src
 function cdgo() {
   cd ${GOPATH}/src
+}
+
+function rgvim () {
+# file=$(rg $1 | peco --query "$LBUFFER" | awk -F":" '{print $1}')
+# vim ${file}
 }
