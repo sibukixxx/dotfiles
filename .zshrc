@@ -121,3 +121,8 @@ fi
 if (which zprof > /dev/null 2>&1) ;then
   zprof
 fi
+export PATH="$HOME/.embulk/bin:$PATH"
+
+alias ghc='stack ghc --'
+alias ghci='stack ghci --'
+alias runhaskell='stack runhaskell --'
