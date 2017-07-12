@@ -55,8 +55,8 @@ setopt no_hup
 
 ## java 環境変数
 export MAVEN_OPTS=-Dfile.encoding=UTF-8
-export JAVA_OPTIONS="-Dfile.encoding=UTF-8"
-export _JAVA_OPTIONS="-Dfile.encoding=UTF-8"
+#export JAVA_OPTIONS="-Dfile.encoding=UTF-8"
+#export _JAVA_OPTIONS="-Dfile.encoding=UTF-8"
 
 # ディレクトリ名を入力するだけでカレントディレクトリを変更
 setopt auto_cd
@@ -77,6 +77,10 @@ fi
 # For npm
 export PATH=$HOME/.nodebrew/current/bin:$PATH
 
+# For Scala
+export SCALA_HOME=$HOME/.scala/
+export PATH=$PATH:$SCALA_HOME/bin
+
 
 # git settings # vcs info
 autoload -Uz vcs_info
@@ -92,9 +96,7 @@ RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)"
 
 # TODO: export
 # For Rust
-export PATH=$HOME/.multirust/toolchains/stable/cargo/bin:$PATH
-export PATH=$HOME/.multirust/toolchains/nightly/cargo/bin:$PATH
-export PATH=$HOME/workspace/rust/src/rustc-1.11.0/src:$PATH
+export PATH="$HOME/.cargo/bin:$PATH"
 
 
 #[ -d "$DOTFILES/pkg/peco" ] && export PATH=$DOTFILES/pkg/peco:$PATH
