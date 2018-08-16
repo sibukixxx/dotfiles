@@ -1,6 +1,9 @@
 # prompt
 PS1="[@${HOST%%.*} %1~]%(!.#.$) "
 RPROMPT="%T"                      # 右側に時間を表示する
+
+setopt nonomatch
+
 setopt transient_rprompt          # 右側まで入力がきたら時間を消す
 setopt prompt_subst               # 便利なプロント
 bindkey -e                        # emacsライクなキーバインド
@@ -33,7 +36,7 @@ bindkey "^N" history-beginning-search-forward-end
 
 # export
 export EDITOR=/usr/local/bin/vim
-export PATH="/usr/local/bin:/Users/shibukixxx/.local/bin:$PATH"
+export PATH="/usr/local/bin/flutter/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 export LANG=ja_JP.UTF-8
 export LC_CTYPE=ja_JP.UTF-8
 export LS_COLORS='di=01;36'
@@ -54,7 +57,7 @@ autoload -U predict-on
 setopt no_hup
 
 ## java 環境変数
-export MAVEN_OPTS=-Dfile.encoding=UTF-8
+#export MAVEN_OPTS=-Dfile.encoding=UTF-8
 #export JAVA_OPTIONS="-Dfile.encoding=UTF-8"
 #export _JAVA_OPTIONS="-Dfile.encoding=UTF-8"
 
@@ -67,7 +70,7 @@ setopt auto_menu
 if [ -x "`which go`" ]; then              
 export GOPATH=$HOME/godev
 export PATH=$GOPATH/bin:$PATH
-export GOROOT=/usr/local/opt/go/libexec # homebrew 
+export GOROOT=/usr/local/Cellar/go/1.8.3/libexec
 export CC=clang # textql用 
 
 #Fot Appengine Go
@@ -96,6 +99,9 @@ RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)"
 
 # TODO: export
 # For Rust
+#export PATH=$HOME/.multirust/toolchains/stable/cargo/bin:$PATH
+#export PATH=$HOME/.multirust/toolchains/nightly/cargo/bin:$PATH
+#export PATH=$HOME/workspace/rust/src/rustc-1.11.0/src:$PATH
 export PATH="$HOME/.cargo/bin:$PATH"
 
 
@@ -128,3 +134,11 @@ export PATH="$HOME/.embulk/bin:$PATH"
 alias ghc='stack ghc --'
 alias ghci='stack ghci --'
 alias runhaskell='stack runhaskell --'
+
+# pyenv
+#export PYENV_ROOT="$HOME/.pyenv"
+#export PATH="$PYENV_ROOT/bin:$PATH"
+#eval "$(pyenv init -)"
+
+export GRADLE_HOME=$(brew info gradle | grep /usr/local/Cellar/gradle | awk '{print $1}'
+export JAVA_HOME=`/usr/libexec/java_home -V`

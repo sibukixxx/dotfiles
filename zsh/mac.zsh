@@ -58,6 +58,6 @@ autoload -U +X compinit && compinit
 autoload -U +X bashcompinit && bashcompinit
 
 ## For C#
-source /usr/local/bin/dnvm.sh
+#source /usr/local/bin/dnvm.sh
 
 #eval "$(stack --bash-completion-script stack)"

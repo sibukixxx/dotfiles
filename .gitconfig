@@ -33,7 +33,7 @@
   pus = push
   puh = push
   pl = !git pull && git submodule update --init
-  # commit関連
+  # commit関連 http://qiita.com/ken_c_lo/items/4cb49f0fb74e8778804d
   ci-trash = commit -m ":put_litter_in_its_place:"`
   # branch関連
   br = branch
