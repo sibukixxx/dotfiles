@@ -142,3 +142,6 @@ alias runhaskell='stack runhaskell --'
 
 export GRADLE_HOME=$(brew info gradle | grep /usr/local/Cellar/gradle | awk '{print $1}'
 export JAVA_HOME=`/usr/libexec/java_home -V`
+
+# neo vim
+export XDG_CONFIG_HOME=$HOME/.config
