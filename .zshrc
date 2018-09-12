@@ -140,7 +140,7 @@ alias runhaskell='stack runhaskell --'
 #export PATH="$PYENV_ROOT/bin:$PATH"
 #eval "$(pyenv init -)"
 
-export GRADLE_HOME=$(brew info gradle | grep /usr/local/Cellar/gradle | awk '{print $1}'
+#export GRADLE_HOME=$(brew info gradle | grep /usr/local/Cellar/gradle | awk '{print $1}'
 export JAVA_HOME=`/usr/libexec/java_home -V`
 
 # neo vim
