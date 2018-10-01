@@ -119,6 +119,4 @@
   enabled = true
 
 [ghq]
-	root = ~/godev
 	root = ~/.ghq
-	root = ~/repo
