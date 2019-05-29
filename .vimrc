@@ -1,10 +1,11 @@
 set backspace=indent,eol,start
- set t_BE=
+set t_BE=
 set number
 set runtimepath+=~/.vim/
 set hlsearch
 set autoread
-syntax on
+set paste
+syntax enable
 
 " start dein 
 if &compatible

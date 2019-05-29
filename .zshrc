@@ -36,7 +36,7 @@ bindkey "^N" history-beginning-search-forward-end
 
 # export
 export EDITOR=/usr/local/bin/vim
-export PATH="/usr/local/bin/flutter/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+export PATH="/usr/local/bin/flutter/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH:/usr/local/sbin"
 export LANG=ja_JP.UTF-8
 export LC_CTYPE=ja_JP.UTF-8
 export LS_COLORS='di=01;36'
@@ -57,6 +57,7 @@ autoload -U predict-on
 setopt no_hup
 
 ## java 環境変数
+export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
 #export MAVEN_OPTS=-Dfile.encoding=UTF-8
 #export JAVA_OPTIONS="-Dfile.encoding=UTF-8"
 #export _JAVA_OPTIONS="-Dfile.encoding=UTF-8"
@@ -70,7 +71,7 @@ setopt auto_menu
 if [ -x "`which go`" ]; then              
 export GOPATH=$HOME/godev
 export PATH=$GOPATH/bin:$PATH
-export GOROOT=/usr/local/Cellar/go/1.8.3/libexec
+export GOROOT=/usr/local/Cellar/go/latest/libexec
 export CC=clang # textql用 
 
 #Fot Appengine Go
@@ -131,17 +132,24 @@ if (which zprof > /dev/null 2>&1) ;then
 fi
 export PATH="$HOME/.embulk/bin:$PATH"
 
+alias vim='nvim'
 alias ghc='stack ghc --'
 alias ghci='stack ghci --'
 alias runhaskell='stack runhaskell --'
 
 # pyenv
-#export PYENV_ROOT="$HOME/.pyenv"
-#export PATH="$PYENV_ROOT/bin:$PATH"
-#eval "$(pyenv init -)"
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
 
 #export GRADLE_HOME=$(brew info gradle | grep /usr/local/Cellar/gradle | awk '{print $1}'
 export JAVA_HOME=`/usr/libexec/java_home -V`
 
 # neo vim
 export XDG_CONFIG_HOME=$HOME/.config
+
+complete -C '/usr/local/bin/aws_completer' aws
+
+export FLASK_APP=jasmy flask run
+
+export PATH="$HOME/.cargo/bin:$PATH"
