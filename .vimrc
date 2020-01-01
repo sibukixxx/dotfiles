@@ -1,6 +1,7 @@
 set backspace=indent,eol,start
  set t_BE=
 set number
+set paste
 set runtimepath+=~/.vim/
 set hlsearch
 set autoread

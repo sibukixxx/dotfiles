@@ -36,7 +36,7 @@ bindkey "^N" history-beginning-search-forward-end
 
 # export
 export EDITOR=/usr/local/bin/vim
-export PATH="/usr/local/bin/flutter/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+export PATH="$HOME/.deno/bin:/usr/local/bin/flutter/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 export LANG=ja_JP.UTF-8
 export LC_CTYPE=ja_JP.UTF-8
 export LS_COLORS='di=01;36'
@@ -70,7 +70,7 @@ setopt auto_menu
 if [ -x "`which go`" ]; then              
 export GOPATH=$HOME/godev
 export PATH=$GOPATH/bin:$PATH
-export GOROOT=/usr/local/Cellar/go/1.8.3/libexec
+export GOROOT=/usr/local/Cellar/go/latest/libexec
 export CC=clang # textql用 
 
 #Fot Appengine Go
@@ -145,3 +145,11 @@ export JAVA_HOME=`/usr/libexec/java_home -V`
 
 # neo vim
 export XDG_CONFIG_HOME=$HOME/.config
+
+alias julia='/usr/local/bin/julia'
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="/Users/sibukixxx/.sdkman"
+[[ -s "/Users/sibukixxx/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/sibukixxx/.sdkman/bin/sdkman-init.sh"
+export PATH="$HOME/.jenv/bin:$PATH"
+eval "$(jenv init -)"
