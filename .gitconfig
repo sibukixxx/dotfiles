@@ -119,7 +119,7 @@
   enabled = true
 
 [ghq]
-	root = ~/.ghq
+	root = ~/repos
 [commit]
 	#template = /Users/sibukixxx/.gitmessage.txt
 [http]

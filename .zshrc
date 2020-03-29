@@ -42,7 +42,7 @@ export LC_CTYPE=ja_JP.UTF-8
 export LS_COLORS='di=01;36'
 
 ## export original variable
-export DOTFILES=$HOME/.ghq/github.com/sibukixxx/dotfiles
+export DOTFILES=$HOME/repos/github.com/sibukixxx/dotfiles
 
 # zsh plugin 
 export ZPLUG_HOME=$HOME/.zplug
@@ -132,7 +132,8 @@ if (which zprof > /dev/null 2>&1) ;then
 fi
 export PATH="$HOME/.embulk/bin:$PATH"
 
-alias vim='nvim'
+#alias vim='nvim'
+alias mis='/Users/sibukixxx/repos/github.com/mis-gk/'
 alias ghc='stack ghc --'
 alias ghci='stack ghci --'
 alias runhaskell='stack runhaskell --'
@@ -155,3 +156,9 @@ export SDKMAN_DIR="/Users/sibukixxx/.sdkman"
 [[ -s "/Users/sibukixxx/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/sibukixxx/.sdkman/bin/sdkman-init.sh"
 export PATH="$HOME/.jenv/bin:$PATH"
 eval "$(jenv init -)"
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/sibukixxx/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/sibukixxx/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/sibukixxx/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/sibukixxx/google-cloud-sdk/completion.zsh.inc'; fi
