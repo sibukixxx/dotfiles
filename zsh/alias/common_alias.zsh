@@ -2,6 +2,10 @@
 alias ls='ls -G'
 alias ll='ls -la'
 alias la='ls -A'
+
+alias ll='ls -alGF --color=auto'
+alias la='ls -A --color=auto'
+
 alias lal="ls -l -A"
 alias cp="cp -i"
 alias mv="mv -i"
