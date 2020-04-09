@@ -1,7 +1,6 @@
-alias nv="/usr/local/bin/nvim"
 alias ww="cd ~/workspace/ "
+alias ee='cd ~/.ghq/github.com/sibukixxx/$1'
 alias ss="cd ~/workspace/sibukixxx-sandbox "
-alias umj="cd ~/workspace/sibukixxx-sandbox/umj_project/laravel5.2/"
 alias charm="open -a PyCharm ."
 
 # highlight color with less

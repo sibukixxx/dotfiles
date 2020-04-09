@@ -142,14 +142,20 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
+# rubyenv
+[[ -d ~/.rbenv  ]] && \
+  export PATH=${HOME}/.rbenv/bin:${PATH} && \
+  eval "$(rbenv init -)"
+
 #export GRADLE_HOME=$(brew info gradle | grep /usr/local/Cellar/gradle | awk '{print $1}'
 export JAVA_HOME=`/usr/libexec/java_home -V`
 
 # neo vim
 export XDG_CONFIG_HOME=$HOME/.config
 
-complete -C '/usr/local/bin/aws_completer' aws
-
 export FLASK_APP=jasmy flask run
 
 export PATH="$HOME/.cargo/bin:$PATH"
+
+export PATH="$HONE/.jenv/bin:$PATH"
+eval "$(jenv init -)"
