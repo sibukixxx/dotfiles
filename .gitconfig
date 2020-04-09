@@ -119,4 +119,8 @@
   enabled = true
 
 [ghq]
-	root = ~/.ghq
+	root = ~/repos
+[commit]
+	#template = /Users/sibukixxx/.gitmessage.txt
+[http]
+	#proxy = http://192.168.16.51:3128

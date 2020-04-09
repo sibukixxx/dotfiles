@@ -9,6 +9,11 @@ setopt prompt_subst               # 便利なプロント
 bindkey -e                        # emacsライクなキーバインド
 autoload -U compinit
 compinit -u
+fpath=(~/.zsh-completions $fpath)
+zstyle ':completion:*:sudo:*' command-path /usr/local/sbin /usr/local/bin \
+                             /usr/sbin /usr/bin /sbin /bin /usr/X11R6/bin \
+                             /usr/local/git/bin
+
 setopt autopushd
 setopt pushd_ignore_dups
 setopt auto_cd
@@ -42,7 +47,7 @@ export LC_CTYPE=ja_JP.UTF-8
 export LS_COLORS='di=01;36'
 
 ## export original variable
-export DOTFILES=$HOME/.ghq/github.com/sibukixxx/dotfiles
+export DOTFILES=$HOME/repos/github.com/sibukixxx/dotfiles
 
 # zsh plugin 
 export ZPLUG_HOME=$HOME/.zplug
@@ -110,12 +115,21 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 # include
 if [ `uname` = "Darwin" ]; then
+
+  ## export original variable
+  export DOTFILES=$HOME/.ghq/github.com/sibukixxx/dotfiles
+
   # Mac
   [ -f ${DOTFILES}/zsh/mac.zsh ] && source ${DOTFILES}/zsh/mac.zsh
   [ -f ${DOTFILES}/zsh/docker-machine.zsh ] && source ${DOTFILES}/zsh/docker-machine.zsh
   [ -f ${DOTFILES}/zsh/alias/mac_alias.zsh ] && source ${DOTFILES}/zsh/alias/mac_alias.zsh
 elif [ `uname` = "Linux" ]; then
-  [ -f ${DOTFILES}/zsh/ubuntu.zsh ] && source ${DOTFILES}/zsh/ubuntu.zsh
+  export DOTFILES=$HOME/dotfiles
+
+  export GOROOT=/usr/local/go/
+  export GOPATH=$HOME/godev
+  export PATH=$GOPATH/bin:$PATH
+
 fi
 
 [ -f ${DOTFILES}/zsh/peco.zsh ] && source ${DOTFILES}/zsh/peco.zsh
@@ -132,7 +146,7 @@ if (which zprof > /dev/null 2>&1) ;then
 fi
 export PATH="$HOME/.embulk/bin:$PATH"
 
-alias vim='nvim'
+alias mis='/Users/sibukixxx/repos/github.com/mis-gk/'
 alias ghc='stack ghc --'
 alias ghci='stack ghci --'
 alias runhaskell='stack runhaskell --'
@@ -153,9 +167,17 @@ export JAVA_HOME=`/usr/libexec/java_home -V`
 # neo vim
 export XDG_CONFIG_HOME=$HOME/.config
 
-export FLASK_APP=jasmy flask run
-
 export PATH="$HOME/.cargo/bin:$PATH"
+alias julia='/usr/local/bin/julia'
 
-export PATH="$HONE/.jenv/bin:$PATH"
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="/Users/sibukixxx/.sdkman"
+[[ -s "/Users/sibukixxx/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/sibukixxx/.sdkman/bin/sdkman-init.sh"
+export PATH="$HOME/.jenv/bin:$PATH"
 eval "$(jenv init -)"
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/sibukixxx/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/sibukixxx/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/sibukixxx/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/sibukixxx/google-cloud-sdk/completion.zsh.inc'; fi
