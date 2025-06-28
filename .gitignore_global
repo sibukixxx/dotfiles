@@ -7,3 +7,10 @@ tags
 .sass-cache
 cache
 ._.DS_Store
+
+# IntelliJ project files
+.idea
+*.iml
+out
+gen
+.DS_Store

@@ -40,20 +40,20 @@ bindkey "^P" history-beginning-search-backward-end
 bindkey "^N" history-beginning-search-forward-end
 
 # export
-export EDITOR=/usr/local/bin/vim
-export PATH="/usr/local/bin/flutter/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH:/usr/local/sbin"
+export EDITOR=/opt/homebrew/bin/nvim
+export PATH="/usr/local/bin/flutter/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH:/usr/local/sbin:/opt/homebrew/bin"
 export LANG=ja_JP.UTF-8
 export LC_CTYPE=ja_JP.UTF-8
 export LS_COLORS='di=01;36'
 
 ## export original variable
-export DOTFILES=$HOME/repos/github.com/sibukixxx/dotfiles
+export DOTFILES=$HOME/dotfiles
 
 # zsh plugin 
 export ZPLUG_HOME=$HOME/.zplug
 
 ## 補完関連
-# sudo でも頑張って補完
+# sudo 補完
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 zstyle ':completion:*:default' menu select=1
 
@@ -61,35 +61,24 @@ zstyle ':completion:*:default' menu select=1
 autoload -U predict-on
 setopt no_hup
 
-## java 環境変数
-export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
-#export MAVEN_OPTS=-Dfile.encoding=UTF-8
-#export JAVA_OPTIONS="-Dfile.encoding=UTF-8"
-#export _JAVA_OPTIONS="-Dfile.encoding=UTF-8"
-
 # ディレクトリ名を入力するだけでカレントディレクトリを変更
 setopt auto_cd
 # タブキー連打で補完候補を順に表示
 setopt auto_menu
 
-# GOLANG環境設定 #############           
+# GOLANG環境設定
 if [ -x "`which go`" ]; then              
-export GOPATH=$HOME/godev
-export PATH=$GOPATH/bin:$PATH
-export GOROOT=/usr/local/Cellar/go/latest/libexec
-export CC=clang # textql用 
+  export GOPATH=$HOME/godev
+  export PATH=$GOPATH/bin:$PATH
+  export GOROOT="$(brew --prefix go)/libexec"
+  export CC=clang # textql用 
 
-#Fot Appengine Go
-export PATH=$GOPATH/src/gae/go_appengine:$PATH
+  #Fot Appengine Go
+  export PATH=$GOPATH/src/gae/go_appengine:$PATH
 fi                                          
 
 # For npm
 export PATH=$HOME/.nodebrew/current/bin:$PATH
-
-# For Scala
-export SCALA_HOME=$HOME/.scala/
-export PATH=$PATH:$SCALA_HOME/bin
-
 
 # git settings # vcs info
 autoload -Uz vcs_info
@@ -103,25 +92,18 @@ precmd () {
 RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)"
 
 
-# TODO: export
 # For Rust
-#export PATH=$HOME/.multirust/toolchains/stable/cargo/bin:$PATH
-#export PATH=$HOME/.multirust/toolchains/nightly/cargo/bin:$PATH
-#export PATH=$HOME/workspace/rust/src/rustc-1.11.0/src:$PATH
 export PATH="$HOME/.cargo/bin:$PATH"
 
-
-#[ -d "$DOTFILES/pkg/peco" ] && export PATH=$DOTFILES/pkg/peco:$PATH
 
 # include
 if [ `uname` = "Darwin" ]; then
 
   ## export original variable
-  export DOTFILES=$HOME/.ghq/github.com/sibukixxx/dotfiles
+  export DOTFILES=$HOME/dotfiles
 
   # Mac
   [ -f ${DOTFILES}/zsh/mac.zsh ] && source ${DOTFILES}/zsh/mac.zsh
-  [ -f ${DOTFILES}/zsh/docker-machine.zsh ] && source ${DOTFILES}/zsh/docker-machine.zsh
   [ -f ${DOTFILES}/zsh/alias/mac_alias.zsh ] && source ${DOTFILES}/zsh/alias/mac_alias.zsh
 elif [ `uname` = "Linux" ]; then
   export DOTFILES=$HOME/dotfiles
@@ -133,6 +115,7 @@ elif [ `uname` = "Linux" ]; then
 fi
 
 [ -f ${DOTFILES}/zsh/peco.zsh ] && source ${DOTFILES}/zsh/peco.zsh
+[ -f ${DOTFILES}/zsh/fzf-worktree.zsh ] && source ${DOTFILES}/zsh/fzf-worktree.zsh
 [ -f ${DOTFILES}/zsh/npm-completion.zsh ] && source ${DOTFILES}/zsh/npm-completion.zsh
 [ -f ${DOTFILES}/zsh/alias/common_alias.zsh ] && source ${DOTFILES}/zsh/alias/common_alias.zsh
 
@@ -146,7 +129,6 @@ if (which zprof > /dev/null 2>&1) ;then
 fi
 export PATH="$HOME/.embulk/bin:$PATH"
 
-alias mis='/Users/sibukixxx/repos/github.com/mis-gk/'
 alias ghc='stack ghc --'
 alias ghci='stack ghci --'
 alias runhaskell='stack runhaskell --'
@@ -156,28 +138,14 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
-# rubyenv
-[[ -d ~/.rbenv  ]] && \
-  export PATH=${HOME}/.rbenv/bin:${PATH} && \
-  eval "$(rbenv init -)"
-
-#export GRADLE_HOME=$(brew info gradle | grep /usr/local/Cellar/gradle | awk '{print $1}'
-export JAVA_HOME=`/usr/libexec/java_home -V`
-
 # neo vim
 export XDG_CONFIG_HOME=$HOME/.config
 
 export PATH="$HOME/.cargo/bin:$PATH"
-alias julia='/usr/local/bin/julia'
 
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="/Users/sibukixxx/.sdkman"
-[[ -s "/Users/sibukixxx/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/sibukixxx/.sdkman/bin/sdkman-init.sh"
-export PATH="$HOME/.jenv/bin:$PATH"
-eval "$(jenv init -)"
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/sibukixxx/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/sibukixxx/google-cloud-sdk/path.zsh.inc'; fi
+export NVM_DIR="$HOME/.config/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/sibukixxx/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/sibukixxx/google-cloud-sdk/completion.zsh.inc'; fi
+

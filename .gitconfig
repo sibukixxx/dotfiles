@@ -15,8 +15,9 @@
 [core]
   excludesfile = ~/.gitignore  # globalな.gitignoreの指定
 	autoCRLF = false
-  precomposeunicode = true
-  editor = vim
+	precomposeunicode = true
+	editor = vi
+	quotepath = false
 [alias]
   st = status
   sh = show
@@ -124,3 +125,6 @@
 	#template = /Users/sibukixxx/.gitmessage.txt
 [http]
 	#proxy = http://192.168.16.51:3128
+[i18n]
+	commitEncoding = utf-8
+	logOutputEncoding = utf-8
