@@ -16,7 +16,7 @@
   excludesfile = ~/.gitignore  # globalな.gitignoreの指定
 	autoCRLF = false
 	precomposeunicode = true
-	editor = vi
+	editor = nvim
 	quotepath = false
 [alias]
   st = status
@@ -108,7 +108,6 @@
   gn = grep -n
   delete-merged-branches = !git branch --merged | grep -vE \"^\\*|master$|develop$\"|xargs -I % git branch -d %
   delete-merged-branches-list = !git branch --merged | grep -vE \"^\\*|master$|develop$\"
-  aicommit = "!f() { COMMITMSG=$(claude -p 'Generate ONLY a one-line Git commit message in English, using imperative mood, summarizing what was changed and why, based strictly on the contents of `git diff --cached`. Do not add explanation or a body. Output only the commit summary line.'); git commit -m \"$COMMITMSG\" -e; }; f"
 [filter "lfs"]
   clean = git-lfs clean %f
   smudge = git-lfs smudge %f
@@ -129,3 +128,5 @@
 [i18n]
 	commitEncoding = utf-8
 	logOutputEncoding = utf-8
+[credential]
+	helper = store
