@@ -146,21 +146,10 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/sibukixxx/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/sibukixxx/Downloads/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/sibukixxx/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/sibukixxx/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
-
-
-# 使い方: bigfiles [DIR] [N]  # 既定はカレントと上位20件
-bigfiles(){ 
-  local dir="${1:-.}" n="${2:-20}"
-  find "$dir" -type f -size +50M -exec stat -f "%z\t%N" {} + \
-    | sort -nr | head -n "$n" \
-    | awk '{printf "%8.1f MB\t", $1/1024/1024; $1=""; sub(/^\t/,""); print}'
-}
-# 例: bigfiles ~/Projects 50
+alias vi="nvim"
+alias vim="nvim"
+alias view="nvim -R"
