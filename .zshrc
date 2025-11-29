@@ -1,6 +1,41 @@
 # prompt
-PS1="[@${HOST%%.*} %1~]%(!.#.$) "
-RPROMPT="%T"                      # 右側に時間を表示する
+# カレントディレクトリから親に向かって .gcloud-project を探索し、
+# 見つかったらその中身（project ID）を (gcloud:xxx) として返す
+gcloud_project_prompt() {
+  local dir="$PWD"
+  local marker=""
+  local project=""
+
+  # ルートディレクトリまで上りながら .gcloud-project を探す
+  while [[ "$dir" != "/" ]]; do
+    if [[ -f "$dir/.gcloud-project" ]]; then
+      marker="$dir/.gcloud-project"
+      break
+    fi
+    dir="${dir:h}"  # 親ディレクトリへ
+  done
+
+  # マーカーが見つからなければ何も表示しない
+  [[ -z "$marker" ]] && return 0
+
+  # ファイルから project ID を読む
+  project="$(<"$marker")"
+
+  # 空だったら gcloud の現在の project を fallback にする
+  if [[ -z "$project" ]]; then
+    project="$(gcloud config get-value project 2>/dev/null)"
+  fi
+
+  # それでもなければ何も出さない
+  [[ -z "$project" ]] && return 0
+
+  # 色付きで (gcloud:project-id) を出力
+  print -r "%F{cyan}(gcloud:${project})%f"
+}
+
+
+PS1='[@${HOST%%.*} %1~] $(gcloud_project_prompt)%(!.#.$) '
+RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
 
 setopt nonomatch
 
@@ -89,7 +124,7 @@ precmd () {
     LANG=en_US.UTF-8 vcs_info
     [[ -n "$vcs_info_msg_0_" ]] && psvar[1]="$vcs_info_msg_0_"
 }
-RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)"
+RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
 
 
 # For Rust
@@ -153,3 +188,7 @@ export NVM_DIR="$HOME/.config/nvm"
 alias vi="nvim"
 alias vim="nvim"
 alias view="nvim -R"
+
+# google-cloud-sdk
+export PATH="$(ls -d /opt/homebrew/Caskroom/gcloud-cli/*/google-cloud-sdk/bin | head -1):$PATH"
+
