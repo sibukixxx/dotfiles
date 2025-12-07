@@ -192,3 +192,6 @@ alias view="nvim -R"
 # google-cloud-sdk
 export PATH="$(ls -d /opt/homebrew/Caskroom/gcloud-cli/*/google-cloud-sdk/bin | head -1):$PATH"
 
+
+# Added by Antigravity
+export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
