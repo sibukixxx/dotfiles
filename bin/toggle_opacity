@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# toggle_opacity - Toggle Alacritty transparency
+# Used with Hammerspoon: Cmd+U to toggle
+
+CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/alacritty/alacritty.toml"
+
+[[ ! -f "$CONFIG_FILE" ]] && exit 0
+
+opacity=$(awk '$1 == "opacity" {print $3; exit}' "$CONFIG_FILE")
+
+case $opacity in
+  1)
+    toggle_opacity=0.85
+    ;;
+  *)
+    toggle_opacity=1
+    ;;
+esac
+
+sed -i "" "s/opacity = $opacity/opacity = $toggle_opacity/g" "$CONFIG_FILE"

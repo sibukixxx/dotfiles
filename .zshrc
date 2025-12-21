@@ -84,8 +84,30 @@ export LS_COLORS='di=01;36'
 ## export original variable
 export DOTFILES=$HOME/dotfiles
 
-# zsh plugin 
-export ZPLUG_HOME=$HOME/.zplug
+# =============================================================================
+# First-time setup: Install essential CLI tools if missing (Mac only)
+# =============================================================================
+if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
+  _essential_tools=(eza bat ripgrep fd zoxide fzf ghq sheldon zellij)
+  _missing_tools=()
+  for _tool in "${_essential_tools[@]}"; do
+    if ! command -v "$_tool" &>/dev/null; then
+      _missing_tools+=("$_tool")
+    fi
+  done
+  if [[ ${#_missing_tools[@]} -gt 0 ]]; then
+    echo "Installing missing tools: ${_missing_tools[*]}"
+    brew install "${_missing_tools[@]}"
+  fi
+  unset _essential_tools _missing_tools _tool
+fi
+
+# =============================================================================
+# Sheldon - Plugin Manager
+# =============================================================================
+if command -v sheldon &>/dev/null; then
+  eval "$(sheldon source)"
+fi
 
 ## 補完関連
 # sudo 補完
@@ -131,28 +153,26 @@ RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
 export PATH="$HOME/.cargo/bin:$PATH"
 
 
-# include
-if [ `uname` = "Darwin" ]; then
-
-  ## export original variable
-  export DOTFILES=$HOME/dotfiles
-
-  # Mac
-  [ -f ${DOTFILES}/zsh/mac.zsh ] && source ${DOTFILES}/zsh/mac.zsh
-  [ -f ${DOTFILES}/zsh/alias/mac_alias.zsh ] && source ${DOTFILES}/zsh/alias/mac_alias.zsh
-elif [ `uname` = "Linux" ]; then
-  export DOTFILES=$HOME/dotfiles
-
+# Linux specific settings
+if [[ "$(uname)" == "Linux" ]]; then
   export GOROOT=/usr/local/go/
   export GOPATH=$HOME/godev
   export PATH=$GOPATH/bin:$PATH
-
 fi
 
-[ -f ${DOTFILES}/zsh/peco.zsh ] && source ${DOTFILES}/zsh/peco.zsh
-[ -f ${DOTFILES}/zsh/fzf-worktree.zsh ] && source ${DOTFILES}/zsh/fzf-worktree.zsh
+# Fallback: Load local scripts if sheldon is not available
+if ! command -v sheldon &>/dev/null; then
+  [ -f ${DOTFILES}/zsh/tools.zsh ] && source ${DOTFILES}/zsh/tools.zsh
+  [ -f ${DOTFILES}/zsh/peco.zsh ] && source ${DOTFILES}/zsh/peco.zsh
+  [ -f ${DOTFILES}/zsh/fzf-worktree.zsh ] && source ${DOTFILES}/zsh/fzf-worktree.zsh
+  [ -f ${DOTFILES}/zsh/alias/common_alias.zsh ] && source ${DOTFILES}/zsh/alias/common_alias.zsh
+  if [[ "$(uname)" == "Darwin" ]]; then
+    [ -f ${DOTFILES}/zsh/mac.zsh ] && source ${DOTFILES}/zsh/mac.zsh
+    [ -f ${DOTFILES}/zsh/alias/mac_alias.zsh ] && source ${DOTFILES}/zsh/alias/mac_alias.zsh
+  fi
+fi
+
 [ -f ${DOTFILES}/zsh/npm-completion.zsh ] && source ${DOTFILES}/zsh/npm-completion.zsh
-[ -f ${DOTFILES}/zsh/alias/common_alias.zsh ] && source ${DOTFILES}/zsh/alias/common_alias.zsh
 
 # The next line updates PATH for the Google Cloud SDK.
 [ -f '/usr/local/bin/google-cloud-sdk/path.zsh.inc' ] && source '/usr/local/bin/google-cloud-sdk/path.zsh.inc'
@@ -188,6 +208,23 @@ export NVM_DIR="$HOME/.config/nvm"
 alias vi="nvim"
 alias vim="nvim"
 alias view="nvim -R"
+
+# =============================================================================
+# Zellij
+# =============================================================================
+if command -v zellij &>/dev/null; then
+  alias zj="zellij"
+  alias zja="zellij attach"
+  alias zjl="zellij list-sessions"
+  alias zjk="zellij kill-session"
+  alias zjka="zellij kill-all-sessions"
+
+  # Auto-attach or create session
+  function zs() {
+    local session_name="${1:-main}"
+    zellij attach "$session_name" 2>/dev/null || zellij -s "$session_name"
+  }
+fi
 
 # google-cloud-sdk
 export PATH="$(ls -d /opt/homebrew/Caskroom/gcloud-cli/*/google-cloud-sdk/bin | head -1):$PATH"

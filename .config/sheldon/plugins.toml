@@ -1,0 +1,73 @@
+# Sheldon configuration
+# https://sheldon.cli.rs/
+
+shell = "zsh"
+
+# =============================================================================
+# Deferred loading template (for performance)
+# =============================================================================
+[templates]
+defer = "{{ hooks?.pre | nl }}{% for file in files %}zsh-defer source \"{{ file }}\"\n{% endfor %}{{ hooks?.post | nl }}"
+
+# =============================================================================
+# Essential Plugins
+# =============================================================================
+
+[plugins.zsh-defer]
+github = "romkatv/zsh-defer"
+
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+use = ["{{ name }}.zsh"]
+apply = ["defer"]
+
+[plugins.zsh-syntax-highlighting]
+github = "zsh-users/zsh-syntax-highlighting"
+apply = ["defer"]
+
+[plugins.zsh-completions]
+github = "zsh-users/zsh-completions"
+apply = ["defer"]
+
+[plugins.zsh-history-substring-search]
+github = "zsh-users/zsh-history-substring-search"
+apply = ["defer"]
+
+# =============================================================================
+# Prompt (optional - uncomment if you want to use starship or pure)
+# =============================================================================
+# [plugins.starship]
+# inline = 'eval "$(starship init zsh)"'
+
+# [plugins.pure]
+# github = "sindresorhus/pure"
+# use = ["async.zsh", "pure.zsh"]
+
+# =============================================================================
+# Local dotfiles scripts
+# =============================================================================
+[plugins.dotfiles-tools]
+local = "~/dotfiles/zsh"
+use = ["tools.zsh"]
+
+[plugins.dotfiles-fzf-worktree]
+local = "~/dotfiles/zsh"
+use = ["fzf-worktree.zsh"]
+
+[plugins.dotfiles-peco]
+local = "~/dotfiles/zsh"
+use = ["peco.zsh"]
+
+[plugins.dotfiles-mac]
+local = "~/dotfiles/zsh"
+use = ["mac.zsh"]
+profiles = ["macos"]
+
+[plugins.dotfiles-alias-common]
+local = "~/dotfiles/zsh/alias"
+use = ["common_alias.zsh"]
+
+[plugins.dotfiles-alias-mac]
+local = "~/dotfiles/zsh/alias"
+use = ["mac_alias.zsh"]
+profiles = ["macos"]
