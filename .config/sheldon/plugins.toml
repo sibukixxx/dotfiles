@@ -63,6 +63,11 @@ local = "~/dotfiles/zsh"
 use = ["mac.zsh"]
 profiles = ["macos"]
 
+[plugins.dotfiles-linux]
+local = "~/dotfiles/zsh"
+use = ["linux.zsh"]
+profiles = ["linux"]
+
 [plugins.dotfiles-alias-common]
 local = "~/dotfiles/zsh/alias"
 use = ["common_alias.zsh"]
@@ -71,3 +76,8 @@ use = ["common_alias.zsh"]
 local = "~/dotfiles/zsh/alias"
 use = ["mac_alias.zsh"]
 profiles = ["macos"]
+
+[plugins.dotfiles-alias-linux]
+local = "~/dotfiles/zsh/alias"
+use = ["linux_alias.zsh"]
+profiles = ["linux"]

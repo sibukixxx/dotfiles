@@ -7,8 +7,126 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "==> Starting dotfiles setup..."
 echo "    Dotfiles directory: $DOTFILES_DIR"
 
+# Detect OS
+detect_os() {
+  if [[ "$(uname)" == "Darwin" ]]; then
+    echo "macos"
+  elif grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "wsl"
+  elif [[ "$(uname)" == "Linux" ]]; then
+    echo "linux"
+  else
+    echo "unknown"
+  fi
+}
+
+OS_TYPE=$(detect_os)
+echo "    Detected OS: $OS_TYPE"
+
 # =============================================================================
-# Homebrew
+# Nix (for WSL/Linux)
+# =============================================================================
+install_nix() {
+  if [[ "$OS_TYPE" != "wsl" && "$OS_TYPE" != "linux" ]]; then
+    return 0
+  fi
+
+  if command -v nix &>/dev/null; then
+    echo "==> Nix already installed"
+    return 0
+  fi
+
+  echo "==> Installing Nix..."
+  sh <(curl -L https://nixos.org/nix/install) --daemon
+
+  # Source nix for current session
+  if [[ -f /etc/profile.d/nix.sh ]]; then
+    . /etc/profile.d/nix.sh
+  elif [[ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
+    . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+  fi
+}
+
+# =============================================================================
+# Home Manager (for Nix)
+# =============================================================================
+install_home_manager() {
+  if [[ "$OS_TYPE" != "wsl" && "$OS_TYPE" != "linux" ]]; then
+    return 0
+  fi
+
+  if ! command -v nix &>/dev/null; then
+    echo "    Nix not found, skipping home-manager..."
+    return 1
+  fi
+
+  if command -v home-manager &>/dev/null; then
+    echo "==> Home Manager already installed"
+    return 0
+  fi
+
+  echo "==> Installing Home Manager..."
+
+  # Add home-manager channel
+  nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager
+  nix-channel --update
+
+  # Install home-manager
+  nix-shell '<home-manager>' -A install
+}
+
+# =============================================================================
+# Setup Home Manager configuration
+# =============================================================================
+setup_home_manager() {
+  if [[ "$OS_TYPE" != "wsl" && "$OS_TYPE" != "linux" ]]; then
+    return 0
+  fi
+
+  if ! command -v home-manager &>/dev/null; then
+    echo "    Home Manager not found, skipping..."
+    return 1
+  fi
+
+  echo "==> Setting up Home Manager..."
+
+  # Link home.nix
+  mkdir -p "$HOME/.config/home-manager"
+  ln -sf "$DOTFILES_DIR/nix/home.nix" "$HOME/.config/home-manager/home.nix"
+
+  # Apply configuration
+  echo "    Applying home-manager configuration..."
+  home-manager switch
+
+  echo "    Home Manager setup complete"
+}
+
+# =============================================================================
+# Install packages via apt (basic dependencies for WSL/Linux)
+# =============================================================================
+install_apt_packages() {
+  if [[ "$OS_TYPE" != "wsl" && "$OS_TYPE" != "linux" ]]; then
+    return 0
+  fi
+
+  echo "==> Installing basic packages via apt..."
+
+  local packages=(
+    build-essential
+    curl
+    git
+    zsh
+    peco
+  )
+
+  sudo apt-get update
+  sudo apt-get install -y "${packages[@]}"
+
+  echo "    apt packages installed"
+}
+
+# =============================================================================
+# Homebrew (for macOS)
 # =============================================================================
 install_homebrew() {
   if ! command -v brew &>/dev/null; then
@@ -174,16 +292,34 @@ setup_sheldon() {
 setup_fzf() {
   echo "==> Setting up fzf..."
 
-  if command -v fzf &>/dev/null; then
-    local fzf_install="$(brew --prefix)/opt/fzf/install"
-    if [[ -f "$fzf_install" ]]; then
-      echo "    Installing fzf key bindings..."
-      "$fzf_install" --key-bindings --completion --no-update-rc --no-bash --no-fish
-    fi
-    echo "    fzf setup complete"
-  else
+  if ! command -v fzf &>/dev/null; then
     echo "    fzf not found, skipping..."
+    return 0
   fi
+
+  local fzf_install=""
+
+  case "$OS_TYPE" in
+    macos)
+      fzf_install="$(brew --prefix)/opt/fzf/install"
+      ;;
+    wsl|linux)
+      # Nix installs fzf, check for its install script
+      if [[ -f "$HOME/.nix-profile/share/fzf/shell/key-bindings.zsh" ]]; then
+        echo "    fzf key bindings available via Nix"
+        return 0
+      fi
+      # Fallback to system fzf
+      fzf_install="/usr/share/doc/fzf/examples/key-bindings.zsh"
+      ;;
+  esac
+
+  if [[ -n "$fzf_install" && -f "$fzf_install" ]]; then
+    echo "    Installing fzf key bindings..."
+    "$fzf_install" --key-bindings --completion --no-update-rc --no-bash --no-fish 2>/dev/null || true
+  fi
+
+  echo "    fzf setup complete"
 }
 
 # =============================================================================
@@ -286,10 +422,28 @@ print_instructions() {
 # Main
 # =============================================================================
 main() {
-  install_homebrew
-  install_packages
-  install_rustup
-  install_rust_tools
+  case "$OS_TYPE" in
+    macos)
+      install_homebrew
+      install_packages
+      install_rustup
+      install_rust_tools
+      ;;
+    wsl|linux)
+      install_apt_packages
+      install_nix
+      install_home_manager
+      setup_home_manager
+      install_rustup
+      install_rust_tools
+      ;;
+    *)
+      echo "Unknown OS type: $OS_TYPE"
+      exit 1
+      ;;
+  esac
+
+  # Common setup for all platforms
   create_symlinks
   setup_bin
   setup_zsh

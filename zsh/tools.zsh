@@ -30,12 +30,19 @@ if command -v fzf &>/dev/null; then
     export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
   fi
 
-  # Load fzf key bindings and completion
-  if [[ -f "$(brew --prefix)/opt/fzf/shell/key-bindings.zsh" ]]; then
-    source "$(brew --prefix)/opt/fzf/shell/key-bindings.zsh"
+  # Load fzf key bindings and completion (platform-specific paths)
+  local fzf_base=""
+  if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
+    fzf_base="$(brew --prefix)/opt/fzf/shell"
+  elif [[ -d "$HOME/.nix-profile/share/fzf/shell" ]]; then
+    fzf_base="$HOME/.nix-profile/share/fzf/shell"
+  elif [[ -d "/usr/share/doc/fzf/examples" ]]; then
+    fzf_base="/usr/share/doc/fzf/examples"
   fi
-  if [[ -f "$(brew --prefix)/opt/fzf/shell/completion.zsh" ]]; then
-    source "$(brew --prefix)/opt/fzf/shell/completion.zsh"
+
+  if [[ -n "$fzf_base" ]]; then
+    [[ -f "$fzf_base/key-bindings.zsh" ]] && source "$fzf_base/key-bindings.zsh"
+    [[ -f "$fzf_base/completion.zsh" ]] && source "$fzf_base/completion.zsh"
   fi
 
   # Preview with bat if available

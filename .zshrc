@@ -85,6 +85,15 @@ export LS_COLORS='di=01;36'
 export DOTFILES=$HOME/dotfiles
 
 # =============================================================================
+# Nix (for WSL/Linux)
+# =============================================================================
+if [[ -f /etc/profile.d/nix.sh ]]; then
+  . /etc/profile.d/nix.sh
+elif [[ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
+  . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+fi
+
+# =============================================================================
 # First-time setup: Install essential CLI tools if missing (Mac only)
 # =============================================================================
 if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
@@ -111,6 +120,8 @@ fi
 if command -v sheldon &>/dev/null; then
   if [[ "$(uname)" == "Darwin" ]]; then
     eval "$(sheldon --profile macos source)"
+  elif [[ "$(uname)" == "Linux" ]]; then
+    eval "$(sheldon --profile linux source)"
   else
     eval "$(sheldon source)"
   fi
