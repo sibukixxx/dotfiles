@@ -8,22 +8,19 @@ tap "homebrew/cask-fonts"
 brew "zsh"
 brew "git"
 brew "neovim"
-brew "zellij"            # modern terminal multiplexer
 # brew "tmux"            # legacy (replaced by zellij)
 brew "wget"
 brew "curl"
 brew "jq"
 brew "tree"
 brew "colordiff"
-brew "ripgrep"
-brew "fd"
-brew "bat"
-brew "eza"               # modern ls replacement
+
+# Rust tools (installed via cargo, see init.sh):
+# ripgrep, fd, bat, eza, zoxide, sheldon, zellij
 
 # =============================================================================
-# Navigation & Search (zoxide, fzf, ghq)
+# Navigation & Search (fzf, ghq)
 # =============================================================================
-brew "zoxide"            # smarter cd command
 brew "fzf"               # fuzzy finder
 brew "ghq"               # remote repository management
 
@@ -41,9 +38,8 @@ brew "gh"                # GitHub CLI
 brew "mysql"
 
 # =============================================================================
-# Shell Plugin Manager
+# Shell Plugin Manager (sheldon installed via cargo)
 # =============================================================================
-brew "sheldon"           # fast shell plugin manager
 
 # =============================================================================
 # Utilities

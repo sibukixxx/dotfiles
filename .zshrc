@@ -88,25 +88,32 @@ export DOTFILES=$HOME/dotfiles
 # First-time setup: Install essential CLI tools if missing (Mac only)
 # =============================================================================
 if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
-  _essential_tools=(eza bat ripgrep fd zoxide fzf ghq sheldon zellij)
+  # Note: brew package names vs command names differ for some tools
+  # ripgrep -> rg, but brew install uses 'ripgrep'
+  _essential_tools=(eza bat rg fd zoxide fzf ghq sheldon zellij)
+  _brew_names=(eza bat ripgrep fd zoxide fzf ghq sheldon zellij)
   _missing_tools=()
-  for _tool in "${_essential_tools[@]}"; do
-    if ! command -v "$_tool" &>/dev/null; then
-      _missing_tools+=("$_tool")
+  for i in {1..${#_essential_tools[@]}}; do
+    if ! command -v "${_essential_tools[$i]}" &>/dev/null; then
+      _missing_tools+=("${_brew_names[$i]}")
     fi
   done
   if [[ ${#_missing_tools[@]} -gt 0 ]]; then
     echo "Installing missing tools: ${_missing_tools[*]}"
     brew install "${_missing_tools[@]}"
   fi
-  unset _essential_tools _missing_tools _tool
+  unset _essential_tools _brew_names _missing_tools i
 fi
 
 # =============================================================================
 # Sheldon - Plugin Manager
 # =============================================================================
 if command -v sheldon &>/dev/null; then
-  eval "$(sheldon source)"
+  if [[ "$(uname)" == "Darwin" ]]; then
+    eval "$(sheldon --profile macos source)"
+  else
+    eval "$(sheldon source)"
+  fi
 fi
 
 ## 補完関連

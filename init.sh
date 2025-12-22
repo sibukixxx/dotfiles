@@ -39,6 +39,53 @@ install_packages() {
 }
 
 # =============================================================================
+# Rustup & Cargo
+# =============================================================================
+install_rustup() {
+  if ! command -v rustup &>/dev/null; then
+    echo "==> Installing Rustup..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+  else
+    echo "==> Rustup already installed"
+  fi
+}
+
+# =============================================================================
+# Install Rust CLI tools via Cargo
+# =============================================================================
+install_rust_tools() {
+  echo "==> Installing Rust tools via Cargo..."
+
+  # Ensure cargo is in PATH
+  if [[ -f "$HOME/.cargo/env" ]]; then
+    source "$HOME/.cargo/env"
+  fi
+
+  if ! command -v cargo &>/dev/null; then
+    echo "    Cargo not found. Please install Rustup first."
+    return 1
+  fi
+
+  local rust_tools=(
+    "ripgrep"      # rg - fast grep
+    "fd-find"      # fd - fast find
+    "bat"          # cat with syntax highlighting
+    "eza"          # modern ls replacement
+    "zoxide"       # smarter cd
+    "sheldon"      # shell plugin manager
+    "zellij"       # terminal multiplexer
+  )
+
+  for tool in "${rust_tools[@]}"; do
+    echo "    Installing $tool..."
+    cargo install "$tool" --locked 2>/dev/null || cargo install "$tool"
+  done
+
+  echo "    Rust tools installation complete"
+}
+
+# =============================================================================
 # Create symbolic links
 # =============================================================================
 create_symlinks() {
@@ -241,6 +288,8 @@ print_instructions() {
 main() {
   install_homebrew
   install_packages
+  install_rustup
+  install_rust_tools
   create_symlinks
   setup_bin
   setup_zsh
