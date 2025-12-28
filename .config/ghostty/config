@@ -1,0 +1,81 @@
+# Ghostty Configuration
+# https://ghostty.org/docs/config
+
+# =============================================================================
+# Font
+# =============================================================================
+font-family = HackGen35 Console NF
+font-size = 14
+
+# =============================================================================
+# Cursor
+# =============================================================================
+cursor-style = bar
+cursor-style-blink = true
+
+# =============================================================================
+# Window
+# =============================================================================
+window-padding-x = 8
+window-padding-y = 8
+window-decoration = false
+macos-option-as-alt = true
+window-save-state = always
+
+# =============================================================================
+# Shell
+# =============================================================================
+shell-integration = zsh
+
+# =============================================================================
+# Scrollback
+# =============================================================================
+scrollback-limit = 10000
+
+# =============================================================================
+# Clipboard
+# =============================================================================
+copy-on-select = clipboard
+
+# =============================================================================
+# Colors (Tokyo Night theme)
+# =============================================================================
+background = 1a1b26
+foreground = c0caf5
+
+# Normal colors
+palette = 0=#15161e
+palette = 1=#f7768e
+palette = 2=#9ece6a
+palette = 3=#e0af68
+palette = 4=#7aa2f7
+palette = 5=#bb9af7
+palette = 6=#7dcfff
+palette = 7=#a9b1d6
+
+# Bright colors
+palette = 8=#414868
+palette = 9=#f7768e
+palette = 10=#9ece6a
+palette = 11=#e0af68
+palette = 12=#7aa2f7
+palette = 13=#bb9af7
+palette = 14=#7dcfff
+palette = 15=#c0caf5
+
+# =============================================================================
+# Keybindings
+# =============================================================================
+# Fullscreen toggle
+keybind = super+enter=toggle_fullscreen
+
+# Font size
+keybind = super+plus=increase_font_size:1
+keybind = super+minus=decrease_font_size:1
+keybind = super+zero=reset_font_size
+
+# Clear screen
+keybind = super+k=clear_screen
+
+# Quick terminal (global hotkey)
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
