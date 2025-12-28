@@ -212,7 +212,6 @@ create_symlinks() {
   # Basic dotfiles
   ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
   ln -sf "$DOTFILES_DIR/.vimrc" "$HOME/.vimrc"
-  ln -sf "$DOTFILES_DIR/.gitconfig" "$HOME/.gitconfig"
 
   # .config directory (alacritty, zellij, sheldon, nvim, etc.)
   if [[ -d "$DOTFILES_DIR/.config" ]]; then
@@ -220,10 +219,28 @@ create_symlinks() {
     for config in "$DOTFILES_DIR/.config"/*; do
       if [[ -e "$config" ]]; then
         config_name=$(basename "$config")
-        ln -sf "$config" "$HOME/.config/$config_name"
-        echo "    Linked .config/$config_name"
+        # For git, link individual files (XDG Base Directory)
+        if [[ "$config_name" == "git" ]]; then
+          mkdir -p "$HOME/.config/git"
+          for git_file in "$config"/*; do
+            if [[ -f "$git_file" ]]; then
+              git_file_name=$(basename "$git_file")
+              ln -sf "$git_file" "$HOME/.config/git/$git_file_name"
+              echo "    Linked .config/git/$git_file_name"
+            fi
+          done
+        else
+          ln -sf "$config" "$HOME/.config/$config_name"
+          echo "    Linked .config/$config_name"
+        fi
       fi
     done
+  fi
+
+  # Remove legacy ~/.gitconfig symlink if exists
+  if [[ -L "$HOME/.gitconfig" ]]; then
+    rm "$HOME/.gitconfig"
+    echo "    Removed legacy ~/.gitconfig symlink"
   fi
 
   echo "    Symbolic links created"
