@@ -1,0 +1,169 @@
+[user]
+	name = sibukixxx
+	email = sibukixxx@gmail.com
+
+[core]
+	excludesfile = ~/.config/git/ignore
+	autoCRLF = false
+	precomposeunicode = true
+	editor = nvim
+	quotepath = false
+
+[init]
+	defaultBranch = main
+
+[push]
+	default = simple
+	autoSetupRemote = true
+
+[pull]
+	rebase = true
+
+[fetch]
+	prune = true
+
+[rebase]
+	autoStash = true
+
+[merge]
+	conflictstyle = diff3
+
+[diff]
+	colorMoved = default
+
+[color]
+	status = auto
+	diff = auto
+	branch = auto
+	interactive = auto
+	grep = auto
+
+[url "git@github.com:sibukixxx/"]
+	insteadof = gh:
+
+[commit]
+	template = ~/.config/git/message
+
+[log]
+	decorate = true
+
+[rerere]
+	enabled = true
+
+[i18n]
+	commitEncoding = utf-8
+	logOutputEncoding = utf-8
+
+[credential]
+	helper = store
+
+[ghq]
+	root = ~/repos
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[alias]
+	# status
+	st = status
+	sh = show
+	so = remote show origin
+
+	# fetch/pull/push
+	ft = fetch
+	up = pull --rebase
+	pl = !git pull && git submodule update --init
+
+	# add/commit
+	ad = add
+	ci = commit -a
+	cam = commit -a --amend
+	amend = commit --amend
+	save = commit -m
+	resave = commit --amend
+
+	# checkout/branch
+	co = checkout
+	sw = switch
+	br = branch
+	ba = branch -a
+	bm = branch --merged
+	bn = branch --no-merged
+	branchout = checkout -b
+	back = checkout "-"
+
+	# reset/revert
+	unstage = reset -q HEAD --
+	discard = checkout --
+	nevermind = !git reset --hard HEAD && git clean -d -f
+	uncommit = reset --mixed HEAD~
+	invert = revert
+
+	# log
+	wc = whatchanged
+	ls = log --stat
+	lp = log -p
+	la = log --pretty=\"format:%ad %h (%an): %s\" --date=short
+	lr = log origin
+	oneline = log --pretty=oneline
+	ranking = shortlog -s -n --no-merges
+	last = log -1 HEAD --format=format:"%Cred%H"
+	history = log -10 --format=format:'%Cgreen%h %Creset* %s (%cN, %ar)'
+	contributors = shortlog -s -n
+
+	# log graph
+	graph = log --graph -10 --branches --remotes --tags --format=format:'%Cgreen%h %Creset* %<(75,trunc)%s (%cN, %ar) %Cred%d' --date-order
+	lga = log --graph --all --color --pretty='%x09%h %cn%x09%s %Cred%d%Creset'
+	gra = log --graph --all --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+
+	# diff
+	dm = diff master
+	dw = diff --color-words
+	dc = diff --cached
+	ds = diff --staged
+	d1 = diff HEAD~
+	d2 = diff HEAD~~
+	d3 = diff HEAD~~~
+	prestage = diff -w --word-diff=color
+	precommit = diff --cached -w --word-diff=color --word-diff-regex='[^[:space:]<>]+'
+	what = show -w
+
+	# grep
+	gr = grep
+	gn = grep -n
+
+	# stash
+	stashes = stash list
+	unstash = stash pop
+
+	# remote
+	remotes = remote -v
+	tags = tag
+	branches = branch -a
+
+	# file operations
+	move = mv
+	remove = rm
+	untrack = rm -r --cached
+
+	# rebase
+	rbm = rebase master
+	rewrite = rebase -i
+
+	# merge conflict
+	unmerged = diff --name-only --diff-filter=U
+	edit-unmerged = "!f() { git ls-files --unmerged | cut -f2 | sort -u ; }; vim `f`"
+	add-unmerged = "!f() { git ls-files --unmerged | cut -f2 | sort -u ; }; git add `f`"
+
+	# branch cleanup
+	delete-merged-branches = !git branch --merged | grep -vE \"^\\*|master$|main$|develop$\" | xargs -I % git branch -d %
+	delete-merged-branches-list = !git branch --merged | grep -vE \"^\\*|master$|main$|develop$\"
+
+	# typo fixes
+	puhs = push
+	psuh = push
+	pus = push
+	puh = push

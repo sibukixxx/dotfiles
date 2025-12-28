@@ -1,0 +1,16 @@
+
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+#
+# ---
+# Type: feat | fix | docs | style | refactor | perf | test | chore
+# Scope: Optional context (e.g., api, ui, auth)
+#
+# Examples:
+#   feat(auth): add OAuth login support
+#   fix: resolve memory leak in data processing
+#   docs: update API documentation
+#   refactor(api): simplify request handling
