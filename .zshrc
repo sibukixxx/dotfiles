@@ -1,111 +1,169 @@
-# prompt
-# カレントディレクトリから親に向かって .gcloud-project を探索し、
-# 見つかったらその中身（project ID）を (gcloud:xxx) として返す
-gcloud_project_prompt() {
-  local dir="$PWD"
-  local marker=""
-  local project=""
+# =============================================================================
+# Environment Variables
+# =============================================================================
+export LANG=ja_JP.UTF-8
+export LC_CTYPE=ja_JP.UTF-8
+export DOTFILES=$HOME/dotfiles
+export XDG_CONFIG_HOME=$HOME/.config
 
-  # ルートディレクトリまで上りながら .gcloud-project を探す
-  while [[ "$dir" != "/" ]]; do
-    if [[ -f "$dir/.gcloud-project" ]]; then
-      marker="$dir/.gcloud-project"
-      break
-    fi
-    dir="${dir:h}"  # 親ディレクトリへ
-  done
+# Editor (prefer nvim)
+if command -v nvim &>/dev/null; then
+  export EDITOR=nvim
+elif command -v vim &>/dev/null; then
+  export EDITOR=vim
+fi
 
-  # マーカーが見つからなければ何も表示しない
-  [[ -z "$marker" ]] && return 0
+# =============================================================================
+# PATH Configuration (consolidated)
+# =============================================================================
+typeset -U path  # Remove duplicates from PATH
 
-  # ファイルから project ID を読む
-  project="$(<"$marker")"
+# Base paths
+path=(
+  $HOME/.local/bin
+  $HOME/.cargo/bin
+  /opt/homebrew/bin
+  /usr/local/bin
+  $path
+)
 
-  # 空だったら gcloud の現在の project を fallback にする
-  if [[ -z "$project" ]]; then
-    project="$(gcloud config get-value project 2>/dev/null)"
+# Homebrew (Apple Silicon vs Intel)
+if [[ -d /opt/homebrew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null)"
+elif [[ -d /usr/local/Homebrew ]]; then
+  eval "$(/usr/local/bin/brew shellenv 2>/dev/null)"
+fi
+
+# Go
+if command -v go &>/dev/null; then
+  export GOPATH=$HOME/godev
+  path=($GOPATH/bin $path)
+  if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
+    export GOROOT="$(brew --prefix go)/libexec"
+  elif [[ -d /usr/local/go ]]; then
+    export GOROOT=/usr/local/go
   fi
+fi
 
-  # それでもなければ何も出さない
-  [[ -z "$project" ]] && return 0
+# Node.js (nodebrew)
+[[ -d $HOME/.nodebrew/current/bin ]] && path=($HOME/.nodebrew/current/bin $path)
 
-  # 色付きで (gcloud:project-id) を出力
-  print -r "%F{cyan}(gcloud:${project})%f"
-}
+# pyenv
+if [[ -d $HOME/.pyenv ]]; then
+  export PYENV_ROOT="$HOME/.pyenv"
+  path=($PYENV_ROOT/bin $path)
+  eval "$(pyenv init -)" 2>/dev/null
+fi
 
+# Google Cloud SDK
+if [[ -d /opt/homebrew/Caskroom/google-cloud-sdk ]]; then
+  gcloud_bin="$(ls -d /opt/homebrew/Caskroom/google-cloud-sdk/*/google-cloud-sdk/bin 2>/dev/null | head -1)"
+  [[ -n "$gcloud_bin" ]] && path=($gcloud_bin $path)
+fi
 
-PS1='[@${HOST%%.*} %1~] $(gcloud_project_prompt)%(!.#.$) '
-RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
+# NVM
+export NVM_DIR="$HOME/.config/nvm"
+[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
 
+# Nix (for WSL/Linux)
+[[ -f /etc/profile.d/nix.sh ]] && source /etc/profile.d/nix.sh
+[[ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]] && source "$HOME/.nix-profile/etc/profile.d/nix.sh"
+
+# =============================================================================
+# Zsh Options
+# =============================================================================
 setopt nonomatch
-
-setopt transient_rprompt          # 右側まで入力がきたら時間を消す
-setopt prompt_subst               # 便利なプロント
-bindkey -e                        # emacsライクなキーバインド
-autoload -U compinit
-compinit -u
-fpath=(~/.zsh-completions $fpath)
-zstyle ':completion:*:sudo:*' command-path /usr/local/sbin /usr/local/bin \
-                             /usr/sbin /usr/bin /sbin /bin /usr/X11R6/bin \
-                             /usr/local/git/bin
-
+setopt transient_rprompt
+setopt prompt_subst
 setopt autopushd
 setopt pushd_ignore_dups
 setopt auto_cd
 setopt list_packed
 setopt list_types
+setopt no_hup
 
-# hisotry
-HISTFILE=$HOME/.zsh-history           # 履歴をファイルに保存する
-HISTSIZE=1000000                       # メモリ内の履歴の数
-SAVEHIST=1000000                       # 保存される履歴の数
-setopt hist_ignore_dups           # 重複を記録しない
+# Emacs-like key bindings
+bindkey -e
+
+# =============================================================================
+# Completion
+# =============================================================================
+autoload -Uz compinit
+compinit -u
+
+fpath=(~/.zsh-completions $fpath)
+
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+zstyle ':completion:*:default' menu select=1
+zstyle ':completion:*:sudo:*' command-path /usr/local/sbin /usr/local/bin \
+                             /usr/sbin /usr/bin /sbin /bin
+
+# =============================================================================
+# History
+# =============================================================================
+HISTFILE=$HOME/.zsh-history
+HISTSIZE=1000000
+SAVEHIST=1000000
+
+setopt hist_ignore_dups
 setopt hist_ignore_all_dups
 setopt hist_save_no_dups
-setopt hist_reduce_blanks         # スペース排除
-setopt extended_history               # 履歴ファイルに時刻を記録
-setopt share_history                  # 端末間の履歴を共有
-function history-all { history -E 1 } # 全履歴の一覧を出力する
+setopt hist_reduce_blanks
+setopt extended_history
+setopt share_history
 
-# history 操作まわり
 autoload history-search-end
 zle -N history-beginning-search-backward-end history-search-end
 zle -N history-beginning-search-forward-end history-search-end
 bindkey "^P" history-beginning-search-backward-end
 bindkey "^N" history-beginning-search-forward-end
 
-# export
-export EDITOR=/opt/homebrew/bin/nvim
-export PATH="/usr/local/bin/flutter/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH:/usr/local/sbin:/opt/homebrew/bin"
-export LANG=ja_JP.UTF-8
-export LC_CTYPE=ja_JP.UTF-8
-export LS_COLORS='di=01;36'
-
-## export original variable
-export DOTFILES=$HOME/dotfiles
+function history-all { history -E 1 }
 
 # =============================================================================
-# Nix (for WSL/Linux)
+# Prompt
 # =============================================================================
-if [[ -f /etc/profile.d/nix.sh ]]; then
-  . /etc/profile.d/nix.sh
-elif [[ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
-  . "$HOME/.nix-profile/etc/profile.d/nix.sh"
-fi
+gcloud_project_prompt() {
+  local dir="$PWD" marker="" project=""
+  while [[ "$dir" != "/" ]]; do
+    if [[ -f "$dir/.gcloud-project" ]]; then
+      marker="$dir/.gcloud-project"
+      break
+    fi
+    dir="${dir:h}"
+  done
+  [[ -z "$marker" ]] && return 0
+  project="$(<"$marker")"
+  [[ -z "$project" ]] && project="$(gcloud config get-value project 2>/dev/null)"
+  [[ -z "$project" ]] && return 0
+  print -r "%F{cyan}(gcloud:${project})%f"
+}
+
+PS1='[@${HOST%%.*} %1~] $(gcloud_project_prompt)%(!.#.$) '
+
+# VCS info for RPROMPT
+autoload -Uz vcs_info
+zstyle ':vcs_info:*' enable git svn hg
+zstyle ':vcs_info:git:*' formats '(%s)-[%b]'
+zstyle ':vcs_info:git:*' actionformats '(%s)-[%b|%a]'
+zstyle ':vcs_info:*' formats '(%s)-[%b]'
+zstyle ':vcs_info:*' actionformats '(%s)-[%b|%a]'
+precmd() {
+  psvar=()
+  LANG=en_US.UTF-8 vcs_info
+  [[ -n "$vcs_info_msg_0_" ]] && psvar[1]="$vcs_info_msg_0_"
+}
+RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
 
 # =============================================================================
-# First-time setup: Install essential CLI tools if missing (Mac only)
+# Auto-install missing CLI tools (macOS only)
 # =============================================================================
 if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
-  # Note: brew package names vs command names differ for some tools
-  # ripgrep -> rg, but brew install uses 'ripgrep'
   _essential_tools=(eza bat rg fd zoxide fzf ghq sheldon zellij)
   _brew_names=(eza bat ripgrep fd zoxide fzf ghq sheldon zellij)
   _missing_tools=()
   for i in {1..${#_essential_tools[@]}}; do
-    if ! command -v "${_essential_tools[$i]}" &>/dev/null; then
-      _missing_tools+=("${_brew_names[$i]}")
-    fi
+    command -v "${_essential_tools[$i]}" &>/dev/null || _missing_tools+=("${_brew_names[$i]}")
   done
   if [[ ${#_missing_tools[@]} -gt 0 ]]; then
     echo "Installing missing tools: ${_missing_tools[*]}"
@@ -118,135 +176,52 @@ fi
 # Sheldon - Plugin Manager
 # =============================================================================
 if command -v sheldon &>/dev/null; then
+  case "$(uname)" in
+    Darwin) eval "$(sheldon --profile macos source)" ;;
+    Linux)  eval "$(sheldon --profile linux source)" ;;
+    *)      eval "$(sheldon source)" ;;
+  esac
+else
+  # Fallback: Load local scripts if sheldon is not available
+  [[ -f ${DOTFILES}/zsh/tools.zsh ]] && source ${DOTFILES}/zsh/tools.zsh
+  [[ -f ${DOTFILES}/zsh/peco.zsh ]] && source ${DOTFILES}/zsh/peco.zsh
+  [[ -f ${DOTFILES}/zsh/fzf-worktree.zsh ]] && source ${DOTFILES}/zsh/fzf-worktree.zsh
+  [[ -f ${DOTFILES}/zsh/alias/common_alias.zsh ]] && source ${DOTFILES}/zsh/alias/common_alias.zsh
   if [[ "$(uname)" == "Darwin" ]]; then
-    eval "$(sheldon --profile macos source)"
-  elif [[ "$(uname)" == "Linux" ]]; then
-    eval "$(sheldon --profile linux source)"
-  else
-    eval "$(sheldon source)"
+    [[ -f ${DOTFILES}/zsh/mac.zsh ]] && source ${DOTFILES}/zsh/mac.zsh
+    [[ -f ${DOTFILES}/zsh/alias/mac_alias.zsh ]] && source ${DOTFILES}/zsh/alias/mac_alias.zsh
   fi
 fi
 
-## 補完関連
-# sudo 補完
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
-zstyle ':completion:*:default' menu select=1
+# =============================================================================
+# Google Cloud SDK
+# =============================================================================
+[[ -f '/usr/local/bin/google-cloud-sdk/path.zsh.inc' ]] && source '/usr/local/bin/google-cloud-sdk/path.zsh.inc'
+[[ -f '/usr/local/bin/google-cloud-sdk/completion.zsh.inc' ]] && source '/usr/local/bin/google-cloud-sdk/completion.zsh.inc'
 
-# 基本的な設定
-autoload -U predict-on
-setopt no_hup
-
-# ディレクトリ名を入力するだけでカレントディレクトリを変更
-setopt auto_cd
-# タブキー連打で補完候補を順に表示
-setopt auto_menu
-
-# GOLANG環境設定
-if [ -x "`which go`" ]; then              
-  export GOPATH=$HOME/godev
-  export PATH=$GOPATH/bin:$PATH
-  export GOROOT="$(brew --prefix go)/libexec"
-  export CC=clang # textql用 
-
-  #Fot Appengine Go
-  export PATH=$GOPATH/src/gae/go_appengine:$PATH
-fi                                          
-
-# For npm
-export PATH=$HOME/.nodebrew/current/bin:$PATH
-
-# git settings # vcs info
-autoload -Uz vcs_info
-zstyle ':vcs_info:*' formats '(%s)-[%b]'
-zstyle ':vcs_info:*' actionformats '(%s)-[%b|%a]'
-precmd () {
-    psvar=()
-    LANG=en_US.UTF-8 vcs_info
-    [[ -n "$vcs_info_msg_0_" ]] && psvar[1]="$vcs_info_msg_0_"
-}
-RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
-
-
-# For Rust
-export PATH="$HOME/.cargo/bin:$PATH"
-
-
-# Linux specific settings
-if [[ "$(uname)" == "Linux" ]]; then
-  export GOROOT=/usr/local/go/
-  export GOPATH=$HOME/godev
-  export PATH=$GOPATH/bin:$PATH
-fi
-
-# Fallback: Load local scripts if sheldon is not available
-if ! command -v sheldon &>/dev/null; then
-  [ -f ${DOTFILES}/zsh/tools.zsh ] && source ${DOTFILES}/zsh/tools.zsh
-  [ -f ${DOTFILES}/zsh/peco.zsh ] && source ${DOTFILES}/zsh/peco.zsh
-  [ -f ${DOTFILES}/zsh/fzf-worktree.zsh ] && source ${DOTFILES}/zsh/fzf-worktree.zsh
-  [ -f ${DOTFILES}/zsh/alias/common_alias.zsh ] && source ${DOTFILES}/zsh/alias/common_alias.zsh
-  if [[ "$(uname)" == "Darwin" ]]; then
-    [ -f ${DOTFILES}/zsh/mac.zsh ] && source ${DOTFILES}/zsh/mac.zsh
-    [ -f ${DOTFILES}/zsh/alias/mac_alias.zsh ] && source ${DOTFILES}/zsh/alias/mac_alias.zsh
-  fi
-fi
-
-[ -f ${DOTFILES}/zsh/npm-completion.zsh ] && source ${DOTFILES}/zsh/npm-completion.zsh
-
-# The next line updates PATH for the Google Cloud SDK.
-[ -f '/usr/local/bin/google-cloud-sdk/path.zsh.inc' ] && source '/usr/local/bin/google-cloud-sdk/path.zsh.inc'
-# The next line enables shell command completion for gcloud.
-[ -f '/usr/local/bin/google-cloud-sdk/completion.zsh.inc' ] && source '/usr/local/bin/google-cloud-sdk/completion.zsh.inc'
-
-if (which zprof > /dev/null 2>&1) ;then
-  zprof
-fi
-export PATH="$HOME/.embulk/bin:$PATH"
-
-alias ghc='stack ghc --'
-alias ghci='stack ghci --'
-alias runhaskell='stack runhaskell --'
-
-# pyenv
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-
-# neo vim
-export XDG_CONFIG_HOME=$HOME/.config
-
-export PATH="$HOME/.cargo/bin:$PATH"
-
-
-export NVM_DIR="$HOME/.config/nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-
-
+# =============================================================================
+# Aliases (basic, non-tool-specific)
+# =============================================================================
 alias vi="nvim"
 alias vim="nvim"
 alias view="nvim -R"
 
-# =============================================================================
 # Zellij
-# =============================================================================
 if command -v zellij &>/dev/null; then
   alias zj="zellij"
   alias zja="zellij attach"
   alias zjl="zellij list-sessions"
   alias zjk="zellij kill-session"
   alias zjka="zellij kill-all-sessions"
-
-  # Auto-attach or create session
-  function zs() {
-    local session_name="${1:-main}"
-    zellij attach "$session_name" 2>/dev/null || zellij -s "$session_name"
-  }
+  zs() { zellij attach "${1:-main}" 2>/dev/null || zellij -s "${1:-main}" }
 fi
 
-# google-cloud-sdk
-export PATH="$(ls -d /opt/homebrew/Caskroom/gcloud-cli/*/google-cloud-sdk/bin | head -1):$PATH"
+# Haskell (via stack)
+alias ghc='stack ghc --'
+alias ghci='stack ghci --'
+alias runhaskell='stack runhaskell --'
 
-
-# Added by Antigravity
-export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
+# =============================================================================
+# Local overrides (optional)
+# =============================================================================
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
