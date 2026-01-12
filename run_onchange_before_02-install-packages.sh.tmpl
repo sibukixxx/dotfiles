@@ -40,7 +40,7 @@ echo "    Homebrew: OK"
 BREWFILE="{{ .chezmoi.sourceDir }}/Brewfile"
 if [[ -f "$BREWFILE" ]]; then
     echo "    Installing packages from Brewfile..."
-    brew bundle --file="$BREWFILE" --no-lock
+    brew bundle --file="$BREWFILE"
 fi
 
 {{ else if or (eq .chezmoi.os "linux") (env "WSL_DISTRO_NAME") -}}
