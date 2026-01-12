@@ -4,7 +4,7 @@
 
 ## 目次
 
-1. [クイックセットアップ（ワンライナー）](#クイックセットアップワンライナー)
+1. [ブートストラップ（初回セットアップ）](#ブートストラップ初回セットアップ)
 2. [前提条件](#前提条件)
 3. [詳細セットアップ](#詳細セットアップ)
 4. [ターミナルエミュレータ](#ターミナルエミュレータ)
@@ -16,23 +16,131 @@
 
 ---
 
-## クイックセットアップ（ワンライナー）
+## ブートストラップ（初回セットアップ）
 
-最も簡単なセットアップ方法です。chezmoi が自動ですべてを行います。
+SSH鍵は age で暗号化されてdotfilesに含まれています。新しいPCでは以下の手順でセットアップします。
 
-### macOS
+### 概要図
 
-```bash
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply YOUR_GITHUB_USERNAME
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 旧PC                                                            │
+│                                                                 │
+│  ~/.config/chezmoi/key.txt  ──────┐                            │
+│                                    │ AirDrop / USB / SCP        │
+└────────────────────────────────────│────────────────────────────┘
+                                     ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 新PC                                                            │
+│                                                                 │
+│  1. chezmoi init (HTTPS)  ─► dotfilesをクローン                │
+│                                                                 │
+│  2. key.txt を配置        ─► ~/.config/chezmoi/key.txt         │
+│                                                                 │
+│  3. chezmoi apply         ─► SSH鍵・設定ファイルが復元         │
+│                                                                 │
+│  4. git remote set-url    ─► 以降はSSHで操作                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Linux / WSL
+### Step 1: 旧PCから age 鍵を転送
+
+新PCでSSH鍵を復号するために、`key.txt` を安全に転送します。
+
+| 方法 | コマンド/手順 |
+|------|---------------|
+| **AirDrop** | Finderで `~/.config/chezmoi/key.txt` を送信 |
+| **USB** | USBメモリにコピーして転送 |
+| **一時SCP** | `scp old-pc:~/.config/chezmoi/key.txt /tmp/` |
+
+**重要**: `key.txt` は秘密鍵です。転送後、一時ファイルは削除してください。
+
+### Step 2: 新PCで chezmoi をインストール
 
 ```bash
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply YOUR_GITHUB_USERNAME
+# macOS
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install chezmoi age
+
+# Linux / WSL
+sh -c "$(curl -fsLS get.chezmoi.io)"
+sudo apt install age  # または nix で
 ```
 
-これで基本的なセットアップは完了です。
+### Step 3: dotfiles をクローン（HTTPS経由）
+
+SSH鍵がまだないので、**HTTPS** でクローンします。
+
+```bash
+# HTTPS でクローン（SSH鍵不要）
+chezmoi init https://github.com/sibukixxx/dotfiles.git
+```
+
+### Step 4: age 鍵を配置
+
+```bash
+# ディレクトリ作成
+mkdir -p ~/.config/chezmoi
+
+# 転送した key.txt を配置
+mv /path/to/key.txt ~/.config/chezmoi/key.txt
+
+# パーミッション設定
+chmod 600 ~/.config/chezmoi/key.txt
+```
+
+### Step 5: dotfiles を適用
+
+```bash
+# 適用（SSH鍵が自動的に復号・復元される）
+chezmoi apply
+```
+
+これで以下が復元されます：
+- `~/.ssh/id_rsa` - SSH秘密鍵
+- `~/.ssh/id_rsa.pub` - SSH公開鍵
+- `~/.ssh/config` - SSH設定
+- その他すべての設定ファイル
+
+### Step 6: リモートをSSHに切り替え
+
+```bash
+# SSH鍵が使えるようになったので、SSHに切り替え
+chezmoi cd
+git remote set-url origin git@github.com:sibukixxx/dotfiles.git
+
+# 確認
+git remote -v
+```
+
+### Step 7: シェルを再起動
+
+```bash
+source ~/.zshrc
+# または、ターミナルを再起動
+```
+
+### クイックコマンド（まとめ）
+
+```bash
+# 1. chezmoi + age インストール
+brew install chezmoi age
+
+# 2. HTTPS でクローン
+chezmoi init https://github.com/sibukixxx/dotfiles.git
+
+# 3. age鍵を配置（事前に転送しておく）
+mkdir -p ~/.config/chezmoi
+mv ~/Downloads/key.txt ~/.config/chezmoi/key.txt
+chmod 600 ~/.config/chezmoi/key.txt
+
+# 4. 適用
+chezmoi apply
+
+# 5. SSHに切り替え
+chezmoi cd && git remote set-url origin git@github.com:sibukixxx/dotfiles.git
+```
 
 ---
 
