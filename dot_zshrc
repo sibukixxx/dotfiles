@@ -141,19 +141,7 @@ gcloud_project_prompt() {
 
 PS1='[@${HOST%%.*} %1~] $(gcloud_project_prompt)%(!.#.$) '
 
-# VCS info for RPROMPT
-autoload -Uz vcs_info
-zstyle ':vcs_info:*' enable git svn hg
-zstyle ':vcs_info:git:*' formats '(%s)-[%b]'
-zstyle ':vcs_info:git:*' actionformats '(%s)-[%b|%a]'
-zstyle ':vcs_info:*' formats '(%s)-[%b]'
-zstyle ':vcs_info:*' actionformats '(%s)-[%b|%a]'
-precmd() {
-  psvar=()
-  LANG=en_US.UTF-8 vcs_info
-  [[ -n "$vcs_info_msg_0_" ]] && psvar[1]="$vcs_info_msg_0_"
-}
-RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
+# VCS info is configured after sheldon to avoid conflicts with zoxide etc.
 
 # =============================================================================
 # Auto-install missing CLI tools (macOS only)
@@ -192,6 +180,26 @@ else
     [[ -f ${XDG_CONFIG_HOME}/zsh/alias/mac_alias.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/alias/mac_alias.zsh
   fi
 fi
+
+# =============================================================================
+# VCS info for RPROMPT (after sheldon to avoid conflicts with zoxide)
+# =============================================================================
+autoload -Uz vcs_info
+zstyle ':vcs_info:*' enable git svn hg
+zstyle ':vcs_info:git:*' formats '(%s)-[%b]'
+zstyle ':vcs_info:git:*' actionformats '(%s)-[%b|%a]'
+zstyle ':vcs_info:*' formats '(%s)-[%b]'
+zstyle ':vcs_info:*' actionformats '(%s)-[%b|%a]'
+
+_vcs_info_precmd() {
+  psvar=()
+  LANG=en_US.UTF-8 vcs_info
+  [[ -n "$vcs_info_msg_0_" ]] && psvar[1]="$vcs_info_msg_0_"
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _vcs_info_precmd
+
+RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
 
 # =============================================================================
 # Google Cloud SDK

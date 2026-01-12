@@ -1,7 +1,3 @@
-# Taps
-tap "homebrew/bundle"
-tap "homebrew/cask-fonts"
-
 # Mac App Store CLI (for Xcode, etc.)
 brew "mas"
 
