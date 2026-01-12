@@ -20,6 +20,15 @@
 
 SSH鍵は age で暗号化されてdotfilesに含まれています。新しいPCでは以下の手順でセットアップします。
 
+### 前提（新規macOSの状態）
+
+新規macOSには以下の状態です：
+- ✅ `curl` - 標準でインストール済み
+- ❌ `git` - Xcode Command Line Tools が必要
+- ❌ `brew` - 手動インストールが必要
+
+**Homebrewインストーラーが Xcode CLT を自動インストールします**ので、特別な準備は不要です。
+
 ### 概要図
 
 ```
@@ -31,15 +40,19 @@ SSH鍵は age で暗号化されてdotfilesに含まれています。新しいP
 └────────────────────────────────────│────────────────────────────┘
                                      ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 新PC                                                            │
+│ 新PC（素のmacOS: curl のみ利用可能）                            │
 │                                                                 │
-│  1. chezmoi init (HTTPS)  ─► dotfilesをクローン                │
+│  1. Homebrew インストール ─► Xcode CLT も自動インストール       │
 │                                                                 │
-│  2. key.txt を配置        ─► ~/.config/chezmoi/key.txt         │
+│  2. brew install         ─► chezmoi, age をインストール        │
 │                                                                 │
-│  3. chezmoi apply         ─► SSH鍵・設定ファイルが復元         │
+│  3. chezmoi init (HTTPS) ─► dotfilesをクローン                 │
 │                                                                 │
-│  4. git remote set-url    ─► 以降はSSHで操作                   │
+│  4. key.txt を配置       ─► ~/.config/chezmoi/key.txt          │
+│                                                                 │
+│  5. chezmoi apply        ─► SSH鍵・設定・アプリが復元          │
+│                                                                 │
+│  6. git remote set-url   ─► 以降はSSHで操作                    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -56,15 +69,34 @@ SSH鍵は age で暗号化されてdotfilesに含まれています。新しいP
 
 **重要**: `key.txt` は秘密鍵です。転送後、一時ファイルは削除してください。
 
-### Step 2: 新PCで chezmoi をインストール
+### Step 2: 新PCで Homebrew と chezmoi をインストール
+
+**macOS（ターミナル.app を開いて実行）**
 
 ```bash
-# macOS
+# Step 2a: Homebrew をインストール（Xcode CLT も自動インストールされる）
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install chezmoi age
 
-# Linux / WSL
+# ⚠️ インストール後、表示される "Next steps" の指示に従って PATH を設定
+# Apple Silicon の場合:
+eval "$(/opt/homebrew/bin/brew shellenv)"
+# Intel Mac の場合:
+eval "$(/usr/local/bin/brew shellenv)"
+
+# Step 2b: chezmoi と age をインストール
+brew install chezmoi age
+```
+
+**Linux / WSL**
+
+```bash
+# curl と git を先にインストール
+sudo apt update && sudo apt install -y curl git
+
+# chezmoi をインストール
 sh -c "$(curl -fsLS get.chezmoi.io)"
+
+# age をインストール
 sudo apt install age  # または nix で
 ```
 
@@ -123,22 +155,32 @@ source ~/.zshrc
 
 ### クイックコマンド（まとめ）
 
+新規macOSで実行するコマンド一覧：
+
 ```bash
-# 1. chezmoi + age インストール
+# 0. ターミナル.app を開く（Finder → アプリケーション → ユーティリティ → ターミナル）
+
+# 1. Homebrew インストール（Xcode CLT も自動インストール）
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 2. PATH設定（Apple Silicon）
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# 3. chezmoi + age インストール
 brew install chezmoi age
 
-# 2. HTTPS でクローン
+# 4. HTTPS でクローン
 chezmoi init https://github.com/sibukixxx/dotfiles.git
 
-# 3. age鍵を配置（事前に転送しておく）
+# 5. age鍵を配置（事前に転送しておく）
 mkdir -p ~/.config/chezmoi
 mv ~/Downloads/key.txt ~/.config/chezmoi/key.txt
 chmod 600 ~/.config/chezmoi/key.txt
 
-# 4. 適用
+# 6. 適用
 chezmoi apply
 
-# 5. SSHに切り替え
+# 7. SSHに切り替え
 chezmoi cd && git remote set-url origin git@github.com:sibukixxx/dotfiles.git
 ```
 
@@ -148,17 +190,20 @@ chezmoi cd && git remote set-url origin git@github.com:sibukixxx/dotfiles.git
 
 ### macOS
 
-chezmoi の run_once スクリプトが自動で処理しますが、事前に確認したい場合：
+> **Note**: 以下は Homebrew インストーラーと chezmoi の run_once スクリプトが**自動で処理**します。
+> 手動での事前インストールは不要ですが、参考として記載します。
 
-1. **Xcode Command Line Tools**
+1. **Xcode Command Line Tools**（Homebrewインストール時に自動インストール）
 
    ```bash
+   # 手動でインストールする場合
    xcode-select --install
    ```
 
-2. **Rosetta 2**（Apple Silicon Macのみ）
+2. **Rosetta 2**（Apple Silicon Macのみ、chezmoi apply時に自動インストール）
 
    ```bash
+   # 手動でインストールする場合
    softwareupdate --install-rosetta --agree-to-license
    ```
 
