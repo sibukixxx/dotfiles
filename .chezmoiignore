@@ -28,8 +28,8 @@ nix/
 *~
 .DS_Store
 
-# Private files (managed separately)
-.ssh/id_*
+# Private files
+# Note: SSH keys are encrypted with age and managed by chezmoi
 .gnupg/
 
 # Cache and generated files

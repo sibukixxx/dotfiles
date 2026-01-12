@@ -11,6 +11,7 @@ macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://
 - **ターミナルマルチプレクサ**: Zellij（tmux代替）
 - **パッケージマネージャ**: macOS は Homebrew、Linux/WSL は Nix + Home Manager
 - **リポジトリ一括クローン**: 初期セットアップ時に全GitHubリポジトリを自動クローン
+- **SSH鍵の暗号化**: age暗号化でSSH鍵を安全に管理・復元
 
 ## 主なツール
 
@@ -350,6 +351,32 @@ gcd
 # Ctrl+G でも選択可能
 # 選択後、自動的にそのディレクトリに移動
 ```
+
+## SSH鍵の管理
+
+SSH鍵は age で暗号化されてリポジトリに含まれています。
+
+### 新しいPCでの復元
+
+```bash
+# 1. age鍵を転送（AirDrop, USB, SCP など）
+mkdir -p ~/.config/chezmoi
+# key.txt を ~/.config/chezmoi/ にコピー
+
+# 2. chezmoi apply で自動復元
+chezmoi apply
+# → ~/.ssh/id_rsa, ~/.ssh/config が復元される
+```
+
+### 新しいSSH鍵を追加
+
+```bash
+# 暗号化して追加
+chezmoi add --encrypt ~/.ssh/id_ed25519
+chezmoi add --encrypt ~/.ssh/id_ed25519.pub
+```
+
+**重要**: `~/.config/chezmoi/key.txt` は復号に必要な秘密鍵です。安全に保管し、Gitにはコミットしないでください。
 
 ## 開発
 

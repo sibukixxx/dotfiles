@@ -6,6 +6,7 @@ tap "homebrew/cask-fonts"
 # Core CLI Tools
 # =============================================================================
 brew "chezmoi"           # dotfiles manager
+brew "age"               # encryption for secrets
 brew "zsh"
 brew "git"
 brew "neovim"

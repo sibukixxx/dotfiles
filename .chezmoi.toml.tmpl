@@ -22,6 +22,9 @@
 
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
+# Age encryption for secrets (SSH keys, etc.)
+encryption = "age"
+
 [data]
     email = {{ $email | quote }}
     name = {{ $name | quote }}
@@ -30,13 +33,12 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
     cloneRepos = {{ $cloneRepos }}
     osid = {{ $osid | quote }}
 
+[age]
+    identity = "~/.config/chezmoi/key.txt"
+    recipient = "age1ygp4prhvutkj4kgk88g8mc3c39jy2rkvl7pxqpda0qnfd5u06cws3l0mzy"
+
 [diff]
-    pager = "delta"
     exclude = ["scripts"]
 
 [edit]
     command = "nvim"
-
-[merge]
-    command = "nvim"
-    args = ["-d", "{{ "{{" }} .Destination {{ "}}" }}", "{{ "{{" }} .Source {{ "}}" }}", "{{ "{{" }} .Target {{ "}}" }}"]

@@ -174,7 +174,25 @@ fc-cache -fv
 
 ## SSH/GPGキーの設定
 
-### SSH キーの生成
+### 既存のSSH鍵を復元（推奨）
+
+SSH鍵は age で暗号化されてdotfilesに含まれています。復元するには：
+
+```bash
+# 1. age鍵を安全に転送（旧PCから）
+# 方法A: AirDrop/USB で ~/.config/chezmoi/key.txt をコピー
+# 方法B: 一時的にSCPで転送
+scp old-pc:~/.config/chezmoi/key.txt ~/.config/chezmoi/
+
+# 2. chezmoi apply で自動復元
+chezmoi apply
+
+# SSH鍵が ~/.ssh/ に復元されます
+```
+
+**重要**: `key.txt` は絶対にGitにコミットしないでください。これは復号に必要な秘密鍵です。
+
+### 新しいSSH鍵を生成する場合
 
 ```bash
 # Ed25519 キーの生成（推奨）
@@ -188,10 +206,10 @@ ssh-keygen -t ed25519 -C "your_email@example.com"
 eval "$(ssh-agent -s)"
 
 # キーを追加（macOS）
-ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+ssh-add --apple-use-keychain ~/.ssh/id_rsa
 
 # キーを追加（Linux）
-ssh-add ~/.ssh/id_ed25519
+ssh-add ~/.ssh/id_rsa
 ```
 
 ### GitHub への登録
@@ -199,12 +217,14 @@ ssh-add ~/.ssh/id_ed25519
 ```bash
 # GitHub CLI を使用する場合（推奨）
 gh auth login
-gh ssh-key add ~/.ssh/id_ed25519.pub -t "New PC $(date +%Y-%m-%d)"
+gh ssh-key add ~/.ssh/id_rsa.pub -t "New PC $(date +%Y-%m-%d)"
 ```
 
 ### SSH 設定ファイル
 
-`~/.ssh/config` を作成:
+SSH設定は chezmoi apply で自動的に `~/.ssh/config` に復元されます。
+
+手動で作成する場合:
 
 ```
 Host github.com
