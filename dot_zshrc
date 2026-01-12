@@ -183,13 +183,13 @@ if command -v sheldon &>/dev/null; then
   esac
 else
   # Fallback: Load local scripts if sheldon is not available
-  [[ -f ${DOTFILES}/zsh/tools.zsh ]] && source ${DOTFILES}/zsh/tools.zsh
-  [[ -f ${DOTFILES}/zsh/peco.zsh ]] && source ${DOTFILES}/zsh/peco.zsh
-  [[ -f ${DOTFILES}/zsh/fzf-worktree.zsh ]] && source ${DOTFILES}/zsh/fzf-worktree.zsh
-  [[ -f ${DOTFILES}/zsh/alias/common_alias.zsh ]] && source ${DOTFILES}/zsh/alias/common_alias.zsh
+  [[ -f ${XDG_CONFIG_HOME}/zsh/tools.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/tools.zsh
+  [[ -f ${XDG_CONFIG_HOME}/zsh/peco.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/peco.zsh
+  [[ -f ${XDG_CONFIG_HOME}/zsh/fzf-worktree.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/fzf-worktree.zsh
+  [[ -f ${XDG_CONFIG_HOME}/zsh/alias/common_alias.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/alias/common_alias.zsh
   if [[ "$(uname)" == "Darwin" ]]; then
-    [[ -f ${DOTFILES}/zsh/mac.zsh ]] && source ${DOTFILES}/zsh/mac.zsh
-    [[ -f ${DOTFILES}/zsh/alias/mac_alias.zsh ]] && source ${DOTFILES}/zsh/alias/mac_alias.zsh
+    [[ -f ${XDG_CONFIG_HOME}/zsh/mac.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/mac.zsh
+    [[ -f ${XDG_CONFIG_HOME}/zsh/alias/mac_alias.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/alias/mac_alias.zsh
   fi
 fi
 

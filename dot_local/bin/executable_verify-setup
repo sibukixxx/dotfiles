@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+
+# verify-setup - Verify dotfiles setup is complete
+# Usage: verify-setup
+
+set -e
+
+echo "==> Verifying dotfiles setup..."
+echo ""
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+check_passed=0
+check_failed=0
+check_warning=0
+
+check_cmd() {
+  local cmd=$1
+  local desc=$2
+  if command -v "$cmd" &>/dev/null; then
+    echo -e "${GREEN}✓${NC} $cmd - $desc"
+    ((check_passed++))
+    return 0
+  else
+    echo -e "${RED}✗${NC} $cmd - $desc (NOT FOUND)"
+    ((check_failed++))
+    return 1
+  fi
+}
+
+check_file() {
+  local file=$1
+  local desc=$2
+  if [[ -e "$file" ]]; then
+    echo -e "${GREEN}✓${NC} $file - $desc"
+    ((check_passed++))
+    return 0
+  else
+    echo -e "${RED}✗${NC} $file - $desc (NOT FOUND)"
+    ((check_failed++))
+    return 1
+  fi
+}
+
+check_symlink() {
+  local link=$1
+  local desc=$2
+  if [[ -L "$link" ]]; then
+    echo -e "${GREEN}✓${NC} $link - $desc"
+    ((check_passed++))
+    return 0
+  else
+    echo -e "${YELLOW}!${NC} $link - $desc (not a symlink)"
+    ((check_warning++))
+    return 1
+  fi
+}
+
+echo "== Basic Tools =="
+check_cmd "zsh" "Shell"
+check_cmd "git" "Version control"
+check_cmd "nvim" "Editor"
+echo ""
+
+echo "== Modern CLI Tools (Rust) =="
+check_cmd "eza" "Modern ls replacement"
+check_cmd "bat" "Cat with syntax highlighting"
+check_cmd "rg" "Ripgrep (fast grep)"
+check_cmd "fd" "Fast find"
+check_cmd "zoxide" "Smart cd"
+echo ""
+
+echo "== Shell Environment =="
+check_cmd "sheldon" "Plugin manager"
+check_cmd "fzf" "Fuzzy finder"
+check_cmd "ghq" "Repository manager"
+echo ""
+
+echo "== Terminal Multiplexer =="
+check_cmd "zellij" "Terminal multiplexer"
+echo ""
+
+echo "== Development Tools =="
+check_cmd "cargo" "Rust package manager"
+check_cmd "gh" "GitHub CLI"
+echo ""
+
+echo "== Symlinks =="
+check_symlink "$HOME/.zshrc" "zsh config"
+check_symlink "$HOME/.config/nvim" "Neovim config"
+check_symlink "$HOME/.config/sheldon" "Sheldon config"
+check_symlink "$HOME/.config/zellij" "Zellij config"
+check_symlink "$HOME/.config/git" "Git config"
+echo ""
+
+echo "== Fonts =="
+if fc-list 2>/dev/null | grep -qi "hackgen"; then
+  echo -e "${GREEN}✓${NC} HackGen Nerd Font installed"
+  ((check_passed++))
+else
+  echo -e "${YELLOW}!${NC} HackGen Nerd Font not found"
+  echo "    Install: brew install --cask font-hackgen-nerd"
+  ((check_warning++))
+fi
+echo ""
+
+echo "== Git Configuration =="
+if git config user.name &>/dev/null; then
+  echo -e "${GREEN}✓${NC} git user.name: $(git config user.name)"
+  ((check_passed++))
+else
+  echo -e "${YELLOW}!${NC} git user.name not set"
+  ((check_warning++))
+fi
+
+if git config user.email &>/dev/null; then
+  echo -e "${GREEN}✓${NC} git user.email: $(git config user.email)"
+  ((check_passed++))
+else
+  echo -e "${YELLOW}!${NC} git user.email not set"
+  ((check_warning++))
+fi
+echo ""
+
+echo "== SSH Configuration =="
+if [[ -f "$HOME/.ssh/id_ed25519" ]] || [[ -f "$HOME/.ssh/id_rsa" ]]; then
+  echo -e "${GREEN}✓${NC} SSH key exists"
+  ((check_passed++))
+else
+  echo -e "${YELLOW}!${NC} No SSH key found"
+  echo "    Generate: ssh-keygen -t ed25519 -C \"your_email@example.com\""
+  ((check_warning++))
+fi
+
+# Check GitHub SSH connection
+if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+  echo -e "${GREEN}✓${NC} GitHub SSH connection works"
+  ((check_passed++))
+else
+  echo -e "${YELLOW}!${NC} GitHub SSH connection not verified"
+  echo "    Test: ssh -T git@github.com"
+  ((check_warning++))
+fi
+echo ""
+
+echo "== Summary =="
+echo -e "${GREEN}Passed:${NC}  $check_passed"
+echo -e "${RED}Failed:${NC}  $check_failed"
+echo -e "${YELLOW}Warning:${NC} $check_warning"
+echo ""
+
+if [[ $check_failed -gt 0 ]]; then
+  echo "Some checks failed. Run './init.sh' to fix missing tools."
+  exit 1
+elif [[ $check_warning -gt 0 ]]; then
+  echo "Setup is mostly complete, but some optional items are missing."
+  exit 0
+else
+  echo "All checks passed! Your dotfiles setup is complete."
+  exit 0
+fi

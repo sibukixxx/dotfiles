@@ -24,6 +24,62 @@ OS_TYPE=$(detect_os)
 echo "    Detected OS: $OS_TYPE"
 
 # =============================================================================
+# Check prerequisites
+# =============================================================================
+check_prerequisites() {
+  echo "==> Checking prerequisites..."
+  local missing=()
+
+  case "$OS_TYPE" in
+    macos)
+      # Check Xcode Command Line Tools
+      if ! xcode-select -p &>/dev/null; then
+        echo "    Xcode Command Line Tools: NOT FOUND"
+        echo ""
+        echo "    Please install Xcode Command Line Tools first:"
+        echo "      xcode-select --install"
+        echo ""
+        exit 1
+      else
+        echo "    Xcode Command Line Tools: OK"
+      fi
+
+      # Check Rosetta 2 on Apple Silicon
+      if [[ "$(uname -m)" == "arm64" ]]; then
+        if ! /usr/bin/pgrep -q oahd; then
+          echo "    Rosetta 2: NOT FOUND (optional, but recommended)"
+          echo "    Install with: softwareupdate --install-rosetta --agree-to-license"
+        else
+          echo "    Rosetta 2: OK"
+        fi
+      fi
+      ;;
+
+    wsl|linux)
+      # Check basic commands
+      for cmd in curl git sudo; do
+        if ! command -v "$cmd" &>/dev/null; then
+          missing+=("$cmd")
+        fi
+      done
+
+      if [[ ${#missing[@]} -gt 0 ]]; then
+        echo "    Missing required commands: ${missing[*]}"
+        echo ""
+        echo "    Please install them first:"
+        echo "      sudo apt update && sudo apt install -y ${missing[*]}"
+        echo ""
+        exit 1
+      else
+        echo "    Basic commands: OK"
+      fi
+      ;;
+  esac
+
+  echo "    Prerequisites check passed"
+}
+
+# =============================================================================
 # Nix (for WSL/Linux)
 # =============================================================================
 install_nix() {
@@ -204,46 +260,29 @@ install_rust_tools() {
 }
 
 # =============================================================================
-# Create symbolic links
+# OpenCode (AI coding assistant)
+# =============================================================================
+install_opencode() {
+  if command -v opencode &>/dev/null; then
+    echo "==> OpenCode already installed"
+    return 0
+  fi
+
+  echo "==> Installing OpenCode..."
+  curl -fsSL https://opencode.ai/install | bash
+  echo "    OpenCode installation complete"
+}
+
+# =============================================================================
+# Create symbolic links (delegates to dotfilesLink.sh)
 # =============================================================================
 create_symlinks() {
-  echo "==> Creating symbolic links..."
-
-  # Basic dotfiles
-  ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
-  ln -sf "$DOTFILES_DIR/.vimrc" "$HOME/.vimrc"
-
-  # .config directory (alacritty, zellij, sheldon, nvim, etc.)
-  if [[ -d "$DOTFILES_DIR/.config" ]]; then
-    mkdir -p "$HOME/.config"
-    for config in "$DOTFILES_DIR/.config"/*; do
-      if [[ -e "$config" ]]; then
-        config_name=$(basename "$config")
-        # For git, link individual files (XDG Base Directory)
-        if [[ "$config_name" == "git" ]]; then
-          mkdir -p "$HOME/.config/git"
-          for git_file in "$config"/*; do
-            if [[ -f "$git_file" ]]; then
-              git_file_name=$(basename "$git_file")
-              ln -sf "$git_file" "$HOME/.config/git/$git_file_name"
-              echo "    Linked .config/git/$git_file_name"
-            fi
-          done
-        else
-          ln -sf "$config" "$HOME/.config/$config_name"
-          echo "    Linked .config/$config_name"
-        fi
-      fi
-    done
+  if [[ -x "$DOTFILES_DIR/dotfilesLink.sh" ]]; then
+    "$DOTFILES_DIR/dotfilesLink.sh" "$DOTFILES_DIR"
+  else
+    echo "Error: dotfilesLink.sh not found or not executable" >&2
+    return 1
   fi
-
-  # Remove legacy ~/.gitconfig symlink if exists
-  if [[ -L "$HOME/.gitconfig" ]]; then
-    rm "$HOME/.gitconfig"
-    echo "    Removed legacy ~/.gitconfig symlink"
-  fi
-
-  echo "    Symbolic links created"
 }
 
 # =============================================================================
@@ -376,6 +415,7 @@ verify_tools() {
     "bat"
     "rg"
     "fd"
+    "opencode"
   )
   local missing=()
 
@@ -439,6 +479,9 @@ print_instructions() {
 # Main
 # =============================================================================
 main() {
+  # Check prerequisites first
+  check_prerequisites
+
   case "$OS_TYPE" in
     macos)
       install_homebrew
@@ -466,6 +509,7 @@ main() {
   setup_zsh
   setup_sheldon
   setup_fzf
+  install_opencode
   install_fonts
   verify_tools
   print_instructions

@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Chezmoi run_once script: Install packages
+# This script runs ONCE before applying dotfiles
+
+set -e
+
+echo "==> Installing packages..."
+
+{{ if eq .chezmoi.os "darwin" -}}
+# =============================================================================
+# macOS: Homebrew
+# =============================================================================
+if ! command -v brew &>/dev/null; then
+    echo "    Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Add Homebrew to PATH for current session
+    {{ if eq .chezmoi.arch "arm64" -}}
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    {{ else -}}
+    eval "$(/usr/local/bin/brew shellenv)"
+    {{ end -}}
+fi
+echo "    Homebrew: OK"
+
+# Install packages from Brewfile
+BREWFILE="{{ .chezmoi.sourceDir }}/Brewfile"
+if [[ -f "$BREWFILE" ]]; then
+    echo "    Installing packages from Brewfile..."
+    brew bundle --file="$BREWFILE" || true
+fi
+
+{{ else if or (eq .chezmoi.os "linux") (env "WSL_DISTRO_NAME") -}}
+# =============================================================================
+# Linux/WSL: Nix + Home Manager
+# =============================================================================
+
+# Install basic apt packages
+echo "    Installing basic apt packages..."
+sudo apt-get update
+sudo apt-get install -y build-essential curl git zsh peco
+
+# Install Nix
+if ! command -v nix &>/dev/null; then
+    echo "    Installing Nix..."
+    sh <(curl -L https://nixos.org/nix/install) --daemon
+
+    # Source nix for current session
+    if [[ -f /etc/profile.d/nix.sh ]]; then
+        . /etc/profile.d/nix.sh
+    elif [[ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
+        . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+    fi
+fi
+echo "    Nix: OK"
+
+# Install Home Manager
+if command -v nix &>/dev/null && ! command -v home-manager &>/dev/null; then
+    echo "    Installing Home Manager..."
+    nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager
+    nix-channel --update
+    nix-shell '<home-manager>' -A install
+fi
+
+# Setup Home Manager
+if command -v home-manager &>/dev/null; then
+    echo "    Setting up Home Manager..."
+    mkdir -p "$HOME/.config/home-manager"
+    ln -sf "{{ .chezmoi.sourceDir }}/nix/home.nix" "$HOME/.config/home-manager/home.nix"
+    home-manager switch || true
+fi
+{{ end -}}
+
+echo "    Package installation complete"

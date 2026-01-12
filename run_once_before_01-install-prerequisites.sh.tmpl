@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Chezmoi run_once script: Install prerequisites
+# This script runs ONCE before applying dotfiles
+
+set -e
+
+echo "==> Checking prerequisites..."
+
+{{ if eq .chezmoi.os "darwin" -}}
+# macOS: Check Xcode Command Line Tools
+if ! xcode-select -p &>/dev/null; then
+    echo "    Installing Xcode Command Line Tools..."
+    xcode-select --install
+    echo "    Please wait for installation to complete, then run 'chezmoi apply' again."
+    exit 1
+fi
+echo "    Xcode Command Line Tools: OK"
+
+# Check Rosetta 2 on Apple Silicon
+{{ if eq .chezmoi.arch "arm64" -}}
+if ! /usr/bin/pgrep -q oahd 2>/dev/null; then
+    echo "    Installing Rosetta 2..."
+    softwareupdate --install-rosetta --agree-to-license
+fi
+echo "    Rosetta 2: OK"
+{{ end -}}
+
+{{ else if or (eq .chezmoi.os "linux") (env "WSL_DISTRO_NAME") -}}
+# Linux/WSL: Check basic commands
+missing=()
+for cmd in curl git sudo; do
+    if ! command -v "$cmd" &>/dev/null; then
+        missing+=("$cmd")
+    fi
+done
+
+if [[ ${#missing[@]} -gt 0 ]]; then
+    echo "    Installing missing prerequisites: ${missing[*]}"
+    sudo apt-get update
+    sudo apt-get install -y "${missing[@]}"
+fi
+echo "    Basic commands: OK"
+{{ end -}}
+
+echo "    Prerequisites check passed"

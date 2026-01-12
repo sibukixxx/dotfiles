@@ -58,7 +58,7 @@
 	helper = store
 
 [ghq]
-	root = ~/repos
+	root = ~/workspace
 
 [filter "lfs"]
 	clean = git-lfs clean -- %f

@@ -4,7 +4,14 @@
       "Bash(chmod:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git mv:*)",
+      "Bash(for f in *)",
+      "Bash(do git mv \"$f\" \"executable_$f\")",
+      "Bash(done)",
+      "Bash(git -C /Users/sibukixxx/dotfiles mv dot_local/bin/git-localinfo dot_local/bin/executable_git-localinfo)",
+      "Bash(git -C /Users/sibukixxx/dotfiles mv dot_local/bin/toggle_opacity dot_local/bin/executable_toggle_opacity)",
+      "Bash(git -C /Users/sibukixxx/dotfiles mv:*)"
     ]
   }
 }

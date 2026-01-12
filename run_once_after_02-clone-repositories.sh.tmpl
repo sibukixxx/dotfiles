@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# Chezmoi run_once script: Clone all GitHub repositories
+# This script runs ONCE after applying dotfiles
+
+{{ if not .cloneRepos -}}
+# Repository cloning is disabled
+exit 0
+{{ end -}}
+
+{{ if eq .githubUser "" -}}
+echo "GitHub username not configured. Skipping repository cloning."
+exit 0
+{{ end -}}
+
+set -e
+
+GITHUB_USER="{{ .githubUser }}"
+WORKSPACE_DIR="$HOME/workspace"
+
+echo "==> Cloning GitHub repositories for $GITHUB_USER..."
+
+# =============================================================================
+# Check prerequisites
+# =============================================================================
+if ! command -v gh &>/dev/null; then
+    echo "    gh (GitHub CLI) not found. Please install it first."
+    echo "    macOS: brew install gh"
+    echo "    Linux: see https://cli.github.com/"
+    exit 1
+fi
+
+if ! command -v ghq &>/dev/null; then
+    echo "    ghq not found. Please install it first."
+    echo "    macOS: brew install ghq"
+    exit 1
+fi
+
+# =============================================================================
+# Authenticate with GitHub if needed
+# =============================================================================
+if ! gh auth status &>/dev/null; then
+    echo "    GitHub CLI not authenticated."
+    echo "    Running 'gh auth login'..."
+    gh auth login
+fi
+
+# =============================================================================
+# Create workspace directory
+# =============================================================================
+mkdir -p "$WORKSPACE_DIR"
+echo "    Workspace directory: $WORKSPACE_DIR"
+
+# =============================================================================
+# Get list of repositories
+# =============================================================================
+echo "    Fetching repository list..."
+
+# Get all repositories (public and private) for the user
+repos=$(gh repo list "$GITHUB_USER" --limit 500 --json nameWithOwner --jq '.[].nameWithOwner')
+
+if [[ -z "$repos" ]]; then
+    echo "    No repositories found for $GITHUB_USER"
+    exit 0
+fi
+
+repo_count=$(echo "$repos" | wc -l | tr -d ' ')
+echo "    Found $repo_count repositories"
+
+# =============================================================================
+# Clone repositories using ghq
+# =============================================================================
+echo "    Cloning repositories..."
+
+cloned=0
+skipped=0
+failed=0
+
+while IFS= read -r repo; do
+    repo_path="$WORKSPACE_DIR/github.com/$repo"
+
+    if [[ -d "$repo_path" ]]; then
+        echo "    [skip] $repo (already exists)"
+        ((skipped++))
+    else
+        echo "    [clone] $repo"
+        if ghq get "github.com/$repo" 2>/dev/null; then
+            ((cloned++))
+        else
+            echo "    [fail] $repo"
+            ((failed++))
+        fi
+    fi
+done <<< "$repos"
+
+# =============================================================================
+# Summary
+# =============================================================================
+echo ""
+echo "==> Repository cloning complete!"
+echo "    Cloned:  $cloned"
+echo "    Skipped: $skipped"
+echo "    Failed:  $failed"
+echo ""
+echo "    Repositories are in: $WORKSPACE_DIR/github.com/$GITHUB_USER/"
+echo ""
+echo "    Quick access:"
+echo "      cd \$(ghq root)/github.com/$GITHUB_USER"
+echo "      gcd  # fuzzy select repository"
+echo ""

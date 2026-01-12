@@ -1,0 +1,42 @@
+{{- /* Chezmoi configuration template */ -}}
+{{- $email := "" -}}
+{{- $name := "" -}}
+{{- $githubUser := "" -}}
+{{- $isWork := false -}}
+{{- $cloneRepos := false -}}
+
+{{- /* Detect OS */ -}}
+{{- $osid := .chezmoi.os -}}
+{{- if hasKey .chezmoi.osRelease "id" -}}
+{{-   $osid = printf "%s-%s" .chezmoi.os .chezmoi.osRelease.id -}}
+{{- end -}}
+
+{{- /* Interactive prompts for new machines */ -}}
+{{- if stdinIsATTY -}}
+{{-   $email = promptStringOnce . "email" "Git email address" -}}
+{{-   $name = promptStringOnce . "name" "Git user name" -}}
+{{-   $githubUser = promptStringOnce . "githubUser" "GitHub username" -}}
+{{-   $isWork = promptBoolOnce . "isWork" "Is this a work machine" -}}
+{{-   $cloneRepos = promptBoolOnce . "cloneRepos" "Clone all GitHub repositories to ~/workspace" -}}
+{{- end -}}
+
+sourceDir = {{ .chezmoi.sourceDir | quote }}
+
+[data]
+    email = {{ $email | quote }}
+    name = {{ $name | quote }}
+    githubUser = {{ $githubUser | quote }}
+    isWork = {{ $isWork }}
+    cloneRepos = {{ $cloneRepos }}
+    osid = {{ $osid | quote }}
+
+[diff]
+    pager = "delta"
+    exclude = ["scripts"]
+
+[edit]
+    command = "nvim"
+
+[merge]
+    command = "nvim"
+    args = ["-d", "{{ "{{" }} .Destination {{ "}}" }}", "{{ "{{" }} .Source {{ "}}" }}", "{{ "{{" }} .Target {{ "}}" }}"]

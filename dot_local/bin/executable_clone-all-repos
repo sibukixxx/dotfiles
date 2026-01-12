@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Clone all GitHub repositories for a user
+# Usage: clone-all-repos [username]
+
+set -e
+
+GITHUB_USER="${1:-}"
+
+if [[ -z "$GITHUB_USER" ]]; then
+    # Try to get from git config or chezmoi data
+    GITHUB_USER=$(git config --get user.name 2>/dev/null || echo "")
+    if [[ -z "$GITHUB_USER" ]]; then
+        echo "Usage: clone-all-repos <github-username>"
+        exit 1
+    fi
+    echo "Using GitHub user: $GITHUB_USER"
+fi
+
+# Check prerequisites
+if ! command -v gh &>/dev/null; then
+    echo "Error: gh (GitHub CLI) not found."
+    echo "Install: brew install gh"
+    exit 1
+fi
+
+if ! command -v ghq &>/dev/null; then
+    echo "Error: ghq not found."
+    echo "Install: brew install ghq"
+    exit 1
+fi
+
+# Authenticate if needed
+if ! gh auth status &>/dev/null; then
+    echo "GitHub CLI not authenticated. Running 'gh auth login'..."
+    gh auth login
+fi
+
+# Get ghq root
+GHQ_ROOT=$(ghq root)
+echo "Workspace: $GHQ_ROOT"
+
+# Get repositories
+echo "Fetching repository list for $GITHUB_USER..."
+repos=$(gh repo list "$GITHUB_USER" --limit 500 --json nameWithOwner --jq '.[].nameWithOwner')
+
+if [[ -z "$repos" ]]; then
+    echo "No repositories found for $GITHUB_USER"
+    exit 0
+fi
+
+repo_count=$(echo "$repos" | wc -l | tr -d ' ')
+echo "Found $repo_count repositories"
+echo ""
+
+# Clone
+cloned=0
+skipped=0
+failed=0
+
+while IFS= read -r repo; do
+    repo_path="$GHQ_ROOT/github.com/$repo"
+
+    if [[ -d "$repo_path" ]]; then
+        echo "[skip] $repo"
+        ((skipped++))
+    else
+        echo "[clone] $repo"
+        if ghq get "github.com/$repo" 2>/dev/null; then
+            ((cloned++))
+        else
+            echo "[fail] $repo"
+            ((failed++))
+        fi
+    fi
+done <<< "$repos"
+
+echo ""
+echo "Done! Cloned: $cloned, Skipped: $skipped, Failed: $failed"
+echo "Repositories in: $GHQ_ROOT/github.com/$GITHUB_USER/"

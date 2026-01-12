@@ -1,19 +1,22 @@
 # dotfiles
 
-macOS / Linux / WSL 対応の開発環境設定ファイル。
+macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://www.chezmoi.io/) で管理。
 
 ## 特徴
 
+- **chezmoi による管理**: テンプレート機能、マシン固有設定、安全なシークレット管理
 - **マルチプラットフォーム対応**: macOS, Linux, WSL をサポート
 - **モダンなCLIツール**: Rust製の高速ツール群（eza, bat, ripgrep, fd, zoxide）
 - **プラグイン管理**: Sheldon による高速なzshプラグイン管理
 - **ターミナルマルチプレクサ**: Zellij（tmux代替）
 - **パッケージマネージャ**: macOS は Homebrew、Linux/WSL は Nix + Home Manager
+- **リポジトリ一括クローン**: 初期セットアップ時に全GitHubリポジトリを自動クローン
 
 ## 主なツール
 
 | ツール | 説明 | 代替 |
 |--------|------|------|
+| **chezmoi** | dotfiles マネージャー | stow, yadm |
 | **Ghostty** | GPU対応の高速ターミナルエミュレータ（推奨） | - |
 | **Alacritty** | GPU対応のターミナルエミュレータ | - |
 | **Zellij** | モダンなターミナルマルチプレクサ | tmux |
@@ -29,62 +32,86 @@ macOS / Linux / WSL 対応の開発環境設定ファイル。
 
 ## クイックスタート
 
-```bash
-# リポジトリをクローン
-git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/dotfiles
-cd ~/dotfiles
+### 新規インストール（推奨）
 
-# セットアップを実行（自動でOS判定）
-./init.sh
+```bash
+# chezmoi で直接インストール（ワンライナー）
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply YOUR_GITHUB_USERNAME
+
+# または手動で
+brew install chezmoi  # macOS
+chezmoi init https://github.com/YOUR_USERNAME/dotfiles.git
+chezmoi apply
 ```
 
-セットアップスクリプトは以下を自動実行します：
+### 既存マシンの更新
 
-| OS | パッケージマネージャ | インストールされるもの |
-|----|----------------------|------------------------|
-| macOS | Homebrew | Brewfile のパッケージ |
-| Linux/WSL | Nix + Home Manager | home.nix で定義されたパッケージ |
-| 共通 | Cargo (Rust) | ripgrep, fd, bat, eza, zoxide, sheldon, zellij |
+```bash
+chezmoi update
+```
+
+**詳細なセットアップガイド**: [docs/new-pc-setup.md](docs/new-pc-setup.md)
+
+## chezmoi コマンド
+
+| コマンド | 説明 |
+|----------|------|
+| `chezmoi init <repo>` | リポジトリからdotfilesを初期化 |
+| `chezmoi apply` | 変更を適用 |
+| `chezmoi diff` | 適用前の差分を確認 |
+| `chezmoi edit <file>` | ファイルを編集 |
+| `chezmoi update` | リモートから更新を取得して適用 |
+| `chezmoi cd` | ソースディレクトリに移動 |
+| `chezmoi add <file>` | ファイルを管理対象に追加 |
+| `chezmoi managed` | 管理対象ファイル一覧 |
+| `chezmoi data` | テンプレートデータを表示 |
 
 ## ディレクトリ構成
 
 ```
 dotfiles/
-├── init.sh                    # 統合セットアップスクリプト
-├── dotfilesLink.sh            # シンボリックリンク作成スクリプト
+├── .chezmoi.toml.tmpl         # chezmoi設定テンプレート
+├── .chezmoiignore             # 無視ファイル
+├── run_once_before_*.sh.tmpl  # インストール前スクリプト
+├── run_once_after_*.sh.tmpl   # インストール後スクリプト
 ├── Brewfile                   # Homebrewパッケージ一覧（macOS）
-├── .zshrc                     # zsh設定（メイン）
-├── .vimrc                     # Vim設定
-├── .tmux.conf                 # tmux設定（レガシー）
-├── bin/
-│   ├── toggle_opacity         # Alacritty透過切り替え
-│   └── git-localinfo          # Git ローカル情報表示
-├── zsh/
-│   ├── tools.zsh              # zoxide/fzf/ghq 統合設定
-│   ├── peco.zsh               # peco関連（フォールバック）
-│   ├── fzf-worktree.zsh       # git worktree + fzf
-│   ├── mac.zsh                # macOS固有設定
-│   ├── linux.zsh              # Linux固有設定
-│   └── alias/
-│       ├── common_alias.zsh   # 共通エイリアス
-│       ├── mac_alias.zsh      # macOS用エイリアス
-│       └── linux_alias.zsh    # Linux用エイリアス
+├── dot_zshrc                  # ~/.zshrc
+├── dot_vimrc                  # ~/.vimrc
+├── dot_tmux.conf              # ~/.tmux.conf（レガシー）
+├── dot_local/
+│   └── bin/
+│       ├── executable_toggle_opacity   # Alacritty透過切り替え
+│       ├── executable_git-localinfo    # Git ローカル情報表示
+│       ├── executable_verify-setup     # セットアップ検証
+│       └── executable_clone-all-repos  # 全リポジトリ一括クローン
+├── dot_config/
+│   ├── zsh/
+│   │   ├── tools.zsh          # zoxide/fzf/ghq 統合設定
+│   │   ├── peco.zsh           # peco関連（フォールバック）
+│   │   ├── fzf-worktree.zsh   # git worktree + fzf
+│   │   ├── mac.zsh            # macOS固有設定
+│   │   ├── linux.zsh          # Linux固有設定
+│   │   └── alias/
+│   │       ├── common_alias.zsh
+│   │       ├── mac_alias.zsh
+│   │       └── linux_alias.zsh
+│   ├── ghostty/
+│   │   └── config             # Ghostty設定
+│   ├── alacritty/
+│   │   └── alacritty.toml     # Alacritty設定
+│   ├── zellij/
+│   │   └── config.kdl         # Zellij設定
+│   ├── sheldon/
+│   │   └── plugins.toml       # Sheldonプラグイン
+│   ├── nvim/                   # Neovim設定
+│   ├── git/
+│   │   └── config             # Git設定（XDG準拠）
+│   └── karabiner/              # Karabiner-Elements設定（macOS）
 ├── nix/
 │   └── home.nix               # Home Manager設定（Linux/WSL）
-└── .config/
-    ├── ghostty/
-    │   └── config             # Ghostty設定
-    ├── alacritty/
-    │   └── alacritty.toml     # Alacritty設定
-    ├── zellij/
-    │   └── config.kdl         # Zellij設定
-    ├── sheldon/
-    │   └── plugins.toml       # Sheldonプラグイン
-    ├── nvim/                   # Neovim設定
-    ├── git/
-    │   └── config             # Git設定（XDG準拠）
-    └── karabiner/
-        └── karabiner.json     # Karabiner-Elements設定
+└── docs/
+    ├── new-pc-setup.md        # 新規PCセットアップガイド
+    └── zellij.md              # Zellijガイド
 ```
 
 ## キーバインド
@@ -135,15 +162,6 @@ dotfiles/
 | `fcd` | fzfでディレクトリ選択してcd |
 | `fbr` | fzfでgitブランチ切り替え |
 | `flog` | fzfでgitログを閲覧 |
-
-### Alacritty
-
-| キー | 機能 |
-|------|------|
-| `Cmd+Enter` | フルスクリーン切り替え |
-| `Cmd+U` | 透過切り替え（Hammerspoon経由） |
-| `Cmd++/-/0` | フォントサイズ変更 |
-| `Ctrl+Shift+Space` | Viモード |
 
 ## エイリアス
 
@@ -222,44 +240,21 @@ cat ~/.config/sheldon/plugins.toml
 | **zsh-completions** | 追加の補完定義 |
 | **zsh-history-substring-search** | 履歴の部分文字列検索 |
 
-### プロファイル
-
-Sheldon は OS ごとに異なるプラグインを読み込みます：
-
-```bash
-# macOS
-sheldon --profile macos source
-
-# Linux
-sheldon --profile linux source
-```
-
 ## マルチプラットフォーム対応
 
 ### macOS
 
 ```bash
-# Homebrew でパッケージ管理
-brew bundle --file=~/dotfiles/Brewfile
-
-# Rust ツールは cargo でインストール
-cargo install ripgrep fd-find bat eza zoxide sheldon zellij
+# chezmoi がすべてを自動で行います
+chezmoi init --apply YOUR_GITHUB_USERNAME
 ```
 
 ### Linux / WSL
 
 ```bash
-# Nix + Home Manager でパッケージ管理
-# init.sh が自動で設定
-
-# 手動インストール
-sh <(curl -L https://nixos.org/nix/install) --daemon
-nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager
-nix-channel --update
-nix-shell '<home-manager>' -A install
-
-# 設定を適用
-home-manager switch
+# chezmoi がすべてを自動で行います
+# Nix + Home Manager も自動インストール
+chezmoi init --apply YOUR_GITHUB_USERNAME
 ```
 
 ## フォント
@@ -275,101 +270,110 @@ brew install --cask font-hackgen-nerd
 # https://github.com/yuru7/HackGen/releases
 ```
 
-## オプション設定
-
-### Hammerspoon（Alacritty透過切り替え）
-
-`Cmd+U` で Alacritty の透過を切り替え：
-
-```bash
-brew install --cask hammerspoon
-```
-
-`~/.hammerspoon/init.lua`:
-
-```lua
-hs.hotkey.bind({ "cmd" }, "U", function()
-  hs.execute("toggle_opacity", true)
-end)
-```
-
-### Karabiner-Elements
-
-キーボードカスタマイズ設定が `.config/karabiner/` にあります。
-
 ## トラブルシューティング
 
-### ツールが見つからない
+### chezmoi apply が失敗する
 
 ```bash
-# 不足しているツールを確認
-./init.sh
+# 差分を確認
+chezmoi diff
 
-# macOS: Homebrew で手動インストール
-brew install <tool_name>
+# 詳細ログで実行
+chezmoi apply -v
 
-# Linux/WSL: Home Manager を再適用
-home-manager switch
+# 強制適用（注意）
+chezmoi apply --force
 ```
 
-### sheldon が動かない
+### Sheldon が動かない
 
 ```bash
-# プラグインをロック
-sheldon lock
-
 # キャッシュをクリア
 rm -rf ~/.local/share/sheldon
+rm -rf ~/.cache/sheldon
+
+# 再ロック
 sheldon lock
 ```
 
-### フォントが表示されない
+### セットアップの検証
 
 ```bash
-# フォントキャッシュを更新
-fc-cache -fv
-
-# フォントを確認
-fc-list | grep -i hackgen
+verify-setup
 ```
 
-### zsh プロンプトに git ブランチが表示されない
+### シンボリックリンクの状態を確認
 
 ```bash
-# .zshrc に以下があることを確認
-autoload -Uz vcs_info
-zstyle ':vcs_info:*' enable git svn hg
+chezmoi managed
+chezmoi verify
 ```
 
-### シンボリックリンクの再作成
+## リポジトリ管理
 
-```bash
-./dotfilesLink.sh
+### 初期セットアップ時の一括クローン
+
+chezmoi の初期セットアップ時に、GitHub の全リポジトリを `~/workspace` に自動クローンできます。
+
+セットアップ時のプロンプト：
+```
+GitHub username? sibukixxx
+Clone all GitHub repositories to ~/workspace? (y/n) y
 ```
 
-## 手動インストール
+リポジトリは ghq 形式で管理されます：
+```
+~/workspace/
+└── github.com/
+    └── sibukixxx/
+        ├── dotfiles/
+        ├── project-a/
+        └── project-b/
+```
 
-init.sh を使わずに手動でセットアップする場合：
+### 手動でのクローン
 
 ```bash
-# 1. Homebrew をインストール（macOS）
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# 全リポジトリをクローン
+clone-all-repos sibukixxx
 
-# 2. パッケージをインストール
-brew bundle --file=~/dotfiles/Brewfile
+# または ghq で個別にクローン
+ghq get github.com/sibukixxx/repo-name
+```
 
-# 3. Rust ツールをインストール
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-cargo install ripgrep fd-find bat eza zoxide sheldon zellij
+### リポジトリへのアクセス
 
-# 4. シンボリックリンクを作成
-./dotfilesLink.sh
+```bash
+# fuzzy finder でリポジトリを選択
+gcd
 
-# 5. Sheldon プラグインをロック
-sheldon lock
+# Ctrl+G でも選択可能
+# 選択後、自動的にそのディレクトリに移動
+```
 
-# 6. シェルを再読み込み
-source ~/.zshrc
+## 開発
+
+### 新しいファイルを追加
+
+```bash
+# 既存ファイルをchezmoiに追加
+chezmoi add ~/.some-config
+
+# テンプレートとして追加
+chezmoi add --template ~/.some-config
+```
+
+### ファイルを編集
+
+```bash
+# ソースファイルを編集
+chezmoi edit ~/.zshrc
+
+# 適用前に差分確認
+chezmoi diff
+
+# 適用
+chezmoi apply
 ```
 
 ## ライセンス

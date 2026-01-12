@@ -1,0 +1,38 @@
+# Chezmoi ignore file
+# Files that should not be managed by chezmoi
+
+# Repository files
+README.md
+LICENSE
+Brewfile
+docs/
+.git/
+.gitignore
+
+# Legacy scripts (replaced by chezmoi run scripts)
+init.sh
+dotfilesLink.sh
+
+# Nix files (used by run scripts)
+nix/
+
+# OS-specific ignores
+{{- if ne .chezmoi.os "darwin" }}
+# Ignore macOS-specific files on non-macOS
+.config/karabiner/
+{{- end }}
+
+# Editor/IDE files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Private files (managed separately)
+.ssh/id_*
+.gnupg/
+
+# Cache and generated files
+.vim/dein/
+.local/share/sheldon/
+.cache/

@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# Chezmoi run_once script: Setup shell environment
+# This script runs ONCE after applying dotfiles
+
+set -e
+
+echo "==> Setting up shell environment..."
+
+# =============================================================================
+# Zsh completions directory
+# =============================================================================
+mkdir -p "$HOME/.zsh-completions"
+
+# =============================================================================
+# Set zsh as default shell
+# =============================================================================
+if [[ "$SHELL" != *"zsh"* ]]; then
+    echo "    Changing default shell to zsh..."
+    chsh -s "$(which zsh)" || true
+fi
+
+# =============================================================================
+# Sheldon plugin manager
+# =============================================================================
+if command -v sheldon &>/dev/null; then
+    echo "    Locking Sheldon plugins..."
+    sheldon lock || true
+fi
+
+# =============================================================================
+# fzf key bindings
+# =============================================================================
+if command -v fzf &>/dev/null; then
+    echo "    Setting up fzf..."
+    {{ if eq .chezmoi.os "darwin" -}}
+    fzf_install="$(brew --prefix 2>/dev/null)/opt/fzf/install"
+    if [[ -f "$fzf_install" ]]; then
+        "$fzf_install" --key-bindings --completion --no-update-rc --no-bash --no-fish 2>/dev/null || true
+    fi
+    {{ else -}}
+    # Linux: fzf key bindings via Nix or system
+    if [[ -f "$HOME/.nix-profile/share/fzf/shell/key-bindings.zsh" ]]; then
+        echo "    fzf key bindings available via Nix"
+    fi
+    {{ end -}}
+fi
+
+# =============================================================================
+# Verify installations
+# =============================================================================
+echo "==> Verifying tool installations..."
+tools=(zsh nvim git sheldon zellij zoxide fzf ghq eza bat rg fd)
+missing=()
+
+for tool in "${tools[@]}"; do
+    if command -v "$tool" &>/dev/null; then
+        echo "    $tool: OK"
+    else
+        echo "    $tool: NOT FOUND"
+        missing+=("$tool")
+    fi
+done
+
+if [[ ${#missing[@]} -gt 0 ]]; then
+    echo ""
+    echo "    Missing tools: ${missing[*]}"
+    {{ if eq .chezmoi.os "darwin" -}}
+    echo "    Try: brew bundle --file={{ .chezmoi.sourceDir }}/Brewfile"
+    {{ else -}}
+    echo "    Try: home-manager switch"
+    {{ end -}}
+fi
+
+# =============================================================================
+# Print instructions
+# =============================================================================
+echo ""
+echo "============================================================================="
+echo "  Setup complete!"
+echo "============================================================================="
+echo ""
+echo "  Next steps:"
+echo ""
+echo "  1. Restart your terminal or run:"
+echo "       source ~/.zshrc"
+echo ""
+{{ if eq .chezmoi.os "darwin" -}}
+echo "  2. Install fonts (for terminal):"
+echo "       brew tap homebrew/cask-fonts"
+echo "       brew install --cask font-hackgen-nerd"
+echo ""
+{{ end -}}
+echo "  Quick start:"
+echo "    zellij           # Start terminal multiplexer"
+echo "    zs main          # Attach to 'main' session"
+echo "    z <dir>          # Smart directory jump with zoxide"
+echo ""
+echo "  Chezmoi commands:"
+echo "    chezmoi diff     # See pending changes"
+echo "    chezmoi apply    # Apply changes"
+echo "    chezmoi edit     # Edit dotfiles"
+echo "    chezmoi update   # Pull and apply updates"
+echo ""
+echo "============================================================================="

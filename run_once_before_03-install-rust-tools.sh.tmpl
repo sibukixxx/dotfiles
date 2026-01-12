@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Chezmoi run_once script: Install Rust toolchain and CLI tools
+# This script runs ONCE before applying dotfiles
+
+set -e
+
+echo "==> Installing Rust toolchain and tools..."
+
+# =============================================================================
+# Rustup
+# =============================================================================
+if ! command -v rustup &>/dev/null; then
+    echo "    Installing Rustup..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+fi
+echo "    Rustup: OK"
+
+# Ensure cargo is in PATH
+if [[ -f "$HOME/.cargo/env" ]]; then
+    source "$HOME/.cargo/env"
+fi
+
+# =============================================================================
+# Rust CLI Tools
+# =============================================================================
+if command -v cargo &>/dev/null; then
+    rust_tools=(
+        "ripgrep"      # rg - fast grep
+        "fd-find"      # fd - fast find
+        "bat"          # cat with syntax highlighting
+        "eza"          # modern ls replacement
+        "zoxide"       # smarter cd
+        "sheldon"      # shell plugin manager
+        "zellij"       # terminal multiplexer
+    )
+
+    for tool in "${rust_tools[@]}"; do
+        tool_cmd="${tool}"
+        # Map package name to command name
+        case "$tool" in
+            "ripgrep") tool_cmd="rg" ;;
+            "fd-find") tool_cmd="fd" ;;
+        esac
+
+        if ! command -v "$tool_cmd" &>/dev/null; then
+            echo "    Installing $tool..."
+            cargo install "$tool" --locked 2>/dev/null || cargo install "$tool" || true
+        else
+            echo "    $tool: OK"
+        fi
+    done
+fi
+
+echo "    Rust tools installation complete"

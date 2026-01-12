@@ -47,37 +47,37 @@ apply = ["defer"]
 # Local dotfiles scripts
 # =============================================================================
 [plugins.dotfiles-tools]
-local = "~/dotfiles/zsh"
+local = "~/.config/zsh"
 use = ["tools.zsh"]
 
 [plugins.dotfiles-fzf-worktree]
-local = "~/dotfiles/zsh"
+local = "~/.config/zsh"
 use = ["fzf-worktree.zsh"]
 
 [plugins.dotfiles-peco]
-local = "~/dotfiles/zsh"
+local = "~/.config/zsh"
 use = ["peco.zsh"]
 
 [plugins.dotfiles-mac]
-local = "~/dotfiles/zsh"
+local = "~/.config/zsh"
 use = ["mac.zsh"]
 profiles = ["macos"]
 
 [plugins.dotfiles-linux]
-local = "~/dotfiles/zsh"
+local = "~/.config/zsh"
 use = ["linux.zsh"]
 profiles = ["linux"]
 
 [plugins.dotfiles-alias-common]
-local = "~/dotfiles/zsh/alias"
+local = "~/.config/zsh/alias"
 use = ["common_alias.zsh"]
 
 [plugins.dotfiles-alias-mac]
-local = "~/dotfiles/zsh/alias"
+local = "~/.config/zsh/alias"
 use = ["mac_alias.zsh"]
 profiles = ["macos"]
 
 [plugins.dotfiles-alias-linux]
-local = "~/dotfiles/zsh/alias"
+local = "~/.config/zsh/alias"
 use = ["linux_alias.zsh"]
 profiles = ["linux"]
