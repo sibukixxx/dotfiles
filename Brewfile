@@ -88,10 +88,10 @@ cask "dropbox"           # Cloud storage
 cask "claude"            # Claude Desktop
 
 # =============================================================================
-# Entertainment & Reading
+# Entertainment & Gaming
 # =============================================================================
-cask "kindle"            # Amazon Kindle
 cask "steam"             # Gaming platform
+# Note: Kindle is not available via Homebrew - install from Mac App Store
 
 # =============================================================================
 # Fonts
@@ -103,4 +103,4 @@ cask "font-hackgen-nerd" # HackGen Nerd Font (for terminal)
 # =============================================================================
 # To find app IDs: mas search <app_name>
 # mas "Xcode", id: 497799835         # Install manually - very large
-# mas "Kindle", id: 302584613        # Alternative to cask version
+mas "Kindle", id: 302584613
