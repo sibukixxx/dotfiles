@@ -20,11 +20,8 @@ brew "jq"
 brew "tree"
 brew "colordiff"
 
-# Rust tools (installed via cargo, see init.sh):
-# ripgrep, fd, bat, eza, zoxide, sheldon, zellij
-
 # =============================================================================
-# Navigation & Search (fzf, ghq)
+# Navigation & Search
 # =============================================================================
 brew "fzf"               # fuzzy finder
 brew "ghq"               # remote repository management
@@ -41,10 +38,6 @@ brew "gh"                # GitHub CLI
 # Database Tools
 # =============================================================================
 brew "mysql"
-
-# =============================================================================
-# Shell Plugin Manager (sheldon installed via cargo)
-# =============================================================================
 
 # =============================================================================
 # Utilities

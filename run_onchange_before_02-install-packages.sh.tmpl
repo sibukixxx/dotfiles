@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Chezmoi run_once script: Install packages
-# This script runs ONCE before applying dotfiles
+# Chezmoi run_onchange script: Install packages
+# Hash: {{ include "Brewfile" | sha256sum }}
 
 set -e
 
@@ -10,6 +10,19 @@ echo "==> Installing packages..."
 # =============================================================================
 # macOS: Homebrew
 # =============================================================================
+
+# Always ensure Homebrew is in PATH
+{{ if eq .chezmoi.arch "arm64" -}}
+if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+{{ else -}}
+if [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+{{ end -}}
+
+# Install Homebrew if not found
 if ! command -v brew &>/dev/null; then
     echo "    Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -27,7 +40,7 @@ echo "    Homebrew: OK"
 BREWFILE="{{ .chezmoi.sourceDir }}/Brewfile"
 if [[ -f "$BREWFILE" ]]; then
     echo "    Installing packages from Brewfile..."
-    brew bundle --file="$BREWFILE" || true
+    brew bundle --file="$BREWFILE" --no-lock
 fi
 
 {{ else if or (eq .chezmoi.os "linux") (env "WSL_DISTRO_NAME") -}}

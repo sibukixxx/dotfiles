@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
-# Chezmoi run_once script: Install Rust toolchain and CLI tools
-# This script runs ONCE before applying dotfiles
+# Chezmoi run_onchange script: Install Rust toolchain and CLI tools
+# Hash: v2-rust-tools
 
 set -e
 
 echo "==> Installing Rust toolchain and tools..."
+
+# =============================================================================
+# Ensure cargo is in PATH (do this FIRST)
+# =============================================================================
+if [[ -f "$HOME/.cargo/env" ]]; then
+    source "$HOME/.cargo/env"
+fi
 
 # =============================================================================
 # Rustup
@@ -15,11 +22,6 @@ if ! command -v rustup &>/dev/null; then
     source "$HOME/.cargo/env"
 fi
 echo "    Rustup: OK"
-
-# Ensure cargo is in PATH
-if [[ -f "$HOME/.cargo/env" ]]; then
-    source "$HOME/.cargo/env"
-fi
 
 # =============================================================================
 # Rust CLI Tools
