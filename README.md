@@ -31,6 +31,26 @@ macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://
 | **fd** | 高速find | find |
 | **Neovim** | モダンなVim | Vim |
 
+## アプリケーション（自動インストール）
+
+Brewfile で管理されているアプリケーション：
+
+| カテゴリ | アプリ |
+|----------|--------|
+| **ターミナル** | Ghostty, Alacritty |
+| **ブラウザ** | Google Chrome |
+| **コミュニケーション** | Slack, Discord |
+| **IDE・エディタ** | VS Code, JetBrains Toolbox (WebStorm等) |
+| **コンテナ** | OrbStack |
+| **生産性** | Alfred, Clipy, Obsidian, Dropbox |
+| **AI** | Claude Desktop |
+| **その他** | Kindle, Steam |
+
+```bash
+# アプリケーションのインストール
+brew bundle --file=~/dotfiles/Brewfile
+```
+
 ## クイックスタート
 
 ### 新規インストール（推奨）

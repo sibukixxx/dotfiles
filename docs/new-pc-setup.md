@@ -177,6 +177,44 @@ chezmoi の run_once スクリプトが自動で処理しますが、事前に�
 
 ---
 
+## アプリケーション（自動インストール）
+
+`chezmoi apply` 実行時に Brewfile から以下のアプリが自動インストールされます。
+
+### インストールされるアプリ
+
+| カテゴリ | アプリ | 説明 |
+|----------|--------|------|
+| **ターミナル** | Ghostty, Alacritty | GPU高速ターミナル |
+| **ブラウザ** | Google Chrome | |
+| **コミュニケーション** | Slack, Discord | |
+| **IDE・エディタ** | VS Code, JetBrains Toolbox | WebStorm等はToolbox経由 |
+| **コンテナ** | OrbStack | Docker/Linux VM |
+| **生産性** | Alfred, Clipy, Obsidian, Dropbox | |
+| **AI** | Claude Desktop | |
+| **その他** | Kindle, Steam | |
+
+### Xcode / iOS Simulator
+
+Xcode は Mac App Store から手動インストールが必要です（サイズが大きいため）。
+
+```bash
+# Mac App Store CLI
+mas install 497799835  # Xcode
+
+# または App Store から手動インストール
+open "macappstore://apps.apple.com/app/id497799835"
+```
+
+Xcode インストール後、Simulator が利用可能になります。
+
+```bash
+# Simulator を開く
+open -a Simulator
+```
+
+---
+
 ## 詳細セットアップ
 
 ### Step 1: chezmoi のインストール
