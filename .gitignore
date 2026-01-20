@@ -2,3 +2,4 @@
 .claude/*
 !.claude/CLAUDE.md
 !.claude/settings.local.json
+!.claude/rules/
