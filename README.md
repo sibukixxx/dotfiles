@@ -2,6 +2,16 @@
 
 macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://www.chezmoi.io/) で管理。
 
+## セットアップフロー
+
+```
+新規PC:  make bootstrap → chezmoi init → パッケージ → 完了
+日常:    make update    → git pull     → apply     → 完了
+検証:    make verify    → ツール確認   → 結果表示
+```
+
+詳細なアーキテクチャ: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
 ## 特徴
 
 - **chezmoi による管理**: テンプレート機能、マシン固有設定、安全なシークレット管理
@@ -52,6 +62,17 @@ brew bundle --file=~/dotfiles/Brewfile
 ```
 
 ## クイックスタート
+
+### Makefile コマンド（推奨）
+
+| コマンド | 説明 |
+|----------|------|
+| `make bootstrap` | 初回セットアップ |
+| `make update` | dotfiles更新 |
+| `make verify` | セットアップ検証 |
+| `make packages` | パッケージ同期 |
+| `make diff` | 適用前の差分確認 |
+| `make help` | ヘルプ表示 |
 
 ### 新規インストール（推奨）
 
@@ -422,6 +443,15 @@ chezmoi diff
 # 適用
 chezmoi apply
 ```
+
+## レガシースクリプト
+
+以下のスクリプトは chezmoi 移行前のものです。現在は **chezmoi を推奨** します。
+
+| スクリプト | 状態 | 代替手段 |
+|------------|------|----------|
+| `init.sh` | 廃止予定 | `make bootstrap` |
+| `dotfilesLink.sh` | 廃止予定 | chezmoi が自動処理 |
 
 ## ライセンス
 
