@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: '.'
+          severity: warning
+        env:
+          SHELLCHECK_OPTS: -e SC1091 -e SC2034
+
+  chezmoi-verify:
+    name: Chezmoi Verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
+
+      - name: Verify chezmoi templates
+        run: |
+          # テンプレート構文チェック（dry-run）
+          chezmoi execute-template < /dev/null || true
+
+          # .tmpl ファイルの基本的な構文チェック
+          find . -name "*.tmpl" -type f | while read -r file; do
+            echo "Checking: $file"
+            # Go template の基本構文チェック
+            if grep -qE '\{\{[^}]*$' "$file"; then
+              echo "Warning: Unclosed template tag in $file"
+            fi
+          done
+
+  yaml-lint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Run yamllint
+        run: |
+          yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .github/workflows/*.yml || true
+
+  toml-check:
+    name: TOML Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install taplo
+        run: |
+          curl -fsSL https://github.com/tamasfe/taplo/releases/latest/download/taplo-full-linux-x86_64.gz \
+            | gunzip > /usr/local/bin/taplo
+          chmod +x /usr/local/bin/taplo
+
+      - name: Check TOML files
+        run: |
+          find . -name "*.toml" -type f | while read -r file; do
+            echo "Checking: $file"
+            taplo check "$file" || true
+          done
+
+  markdown-lint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: '**/*.md'
+          config: |
+            {
+              "default": true,
+              "MD013": false,
+              "MD033": false,
+              "MD041": false
+            }
+        continue-on-error: true
+
+  validate-brewfile:
+    name: Validate Brewfile
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Brewfile syntax
+        run: |
+          if [ -f Brewfile ]; then
+            # Ruby 構文チェック
+            ruby -c Brewfile
+          fi

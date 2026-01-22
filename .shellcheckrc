@@ -1,0 +1,14 @@
+# ShellCheck configuration
+# https://www.shellcheck.net/wiki/
+
+# SC1091: Not following sourced files (can't resolve paths)
+disable=SC1091
+
+# SC2034: Variable appears unused (often used by sourced scripts)
+disable=SC2034
+
+# SC1090: Can't follow non-constant source
+disable=SC1090
+
+# SC2154: Variable referenced but not assigned (template variables)
+disable=SC2154

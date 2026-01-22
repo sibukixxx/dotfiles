@@ -5,9 +5,12 @@
 README.md
 LICENSE
 Brewfile
+Makefile
 docs/
 .git/
 .gitignore
+.github/
+.shellcheckrc
 
 # Legacy scripts (replaced by chezmoi run scripts)
 init.sh
