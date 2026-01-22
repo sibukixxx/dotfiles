@@ -6,6 +6,7 @@ README.md
 LICENSE
 Brewfile
 Makefile
+CHANGELOG.md
 docs/
 .git/
 .gitignore

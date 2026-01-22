@@ -537,6 +537,7 @@ home-manager switch
 
 | ドキュメント | 説明 |
 |-------------|------|
+| [CHANGELOG.md](CHANGELOG.md) | 変更履歴 |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 全体設計、フロー図、ディレクトリ構造 |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | よくある問題と解決策 |
 | [new-pc-setup.md](docs/new-pc-setup.md) | 新規 PC セットアップの詳細ガイド |
