@@ -1,0 +1,50 @@
+# Checkov Configuration
+# Learning-focused settings with detailed output
+# Docs: https://www.checkov.io/2.Basics/CLI%20Command%20Reference.html
+
+# Enable Terraform framework
+framework:
+  - terraform
+
+# Verbose output for learning
+quiet: false
+
+# Don't fail CI/CD pipelines initially (soft-fail mode)
+# Remove this once comfortable with security requirements
+soft-fail: true
+
+# Download external modules for complete analysis
+download-external-modules: true
+
+# Output format
+output:
+  - cli
+  # Uncomment for additional formats:
+  # - json
+  # - sarif
+
+# Compact output (set to false for detailed learning)
+compact: false
+
+# Skip specific checks if needed (add check IDs here)
+# skip-check:
+#   - CKV_AWS_19  # Example: S3 bucket not encrypted
+#   - CKV_AWS_21  # Example: S3 versioning not enabled
+
+# Common checks to understand:
+# CKV_AWS_19: S3 bucket encryption
+# CKV_AWS_21: S3 versioning
+# CKV_AWS_23: Security group description
+# CKV_AWS_24: Security group allowing ingress from 0.0.0.0/0
+# CKV_AWS_79: IMDSv2 for EC2
+# CKV_AWS_144: S3 cross-region replication
+# CKV_AWS_145: S3 bucket key encryption
+
+# Directory to scan (can be overridden via CLI)
+# directory: .
+
+# Files to exclude
+skip-path:
+  - "**/.terraform/**"
+  - "**/node_modules/**"
+  - "**/.git/**"
