@@ -85,3 +85,7 @@ profiles = ["linux"]
 [plugins.dotfiles-agent-skills]
 local = "~/.config/zsh"
 use = ["agent-skills.zsh"]
+
+[plugins.dotfiles-terraform]
+local = "~/.config/zsh"
+use = ["terraform.zsh"]
