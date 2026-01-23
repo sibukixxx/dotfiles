@@ -89,12 +89,17 @@ check_cmd "cargo" "Rust package manager"
 check_cmd "gh" "GitHub CLI"
 echo ""
 
+echo "== AI Agent Tools =="
+check_cmd "agent-skills" "Agent skills manager"
+echo ""
+
 echo "== Symlinks =="
 check_symlink "$HOME/.zshrc" "zsh config"
 check_symlink "$HOME/.config/nvim" "Neovim config"
 check_symlink "$HOME/.config/sheldon" "Sheldon config"
 check_symlink "$HOME/.config/zellij" "Zellij config"
 check_symlink "$HOME/.config/git" "Git config"
+check_symlink "$HOME/.config/agent-skills" "Agent skills config"
 echo ""
 
 echo "== Fonts =="

@@ -1,0 +1,68 @@
+# Agent Skills Package Manager Configuration
+# ===========================================
+# This file defines which agent skills to install and where to deploy them.
+#
+# Usage:
+#   agent-skills sync     # Install/update skills to target directories
+#   agent-skills list     # Show available skills
+#   agent-skills status   # Show current installation status
+
+# =============================================================================
+# Target Agents
+# =============================================================================
+# Define which AI agents to manage skills for and their skill directories.
+
+targets:
+  claude:
+    enabled: true
+    path: ~/.claude/skills
+  codex:
+    enabled: false
+    path: ~/.codex/skills
+  opencode:
+    enabled: true
+    path: ~/.config/opencode/skills
+
+# =============================================================================
+# Skill Sources
+# =============================================================================
+# Define repositories containing skill definitions.
+# Each source can be a git repository or local directory.
+
+sources:
+  anthropic:
+    type: git
+    url: https://github.com/anthropics/skills.git
+    branch: main
+    path: skills    # subdirectory within repo containing skills
+
+  # Example: Local skills directory
+  # local:
+  #   type: local
+  #   path: ~/.my-skills
+
+  # Example: Another git source
+  # community:
+  #   type: git
+  #   url: https://github.com/example/agent-skills.git
+  #   branch: main
+  #   path: .
+
+# =============================================================================
+# Enabled Skills
+# =============================================================================
+# List of skills to install. Format: "source:skill-name"
+# Use "agent-skills list" to see all available skills.
+
+enabled:
+  # Document processing
+  - anthropic:pdf
+  - anthropic:docx
+
+  # Development tools
+  - anthropic:mcp-builder
+  - anthropic:frontend-design
+
+  # Uncomment to enable additional skills:
+  # - anthropic:skill-creator
+  # - anthropic:claude-code-guide

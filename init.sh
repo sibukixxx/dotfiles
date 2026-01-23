@@ -323,6 +323,63 @@ install_opencode() {
 }
 
 # =============================================================================
+# Agent Skills Package Manager
+# =============================================================================
+install_agent_skills() {
+  echo "==> Setting up Agent Skills Package Manager..."
+
+  # Ensure required directories exist
+  mkdir -p "$HOME/.config/agent-skills"
+  mkdir -p "$HOME/.agent-skills/cache"
+  mkdir -p "$HOME/.claude/skills"
+
+  # Install yq if not present
+  if ! command -v yq &>/dev/null; then
+    echo "    Installing yq (YAML processor)..."
+    case "$OS_TYPE" in
+      macos)
+        if command -v brew &>/dev/null; then
+          brew install yq
+        fi
+        ;;
+      wsl|linux)
+        if command -v nix-env &>/dev/null; then
+          nix-env -iA nixpkgs.yq-go
+        else
+          echo "    Warning: yq not installed. Please install manually."
+          echo "    For Debian/Ubuntu: sudo apt-get install yq"
+          echo "    For Nix: nix-env -iA nixpkgs.yq-go"
+        fi
+        ;;
+    esac
+  else
+    echo "    yq: OK"
+  fi
+
+  # Link config if using chezmoi-managed dotfiles
+  local config_src="$DOTFILES_DIR/dot_config/agent-skills/skills.yaml"
+  local config_dst="$HOME/.config/agent-skills/skills.yaml"
+
+  if [[ -f "$config_src" && ! -f "$config_dst" ]]; then
+    ln -sf "$config_src" "$config_dst"
+    echo "    Linked skills.yaml config"
+  fi
+
+  # Check if agent-skills command is available
+  if command -v agent-skills &>/dev/null; then
+    echo "    Running initial sync..."
+    agent-skills update 2>/dev/null || true
+    agent-skills sync 2>/dev/null || true
+    echo "    Agent skills synced"
+  else
+    echo "    Warning: agent-skills command not found in PATH"
+    echo "    Ensure ~/.local/bin is in your PATH"
+  fi
+
+  echo "    Agent Skills setup complete"
+}
+
+# =============================================================================
 # Create symbolic links (delegates to dotfilesLink.sh)
 # =============================================================================
 create_symlinks() {
@@ -468,6 +525,7 @@ verify_tools() {
     "gcloud"
     "aws"
     "opencode"
+    "agent-skills"
   )
   local missing=()
 
@@ -525,6 +583,11 @@ print_instructions() {
   echo "    gcloud projects list        # List GCP projects"
   echo "    awswho                      # Show current AWS identity"
   echo ""
+  echo "  Agent Skills commands:"
+  echo "    agent-skills list           # List available skills"
+  echo "    agent-skills sync           # Install enabled skills"
+  echo "    agent-skills add <skill>    # Add a skill"
+  echo ""
   echo "  Zellij keybindings (Prefix: Ctrl+x):"
   echo "    Ctrl+x |         # Split pane vertically"
   echo "    Ctrl+x -         # Split pane horizontally"
@@ -571,6 +634,7 @@ main() {
   setup_fzf
   install_cloud_cli
   install_opencode
+  install_agent_skills
   install_fonts
   verify_tools
   print_instructions

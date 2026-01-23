@@ -81,3 +81,7 @@ profiles = ["macos"]
 local = "~/.config/zsh/alias"
 use = ["linux_alias.zsh"]
 profiles = ["linux"]
+
+[plugins.dotfiles-agent-skills]
+local = "~/.config/zsh"
+use = ["agent-skills.zsh"]
