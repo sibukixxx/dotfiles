@@ -38,6 +38,16 @@ brew "awscli"            # AWS Command Line Interface
 cask "google-cloud-sdk"  # Google Cloud SDK
 
 # =============================================================================
+# Infrastructure as Code
+# =============================================================================
+brew "terraform"         # Infrastructure as Code tool
+brew "tflint"            # Terraform linter
+brew "terraform-docs"    # Auto-generate documentation
+brew "tfsec"             # Security scanner
+brew "pre-commit"        # Git hooks framework
+# Note: checkov is recommended to install via pipx
+
+# =============================================================================
 # Database Tools
 # =============================================================================
 brew "mysql"
