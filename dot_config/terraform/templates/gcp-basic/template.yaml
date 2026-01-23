@@ -1,0 +1,28 @@
+# GCP Basic Template
+name: gcp-basic
+description: Basic GCP infrastructure setup with VPC and common resources
+version: "1.0.0"
+
+variables:
+  - name: project_name
+    description: Name of the project
+    required: true
+  - name: gcp_project_id
+    description: GCP project ID
+    required: true
+  - name: gcp_region
+    description: GCP region
+    default: asia-northeast1
+  - name: environment
+    description: Environment name (dev, stg, prod)
+    default: dev
+
+files:
+  - main.tf.tmpl
+  - variables.tf.tmpl
+  - outputs.tf.tmpl
+  - providers.tf.tmpl
+  - backend.tf.tmpl
+  - .tflint.hcl
+  - .pre-commit-config.yaml
+  - .gitignore

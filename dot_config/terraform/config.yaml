@@ -1,0 +1,28 @@
+# tf-new Configuration
+# Default settings for terraform project generation
+
+defaults:
+  # Default AWS region
+  aws_region: ap-northeast-1
+
+  # Default Terraform version constraint
+  terraform_version: ">= 1.5.0"
+
+  # Default provider versions
+  aws_provider_version: "~> 5.0"
+  google_provider_version: "~> 5.0"
+
+  # Initialize git repository
+  git_init: true
+
+  # Install pre-commit hooks
+  pre_commit_install: true
+
+  # Run terraform init after creation
+  terraform_init: true
+
+  # Run initial security scan
+  run_initial_scan: true
+
+templates_dir: ~/.config/terraform/templates
+modules_dir: ~/.config/terraform/modules
