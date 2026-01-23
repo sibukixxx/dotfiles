@@ -204,8 +204,34 @@ RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
 # =============================================================================
 # Google Cloud SDK
 # =============================================================================
-[[ -f '/usr/local/bin/google-cloud-sdk/path.zsh.inc' ]] && source '/usr/local/bin/google-cloud-sdk/path.zsh.inc'
-[[ -f '/usr/local/bin/google-cloud-sdk/completion.zsh.inc' ]] && source '/usr/local/bin/google-cloud-sdk/completion.zsh.inc'
+# Homebrew installation (macOS)
+if [[ -d "$(brew --prefix 2>/dev/null)/share/google-cloud-sdk" ]]; then
+  source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
+  source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
+# Manual installation
+elif [[ -f "$HOME/google-cloud-sdk/path.zsh.inc" ]]; then
+  source "$HOME/google-cloud-sdk/path.zsh.inc"
+  source "$HOME/google-cloud-sdk/completion.zsh.inc"
+# Legacy path
+elif [[ -f '/usr/local/bin/google-cloud-sdk/path.zsh.inc' ]]; then
+  source '/usr/local/bin/google-cloud-sdk/path.zsh.inc'
+  source '/usr/local/bin/google-cloud-sdk/completion.zsh.inc'
+fi
+
+# =============================================================================
+# AWS CLI
+# =============================================================================
+# AWS CLI completion
+if command -v aws_completer &>/dev/null; then
+  autoload bashcompinit && bashcompinit
+  complete -C "$(which aws_completer)" aws
+fi
+
+# AWS CLI aliases
+if command -v aws &>/dev/null; then
+  alias awswho='aws sts get-caller-identity'
+  alias awsregions='aws ec2 describe-regions --query "Regions[].RegionName" --output text'
+fi
 
 # =============================================================================
 # Aliases (basic, non-tool-specific)

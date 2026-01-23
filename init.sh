@@ -260,6 +260,55 @@ install_rust_tools() {
 }
 
 # =============================================================================
+# Cloud CLI Tools (GCP & AWS)
+# =============================================================================
+install_cloud_cli() {
+  echo "==> Installing Cloud CLI tools..."
+
+  case "$OS_TYPE" in
+    macos)
+      # AWS CLI and Google Cloud SDK are installed via Brewfile
+      # Just need to initialize gcloud if needed
+      if command -v gcloud &>/dev/null; then
+        echo "    Google Cloud SDK: OK (installed via Homebrew)"
+        echo "    Run 'gcloud init' to configure"
+      fi
+
+      if command -v aws &>/dev/null; then
+        echo "    AWS CLI: OK (installed via Homebrew)"
+        echo "    Run 'aws configure' to set up credentials"
+      fi
+      ;;
+
+    wsl|linux)
+      # Install AWS CLI
+      if ! command -v aws &>/dev/null; then
+        echo "    Installing AWS CLI..."
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+        unzip -q /tmp/awscliv2.zip -d /tmp
+        sudo /tmp/aws/install
+        rm -rf /tmp/awscliv2.zip /tmp/aws
+        echo "    AWS CLI installed"
+      else
+        echo "    AWS CLI: OK"
+      fi
+
+      # Install Google Cloud SDK
+      if ! command -v gcloud &>/dev/null; then
+        echo "    Installing Google Cloud SDK..."
+        curl https://sdk.cloud.google.com | bash -s -- --disable-prompts --install-dir="$HOME"
+        echo "    Google Cloud SDK installed"
+        echo "    Run 'gcloud init' to configure"
+      else
+        echo "    Google Cloud SDK: OK"
+      fi
+      ;;
+  esac
+
+  echo "    Cloud CLI setup complete"
+}
+
+# =============================================================================
 # OpenCode (AI coding assistant)
 # =============================================================================
 install_opencode() {
@@ -416,6 +465,8 @@ verify_tools() {
     "bat"
     "rg"
     "fd"
+    "gcloud"
+    "aws"
     "opencode"
   )
   local missing=()
@@ -454,7 +505,11 @@ print_instructions() {
   echo "       brew tap homebrew/cask-fonts"
   echo "       brew install --cask font-hackgen-nerd"
   echo ""
-  echo "  3. (Optional) Setup Hammerspoon for Cmd+U transparency toggle:"
+  echo "  3. Configure Cloud CLI tools:"
+  echo "       gcloud init              # Setup Google Cloud SDK"
+  echo "       aws configure            # Setup AWS CLI"
+  echo ""
+  echo "  4. (Optional) Setup Hammerspoon for Cmd+U transparency toggle:"
   echo "       Add to ~/.hammerspoon/init.lua:"
   echo "         hs.hotkey.bind({ \"cmd\" }, \"U\", function()"
   echo "           hs.execute(\"toggle_opacity\", true)"
@@ -465,6 +520,10 @@ print_instructions() {
   echo "    zs main          # Attach to 'main' session"
   echo "    gcd              # Jump to ghq repository with fzf"
   echo "    z <dir>          # Smart directory jump with zoxide"
+  echo ""
+  echo "  Cloud CLI quick commands:"
+  echo "    gcloud projects list        # List GCP projects"
+  echo "    awswho                      # Show current AWS identity"
   echo ""
   echo "  Zellij keybindings (Prefix: Ctrl+x):"
   echo "    Ctrl+x |         # Split pane vertically"
@@ -510,6 +569,7 @@ main() {
   setup_zsh
   setup_sheldon
   setup_fzf
+  install_cloud_cli
   install_opencode
   install_fonts
   verify_tools
