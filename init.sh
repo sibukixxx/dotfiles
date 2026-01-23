@@ -410,6 +410,7 @@ verify_tools() {
     "zellij"
     "zoxide"
     "fzf"
+    "peco"
     "ghq"
     "eza"
     "bat"

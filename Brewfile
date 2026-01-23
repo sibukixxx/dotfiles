@@ -20,6 +20,7 @@ brew "colordiff"
 # Navigation & Search
 # =============================================================================
 brew "fzf"               # fuzzy finder
+brew "peco"              # interactive filtering tool
 brew "ghq"               # remote repository management
 
 # =============================================================================
