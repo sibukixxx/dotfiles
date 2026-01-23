@@ -2,10 +2,8 @@
 # zoxide - smarter cd command
 # =============================================================================
 if command -v zoxide &>/dev/null; then
-  eval "$(zoxide init zsh)"
-  # Aliases
-  alias cd="z"
-  alias cdi="zi"  # interactive selection
+  # Use --cmd cd to replace cd command directly (avoids alias issues)
+  eval "$(zoxide init zsh --cmd cd)"
 fi
 
 # =============================================================================
