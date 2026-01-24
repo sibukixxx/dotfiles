@@ -55,8 +55,12 @@ if [[ -d $HOME/.pyenv ]]; then
   eval "$(pyenv init -)" 2>/dev/null
 fi
 
-# Google Cloud SDK
-if [[ -d /opt/homebrew/Caskroom/google-cloud-sdk ]]; then
+# Google Cloud CLI
+if [[ -d /opt/homebrew/Caskroom/gcloud-cli ]]; then
+  gcloud_bin="$(ls -d /opt/homebrew/Caskroom/gcloud-cli/*/google-cloud-sdk/bin 2>/dev/null | head -1)"
+  [[ -n "$gcloud_bin" ]] && path=($gcloud_bin $path)
+elif [[ -d /opt/homebrew/Caskroom/google-cloud-sdk ]]; then
+  # Legacy path for backward compatibility
   gcloud_bin="$(ls -d /opt/homebrew/Caskroom/google-cloud-sdk/*/google-cloud-sdk/bin 2>/dev/null | head -1)"
   [[ -n "$gcloud_bin" ]] && path=($gcloud_bin $path)
 fi
@@ -202,10 +206,14 @@ add-zsh-hook precmd _vcs_info_precmd
 RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
 
 # =============================================================================
-# Google Cloud SDK
+# Google Cloud CLI
 # =============================================================================
-# Homebrew installation (macOS)
-if [[ -d "$(brew --prefix 2>/dev/null)/share/google-cloud-sdk" ]]; then
+# Homebrew installation (macOS) - new gcloud-cli path
+if [[ -d "$(brew --prefix 2>/dev/null)/share/gcloud-cli" ]]; then
+  source "$(brew --prefix)/share/gcloud-cli/path.zsh.inc"
+  source "$(brew --prefix)/share/gcloud-cli/completion.zsh.inc"
+# Homebrew installation (macOS) - legacy google-cloud-sdk path
+elif [[ -d "$(brew --prefix 2>/dev/null)/share/google-cloud-sdk" ]]; then
   source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
   source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
 # Manual installation
