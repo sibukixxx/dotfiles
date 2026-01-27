@@ -65,46 +65,46 @@ wt_agents() {
 
   local base="$(basename "$root")"
   local parent="$(dirname "$root")"
-  local paths=()
+  local wt_paths=()
 
   # Create worktrees
   for i in $(seq 1 "$n"); do
     local name="${base}-wt${i}"
-    local path="${parent}/${name}"
+    local wt_dir="${parent}/${name}"
     local branch="wt/${name}"
 
-    if [[ -d "$path" ]]; then
-      echo "Worktree already exists: $path"
+    if [[ -d "$wt_dir" ]]; then
+      echo "Worktree already exists: $wt_dir"
     else
-      git worktree add -b "$branch" "$path" HEAD 2>/dev/null || \
-      git worktree add "$path" "$branch" 2>/dev/null || {
-        echo "Error creating worktree: $path"
+      git worktree add -b "$branch" "$wt_dir" HEAD 2>/dev/null || \
+      git worktree add "$wt_dir" "$branch" 2>/dev/null || {
+        echo "Error creating worktree: $wt_dir"
         continue
       }
-      echo "Created worktree: $path ($branch)"
+      echo "Created worktree: $wt_dir ($branch)"
     fi
-    paths+=("$path")
+    wt_paths+=("$wt_dir")
   done
 
-  [[ ${#paths[@]} -eq 0 ]] && {
+  [[ ${#wt_paths[@]} -eq 0 ]] && {
     echo "No worktrees to open"
     return 1
   }
 
   # Create tmux panes
   local first=true
-  for path in "${paths[@]}"; do
+  for wt_dir in "${wt_paths[@]}"; do
     if $first; then
       # First pane: change directory in current pane
-      cd "$path"
+      cd "$wt_dir"
       $no_claude || tmux send-keys "claude" C-m
       first=false
     else
       # Subsequent panes: split and send commands
       if $no_claude; then
-        tmux split-window -h -c "$path"
+        tmux split-window -h -c "$wt_dir"
       else
-        tmux split-window -h -c "$path" "claude"
+        tmux split-window -h -c "$wt_dir" "claude"
       fi
     fi
   done
@@ -112,7 +112,7 @@ wt_agents() {
   # Arrange panes evenly
   tmux select-layout tiled
 
-  echo "Created ${#paths[@]} panes with worktrees"
+  echo "Created ${#wt_paths[@]} panes with worktrees"
 }
 
 # Cleanup worktrees created by wt_agents
