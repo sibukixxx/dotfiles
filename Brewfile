@@ -35,7 +35,7 @@ brew "gh"                # GitHub CLI
 # Cloud CLI Tools
 # =============================================================================
 brew "awscli"            # AWS Command Line Interface
-cask "google-cloud-sdk"  # Google Cloud SDK
+cask "gcloud-cli"        # Google Cloud CLI (renamed from google-cloud-sdk)
 
 # =============================================================================
 # Infrastructure as Code

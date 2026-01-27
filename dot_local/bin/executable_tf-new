@@ -8,9 +8,13 @@ set -euo pipefail
 
 # Configuration
 TEMPLATES_DIR="${TF_TEMPLATES_DIR:-$HOME/.config/terraform/templates}"
+MODULES_DIR="${TF_MODULES_DIR:-$HOME/.config/terraform/modules}"
+CI_TEMPLATES_DIR="${TF_CI_TEMPLATES_DIR:-$HOME/.config/terraform/ci-templates}"
+TESTING_DIR="${TF_TESTING_DIR:-$HOME/.config/terraform/testing}"
 DEFAULT_AWS_REGION="ap-northeast-1"
 DEFAULT_GCP_REGION="asia-northeast1"
 DEFAULT_ENVIRONMENT="dev"
+DEFAULT_TERRAFORM_VERSION="1.5.0"
 
 # Colors
 RED='\033[0;31m'
@@ -45,6 +49,7 @@ Usage: tf-new <command> [options]
 
 Commands:
     list                    List available templates
+    modules                 List available reusable modules
     <template> <name>       Create new project from template
 
 Options:
@@ -54,13 +59,18 @@ Options:
     --no-git                Don't initialize git repository
     --no-init               Don't run terraform init
     --no-hooks              Don't install pre-commit hooks
+    --with-ci <type>        Add CI/CD configuration (github, gitlab)
+    --with-tests            Add Terratest infrastructure tests
+    --use-modules <list>    Include modules (comma-separated: vpc,ecs,rds)
     -h, --help              Show this help message
 
 Examples:
     tf-new list
+    tf-new modules
     tf-new aws-basic my-project
     tf-new aws-basic my-project -r us-east-1 -e prod
-    tf-new gcp-basic my-project -p my-gcp-project-id
+    tf-new aws-multi-env my-project --with-ci github --with-tests
+    tf-new gcp-basic my-project -p my-gcp-project-id --use-modules vpc,gke
 
 Templates:
 EOF
@@ -92,6 +102,31 @@ list_templates() {
     done
 }
 
+list_modules() {
+    local prefix="${1:-}"
+
+    if [[ ! -d "$MODULES_DIR" ]]; then
+        print_warn "Modules directory not found: $MODULES_DIR"
+        return 0
+    fi
+
+    for module_dir in "$MODULES_DIR"/*/; do
+        if [[ -d "$module_dir" ]]; then
+            local module_name
+            module_name=$(basename "$module_dir")
+            local module_readme="$module_dir/README.md"
+
+            if [[ -f "$module_readme" ]]; then
+                local description
+                description=$(head -1 "$module_readme" | sed 's/^# *//')
+                echo -e "${prefix}${GREEN}${module_name}${NC} - ${description}"
+            else
+                echo -e "${prefix}${GREEN}${module_name}${NC}"
+            fi
+        fi
+    done
+}
+
 # =============================================================================
 # Template Processing
 # =============================================================================
@@ -103,6 +138,7 @@ process_template_file() {
     local region="$4"
     local environment="$5"
     local gcp_project_id="${6:-}"
+    local terraform_version="${7:-$DEFAULT_TERRAFORM_VERSION}"
 
     # Remove .tmpl extension if present
     dst="${dst%.tmpl}"
@@ -116,7 +152,143 @@ process_template_file() {
         -e "s/{{GCP_REGION}}/$region/g" \
         -e "s/{{ENVIRONMENT}}/$environment/g" \
         -e "s/{{GCP_PROJECT_ID}}/$gcp_project_id/g" \
+        -e "s/{{TERRAFORM_VERSION}}/$terraform_version/g" \
         "$src" > "$dst"
+}
+
+# =============================================================================
+# CI/CD Setup Functions
+# =============================================================================
+
+setup_ci() {
+    local ci_type="$1"
+    local project_name="$2"
+    local region="$3"
+    local environment="$4"
+    local terraform_version="$5"
+
+    print_info "Setting up CI/CD ($ci_type)..."
+
+    case "$ci_type" in
+        github)
+            mkdir -p ".github/workflows"
+            for template in "$CI_TEMPLATES_DIR/github-actions"/*.yml.tmpl; do
+                if [[ -f "$template" ]]; then
+                    local filename
+                    filename=$(basename "$template" .tmpl)
+                    process_template_file "$template" ".github/workflows/$filename" \
+                        "$project_name" "$region" "$environment" "" "$terraform_version"
+                fi
+            done
+            print_success "GitHub Actions workflows created"
+            ;;
+        gitlab)
+            for template in "$CI_TEMPLATES_DIR/gitlab-ci"/*.yml.tmpl; do
+                if [[ -f "$template" ]]; then
+                    local filename
+                    filename=$(basename "$template" .tmpl)
+                    # GitLab CI uses .gitlab-ci.yml at root
+                    if [[ "$filename" == *"gitlab-ci"* ]]; then
+                        process_template_file "$template" ".gitlab-ci.yml" \
+                            "$project_name" "$region" "$environment" "" "$terraform_version"
+                    else
+                        process_template_file "$template" "$filename" \
+                            "$project_name" "$region" "$environment" "" "$terraform_version"
+                    fi
+                fi
+            done
+            print_success "GitLab CI configuration created"
+            ;;
+        *)
+            print_error "Unknown CI type: $ci_type (supported: github, gitlab)"
+            return 1
+            ;;
+    esac
+}
+
+# =============================================================================
+# Testing Setup Functions
+# =============================================================================
+
+setup_tests() {
+    local project_name="$1"
+    local region="$2"
+    local environment="$3"
+
+    print_info "Setting up infrastructure tests..."
+
+    mkdir -p "test"
+
+    # Copy Terratest templates
+    if [[ -d "$TESTING_DIR/terratest" ]]; then
+        for template in "$TESTING_DIR/terratest"/*.tmpl; do
+            if [[ -f "$template" ]]; then
+                local filename
+                filename=$(basename "$template" .tmpl)
+                process_template_file "$template" "test/$filename" \
+                    "$project_name" "$region" "$environment"
+            fi
+        done
+    fi
+
+    # Copy test scripts
+    if [[ -d "$TESTING_DIR/scripts" ]]; then
+        mkdir -p "scripts"
+        for script in "$TESTING_DIR/scripts"/*.sh; do
+            if [[ -f "$script" ]]; then
+                cp "$script" "scripts/"
+                chmod +x "scripts/$(basename "$script")"
+            fi
+        done
+    fi
+
+    print_success "Infrastructure tests created in test/"
+    echo "  Run 'cd test && go mod tidy && go test -v ./...' to execute tests"
+}
+
+# =============================================================================
+# Modules Setup Functions
+# =============================================================================
+
+setup_modules() {
+    local modules_list="$1"
+    local project_name="$2"
+    local region="$3"
+    local environment="$4"
+
+    print_info "Setting up modules..."
+
+    mkdir -p "modules"
+
+    IFS=',' read -ra MODULES <<< "$modules_list"
+    for module in "${MODULES[@]}"; do
+        module=$(echo "$module" | xargs)  # Trim whitespace
+        local module_src="$MODULES_DIR/$module"
+
+        if [[ -d "$module_src" ]]; then
+            local module_dst="modules/$module"
+            mkdir -p "$module_dst"
+
+            # Copy and process module files
+            while IFS= read -r -d '' file; do
+                local rel_path="${file#$module_src/}"
+                local dst_path="$module_dst/$rel_path"
+
+                if [[ "$file" == *.tmpl ]]; then
+                    dst_path="${dst_path%.tmpl}"
+                    process_template_file "$file" "$dst_path" \
+                        "$project_name" "$region" "$environment"
+                else
+                    mkdir -p "$(dirname "$dst_path")"
+                    cp "$file" "$dst_path"
+                fi
+            done < <(find "$module_src" -type f -print0)
+
+            print_success "Module '$module' added"
+        else
+            print_warn "Module not found: $module (skipping)"
+        fi
+    done
 }
 
 create_project() {
@@ -128,6 +300,9 @@ create_project() {
     local init_git="$6"
     local run_init="$7"
     local install_hooks="$8"
+    local with_ci="${9:-}"
+    local with_tests="${10:-false}"
+    local use_modules="${11:-}"
 
     local template_dir="$TEMPLATES_DIR/$template_name"
 
@@ -176,7 +351,7 @@ create_project() {
         if [[ "$file" == *.tmpl ]]; then
             # Process template file
             dst_path="${dst_path%.tmpl}"
-            process_template_file "$file" "$dst_path" "$project_name" "$region" "$environment" "$gcp_project_id"
+            process_template_file "$file" "$dst_path" "$project_name" "$region" "$environment" "$gcp_project_id" "$DEFAULT_TERRAFORM_VERSION"
         else
             # Copy file as-is
             mkdir -p "$(dirname "$dst_path")"
@@ -188,6 +363,21 @@ create_project() {
 
     # Change to project directory
     cd "$project_name"
+
+    # Setup CI/CD if requested
+    if [[ -n "$with_ci" ]]; then
+        setup_ci "$with_ci" "$project_name" "$region" "$environment" "$DEFAULT_TERRAFORM_VERSION"
+    fi
+
+    # Setup tests if requested
+    if [[ "$with_tests" == "true" ]]; then
+        setup_tests "$project_name" "$region" "$environment"
+    fi
+
+    # Setup modules if requested
+    if [[ -n "$use_modules" ]]; then
+        setup_modules "$use_modules" "$project_name" "$region" "$environment"
+    fi
 
     # Initialize git
     if [[ "$init_git" == "true" ]]; then
@@ -265,6 +455,9 @@ main() {
     local init_git="true"
     local run_init="true"
     local install_hooks="true"
+    local with_ci=""
+    local with_tests="false"
+    local use_modules=""
 
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -275,6 +468,10 @@ main() {
                 ;;
             list)
                 command="list"
+                shift
+                ;;
+            modules)
+                command="modules"
                 shift
                 ;;
             -r|--region)
@@ -300,6 +497,18 @@ main() {
             --no-hooks)
                 install_hooks="false"
                 shift
+                ;;
+            --with-ci)
+                with_ci="$2"
+                shift 2
+                ;;
+            --with-tests)
+                with_tests="true"
+                shift
+                ;;
+            --use-modules)
+                use_modules="$2"
+                shift 2
                 ;;
             -*)
                 print_error "Unknown option: $1"
@@ -327,6 +536,10 @@ main() {
             echo "Available templates:"
             list_templates "  "
             ;;
+        modules)
+            echo "Available reusable modules:"
+            list_modules "  "
+            ;;
         *)
             if [[ -z "$template_name" ]]; then
                 usage
@@ -345,8 +558,15 @@ main() {
                 exit 1
             fi
 
+            # Validate CI type if specified
+            if [[ -n "$with_ci" ]] && [[ ! "$with_ci" =~ ^(github|gitlab)$ ]]; then
+                print_error "Invalid CI type: $with_ci (must be github or gitlab)"
+                exit 1
+            fi
+
             create_project "$template_name" "$project_name" "$region" "$environment" \
-                "$gcp_project_id" "$init_git" "$run_init" "$install_hooks"
+                "$gcp_project_id" "$init_git" "$run_init" "$install_hooks" \
+                "$with_ci" "$with_tests" "$use_modules"
             ;;
     esac
 }
