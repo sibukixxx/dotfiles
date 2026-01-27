@@ -5,6 +5,9 @@ defaults:
   # Default AWS region
   aws_region: ap-northeast-1
 
+  # Default GCP region
+  gcp_region: asia-northeast1
+
   # Default Terraform version constraint
   terraform_version: ">= 1.5.0"
 
@@ -24,5 +27,105 @@ defaults:
   # Run initial security scan
   run_initial_scan: true
 
+# Directory paths
 templates_dir: ~/.config/terraform/templates
 modules_dir: ~/.config/terraform/modules
+ci_templates_dir: ~/.config/terraform/ci-templates
+testing_dir: ~/.config/terraform/testing
+
+# =============================================================================
+# CI/CD Configuration
+# =============================================================================
+ci:
+  # Default CI platform (github, gitlab)
+  default_platform: github
+
+  github:
+    # Terraform version for GitHub Actions
+    terraform_version: "1.5.0"
+    # Use OIDC for AWS authentication
+    use_oidc: true
+    # Environment names
+    environments:
+      - dev
+      - stg
+      - prod
+    # Concurrency settings
+    concurrency:
+      cancel_in_progress: false
+
+  gitlab:
+    # Terraform version for GitLab CI
+    terraform_version: "1.5.0"
+    # Use Docker image
+    docker_image: hashicorp/terraform
+    # Enable artifact storage
+    artifacts:
+      plan_expire: 1 week
+      output_expire: 30 days
+
+# =============================================================================
+# Testing Configuration
+# =============================================================================
+testing:
+  # Test framework (terratest)
+  framework: terratest
+
+  # Go version for Terratest
+  go_version: "1.21"
+
+  # Terratest settings
+  terratest:
+    # Default test timeout
+    timeout: 30m
+    # Number of parallel tests
+    parallelism: 2
+    # Retry settings
+    retries: 3
+    retry_sleep: 5s
+
+  # Test execution settings
+  execution:
+    # Skip destroy on failure (for debugging)
+    skip_destroy_on_failure: false
+    # Verbose output
+    verbose: true
+
+  # AWS test settings
+  aws:
+    # Allowed regions for testing (to avoid accidental production deployments)
+    allowed_regions:
+      - ap-northeast-1
+      - us-east-1
+      - us-west-2
+    # Test resource name prefix
+    resource_prefix: tftest-
+    # Auto-cleanup test resources older than
+    cleanup_after: 24h
+
+# =============================================================================
+# Security Scanning Configuration
+# =============================================================================
+security:
+  # Enable security scanning
+  enabled: true
+
+  # Tools to use
+  tools:
+    tflint:
+      enabled: true
+      config_file: .tflint.hcl
+    tfsec:
+      enabled: true
+      soft_fail: false
+    checkov:
+      enabled: true
+      skip_checks:
+        - CKV_AWS_144  # S3 cross-region replication
+        - CKV_AWS_145  # S3 KMS encryption
+
+  # Fail pipeline on security issues
+  fail_on_issues: true
+
+  # Minimum severity to fail (LOW, MEDIUM, HIGH, CRITICAL)
+  minimum_severity: MEDIUM
