@@ -1,0 +1,161 @@
+# Terraform Test Workflow
+# Runs infrastructure tests using Terratest
+
+name: Terraform Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_pattern:
+        description: 'Test pattern to run (e.g., TestVPC, ./...)'
+        required: false
+        default: './...'
+      timeout:
+        description: 'Test timeout'
+        required: false
+        default: '30m'
+  schedule:
+    # Run weekly on Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GO_VERSION: "1.21"
+  TF_VERSION: "1.5.0"
+
+jobs:
+  test:
+    name: Infrastructure Tests
+    runs-on: ubuntu-latest
+    # Only run on workflow_dispatch or schedule in the main repo
+    if: github.event_name == 'workflow_dispatch' || github.repository == github.event.repository.full_name
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: '**/go.sum'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      # Note: AWS credentials should be configured via OIDC or secrets
+      # Uncomment and configure as needed:
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_TEST_ROLE_ARN }}
+      #     aws-region: ap-northeast-1
+
+      - name: Download Go Dependencies
+        run: |
+          if [[ -f "test/go.mod" ]]; then
+            cd test
+            go mod download
+          fi
+        continue-on-error: true
+
+      - name: Verify Test Setup
+        run: |
+          echo "=== Go Version ==="
+          go version
+
+          echo "=== Terraform Version ==="
+          terraform version
+
+          echo "=== Test Directory Structure ==="
+          if [[ -d "test" ]]; then
+            find test -type f -name "*.go" | head -20
+          else
+            echo "No test directory found"
+          fi
+
+      - name: Run Infrastructure Tests
+        if: ${{ hashFiles('test/go.mod') != '' }}
+        run: |
+          cd test
+          go test -v \
+            -timeout "${{ github.event.inputs.timeout || '30m' }}" \
+            -parallel 2 \
+            ${{ github.event.inputs.test_pattern || './...' }}
+        env:
+          TF_IN_AUTOMATION: "true"
+        continue-on-error: true
+
+      - name: Test Results Summary
+        if: always()
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pattern**: ${{ github.event.inputs.test_pattern || './...' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timeout**: ${{ github.event.inputs.timeout || '30m' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Go Version**: ${{ env.GO_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Terraform Version**: ${{ env.TF_VERSION }}" >> $GITHUB_STEP_SUMMARY
+
+  validate-test-templates:
+    name: Validate Test Templates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Validate Go Templates
+        run: |
+          # Check Go syntax in test templates
+          for file in dot_config/terraform/testing/terratest/*.go.tmpl; do
+            if [[ -f "$file" ]]; then
+              echo "Checking: $file"
+
+              # Create temp file with placeholders replaced
+              temp_file=$(mktemp --suffix=.go)
+              sed -e 's/{{PROJECT_NAME}}/testproject/g' \
+                  -e 's/{{AWS_REGION}}/ap-northeast-1/g' \
+                  -e 's/{{GCP_REGION}}/asia-northeast1/g' \
+                  -e 's/{{ENVIRONMENT}}/test/g' \
+                  "$file" > "$temp_file"
+
+              # Check syntax
+              if ! go build -n "$temp_file" 2>/dev/null; then
+                # Try gofmt for syntax validation
+                if ! gofmt -e "$temp_file" > /dev/null 2>&1; then
+                  echo "::warning file=$file::Go syntax may have issues"
+                fi
+              fi
+
+              rm "$temp_file"
+            fi
+          done
+
+      - name: Validate go.mod Template
+        run: |
+          if [[ -f "dot_config/terraform/testing/terratest/go.mod.tmpl" ]]; then
+            temp_dir=$(mktemp -d)
+
+            sed -e 's/{{PROJECT_NAME}}/testproject/g' \
+                dot_config/terraform/testing/terratest/go.mod.tmpl > "$temp_dir/go.mod"
+
+            cd "$temp_dir"
+
+            # Validate go.mod syntax
+            if ! go mod verify 2>/dev/null; then
+              echo "::warning::go.mod template may need 'go mod tidy' after generation"
+            fi
+
+            rm -rf "$temp_dir"
+          fi

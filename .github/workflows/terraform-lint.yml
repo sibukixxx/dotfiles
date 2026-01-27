@@ -1,0 +1,161 @@
+# Terraform Lint Workflow
+# Validates Terraform templates and configurations in the dotfiles repository
+
+name: Terraform Lint
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'dot_config/terraform/**'
+      - '.github/workflows/terraform-lint.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'dot_config/terraform/**'
+      - '.github/workflows/terraform-lint.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  terraform-fmt:
+    name: Terraform Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
+
+      - name: Check Format
+        run: |
+          # Find all .tf and .tf.tmpl files and check format
+          find dot_config/terraform -name "*.tf" -o -name "*.tf.tmpl" | while read -r file; do
+            # Skip .tmpl files for direct terraform fmt (they have placeholders)
+            if [[ "$file" == *.tmpl ]]; then
+              # Create a temporary file with placeholders replaced for validation
+              temp_file=$(mktemp)
+              sed -e 's/{{[^}]*}}/placeholder/g' "$file" > "$temp_file"
+              if ! terraform fmt -check "$temp_file" > /dev/null 2>&1; then
+                echo "::warning file=$file::Format check failed (placeholders replaced)"
+              fi
+              rm "$temp_file"
+            else
+              if ! terraform fmt -check "$file"; then
+                echo "::error file=$file::Format check failed"
+                exit 1
+              fi
+            fi
+          done
+        continue-on-error: true
+
+  tflint:
+    name: TFLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Init TFLint
+        run: tflint --init
+        working-directory: dot_config/terraform
+
+      - name: Run TFLint on templates
+        run: |
+          # Run TFLint on non-template directories
+          for dir in dot_config/terraform/templates/*/; do
+            if [[ -d "$dir" ]]; then
+              echo "Checking: $dir"
+              # Create temp directory with resolved templates
+              temp_dir=$(mktemp -d)
+
+              # Copy and resolve .tf.tmpl files
+              for tf_file in "$dir"*.tf.tmpl "$dir"**/*.tf.tmpl; do
+                if [[ -f "$tf_file" ]]; then
+                  dest_file="$temp_dir/$(basename "${tf_file%.tmpl}")"
+                  sed -e 's/{{[^}]*}}/placeholder/g' "$tf_file" > "$dest_file"
+                fi
+              done
+
+              # Copy regular .tf files
+              for tf_file in "$dir"*.tf "$dir"**/*.tf; do
+                if [[ -f "$tf_file" ]]; then
+                  cp "$tf_file" "$temp_dir/" 2>/dev/null || true
+                fi
+              done
+
+              # Run tflint if there are any .tf files
+              if ls "$temp_dir"/*.tf 1> /dev/null 2>&1; then
+                tflint "$temp_dir" || echo "::warning::TFLint found issues in $dir"
+              fi
+
+              rm -rf "$temp_dir"
+            fi
+          done
+        continue-on-error: true
+
+  validate-yaml:
+    name: Validate CI Templates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate GitHub Actions templates
+        run: |
+          for file in dot_config/terraform/ci-templates/github-actions/*.yml.tmpl; do
+            if [[ -f "$file" ]]; then
+              echo "Validating: $file"
+              # Replace placeholders and validate YAML
+              temp_file=$(mktemp)
+              sed -e 's/{{[^}]*}}/placeholder/g' "$file" > "$temp_file"
+              if ! python3 -c "import yaml; yaml.safe_load(open('$temp_file'))"; then
+                echo "::error file=$file::Invalid YAML syntax"
+                exit 1
+              fi
+              rm "$temp_file"
+            fi
+          done
+        continue-on-error: true
+
+      - name: Validate GitLab CI templates
+        run: |
+          for file in dot_config/terraform/ci-templates/gitlab-ci/*.yml.tmpl; do
+            if [[ -f "$file" ]]; then
+              echo "Validating: $file"
+              temp_file=$(mktemp)
+              sed -e 's/{{[^}]*}}/placeholder/g' "$file" > "$temp_file"
+              if ! python3 -c "import yaml; yaml.safe_load(open('$temp_file'))"; then
+                echo "::error file=$file::Invalid YAML syntax"
+                exit 1
+              fi
+              rm "$temp_file"
+            fi
+          done
+        continue-on-error: true
+
+  shellcheck:
+    name: ShellCheck Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: 'dot_config/terraform/testing/scripts'
+          severity: warning

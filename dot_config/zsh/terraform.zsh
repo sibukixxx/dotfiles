@@ -238,3 +238,247 @@ tfenv-use() {
         terraform version
     fi
 }
+
+# =============================================================================
+# tftest - Run infrastructure tests with Terratest
+# =============================================================================
+tftest() {
+    local test_dir="${1:-test}"
+    local test_pattern="${2:-./...}"
+    local timeout="${3:-30m}"
+
+    if [[ ! -d "$test_dir" ]]; then
+        echo "[ERROR] Test directory not found: $test_dir"
+        echo "Create tests with: tf-new <template> <name> --with-tests"
+        return 1
+    fi
+
+    echo "=== Running Infrastructure Tests ==="
+    echo "Directory: $test_dir"
+    echo "Pattern: $test_pattern"
+    echo "Timeout: $timeout"
+    echo ""
+
+    # Check prerequisites
+    if ! command -v go &> /dev/null; then
+        echo "[ERROR] Go is required for Terratest. Install with: brew install go"
+        return 1
+    fi
+
+    # Change to test directory and run tests
+    (
+        cd "$test_dir" || exit 1
+
+        # Download dependencies if go.mod exists
+        if [[ -f "go.mod" ]]; then
+            echo "Downloading Go dependencies..."
+            go mod download
+            go mod tidy
+        fi
+
+        # Run tests
+        echo ""
+        echo "Running tests..."
+        go test -v -timeout "$timeout" -parallel 2 "$test_pattern"
+    )
+}
+
+# =============================================================================
+# tfmodule - Manage and create Terraform modules
+# =============================================================================
+tfmodule() {
+    local command="${1:-help}"
+    local module_name="${2:-}"
+
+    case "$command" in
+        list)
+            echo "Available modules in current project:"
+            if [[ -d "modules" ]]; then
+                for module_dir in modules/*/; do
+                    if [[ -d "$module_dir" ]]; then
+                        local name
+                        name=$(basename "$module_dir")
+                        echo "  - $name"
+                    fi
+                done
+            else
+                echo "  No modules directory found."
+            fi
+            ;;
+        new)
+            if [[ -z "$module_name" ]]; then
+                echo "Usage: tfmodule new <module-name>"
+                return 1
+            fi
+
+            local module_dir="modules/$module_name"
+            if [[ -d "$module_dir" ]]; then
+                echo "[ERROR] Module already exists: $module_name"
+                return 1
+            fi
+
+            echo "Creating module: $module_name"
+            mkdir -p "$module_dir"
+
+            # Create main.tf
+            cat > "$module_dir/main.tf" << 'EOF'
+# =============================================================================
+# Main Module Configuration
+# =============================================================================
+
+# TODO: Add your resources here
+EOF
+
+            # Create variables.tf
+            cat > "$module_dir/variables.tf" << 'EOF'
+# =============================================================================
+# Input Variables
+# =============================================================================
+
+variable "project_name" {
+  description = "Name of the project"
+  type        = string
+}
+
+variable "environment" {
+  description = "Environment (dev, stg, prod)"
+  type        = string
+
+  validation {
+    condition     = contains(["dev", "stg", "prod"], var.environment)
+    error_message = "Environment must be dev, stg, or prod."
+  }
+}
+
+variable "tags" {
+  description = "Additional tags for resources"
+  type        = map(string)
+  default     = {}
+}
+EOF
+
+            # Create outputs.tf
+            cat > "$module_dir/outputs.tf" << 'EOF'
+# =============================================================================
+# Output Values
+# =============================================================================
+
+# TODO: Add your outputs here
+EOF
+
+            # Create README.md
+            cat > "$module_dir/README.md" << EOF
+# $module_name Module
+
+## Description
+
+TODO: Add module description here.
+
+## Usage
+
+\`\`\`hcl
+module "$module_name" {
+  source = "./modules/$module_name"
+
+  project_name = var.project_name
+  environment  = var.environment
+}
+\`\`\`
+
+## Requirements
+
+| Name | Version |
+|------|---------|
+| terraform | >= 1.5.0 |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| project_name | Name of the project | string | n/a | yes |
+| environment | Environment (dev, stg, prod) | string | n/a | yes |
+| tags | Additional tags for resources | map(string) | {} | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| TODO | TODO |
+EOF
+
+            echo "[SUCCESS] Module created: $module_dir"
+            echo ""
+            echo "Next steps:"
+            echo "  1. Edit $module_dir/main.tf to add resources"
+            echo "  2. Add required variables to $module_dir/variables.tf"
+            echo "  3. Define outputs in $module_dir/outputs.tf"
+            echo "  4. Update $module_dir/README.md"
+            ;;
+        docs)
+            if [[ -z "$module_name" ]]; then
+                echo "Generating docs for all modules..."
+                if command -v terraform-docs &> /dev/null; then
+                    for module_dir in modules/*/; do
+                        if [[ -d "$module_dir" ]]; then
+                            echo "  Generating: $module_dir"
+                            terraform-docs markdown table "$module_dir" > "$module_dir/README.md"
+                        fi
+                    done
+                    echo "[SUCCESS] Documentation generated"
+                else
+                    echo "[ERROR] terraform-docs not installed. Install with: brew install terraform-docs"
+                    return 1
+                fi
+            else
+                local module_dir="modules/$module_name"
+                if [[ ! -d "$module_dir" ]]; then
+                    echo "[ERROR] Module not found: $module_name"
+                    return 1
+                fi
+                if command -v terraform-docs &> /dev/null; then
+                    terraform-docs markdown table "$module_dir" > "$module_dir/README.md"
+                    echo "[SUCCESS] Documentation generated: $module_dir/README.md"
+                else
+                    echo "[ERROR] terraform-docs not installed. Install with: brew install terraform-docs"
+                    return 1
+                fi
+            fi
+            ;;
+        validate)
+            echo "Validating modules..."
+            local has_error=0
+            for module_dir in modules/*/; do
+                if [[ -d "$module_dir" ]]; then
+                    local name
+                    name=$(basename "$module_dir")
+                    echo -n "  $name: "
+                    if (cd "$module_dir" && terraform init -backend=false > /dev/null 2>&1 && terraform validate > /dev/null 2>&1); then
+                        echo "✓ valid"
+                    else
+                        echo "✗ invalid"
+                        has_error=1
+                    fi
+                fi
+            done
+            return $has_error
+            ;;
+        help|*)
+            cat << 'EOF'
+Usage: tfmodule <command> [module-name]
+
+Commands:
+    list              List modules in current project
+    new <name>        Create a new module scaffold
+    docs [name]       Generate documentation (all or specific module)
+    validate          Validate all modules
+
+Examples:
+    tfmodule list
+    tfmodule new vpc
+    tfmodule docs
+    tfmodule docs vpc
+    tfmodule validate
+EOF
+            ;;
+    esac
+}
