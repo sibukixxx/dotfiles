@@ -1,0 +1,38 @@
+# AWS ECS Template
+name: aws-ecs
+description: AWS ECS (Elastic Container Service) infrastructure with Fargate
+version: "1.0.0"
+
+variables:
+  - name: project_name
+    description: Name of the project
+    required: true
+  - name: aws_region
+    description: AWS region
+    default: ap-northeast-1
+  - name: environment
+    description: Environment name (dev, stg, prod)
+    default: dev
+  - name: container_port
+    description: Port exposed by the container
+    default: "80"
+
+files:
+  - main.tf.tmpl
+  - variables.tf.tmpl
+  - outputs.tf.tmpl
+  - providers.tf.tmpl
+  - backend.tf.tmpl
+  - modules/ecs-cluster/main.tf
+  - modules/ecs-cluster/variables.tf
+  - modules/ecs-cluster/outputs.tf
+  - modules/ecs-service/main.tf
+  - modules/ecs-service/variables.tf
+  - modules/ecs-service/outputs.tf
+  - .tflint.hcl
+  - .pre-commit-config.yaml
+  - .gitignore
+
+post_create:
+  - terraform fmt -recursive
+  - terraform init

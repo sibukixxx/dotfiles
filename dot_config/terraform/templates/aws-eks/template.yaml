@@ -1,0 +1,41 @@
+# AWS EKS Template
+name: aws-eks
+description: AWS EKS (Elastic Kubernetes Service) infrastructure with managed node groups
+version: "1.0.0"
+
+variables:
+  - name: project_name
+    description: Name of the project
+    required: true
+  - name: aws_region
+    description: AWS region
+    default: ap-northeast-1
+  - name: environment
+    description: Environment name (dev, stg, prod)
+    default: dev
+  - name: kubernetes_version
+    description: Kubernetes version for EKS cluster
+    default: "1.29"
+  - name: node_instance_types
+    description: EC2 instance types for node group
+    default: '["t3.medium"]'
+
+files:
+  - main.tf.tmpl
+  - variables.tf.tmpl
+  - outputs.tf.tmpl
+  - providers.tf.tmpl
+  - backend.tf.tmpl
+  - modules/eks/main.tf
+  - modules/eks/variables.tf
+  - modules/eks/outputs.tf
+  - modules/node-group/main.tf
+  - modules/node-group/variables.tf
+  - modules/node-group/outputs.tf
+  - .tflint.hcl
+  - .pre-commit-config.yaml
+  - .gitignore
+
+post_create:
+  - terraform fmt -recursive
+  - terraform init
