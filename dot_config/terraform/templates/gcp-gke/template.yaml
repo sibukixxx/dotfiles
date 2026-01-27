@@ -1,0 +1,38 @@
+# GCP GKE Template
+name: gcp-gke
+description: GCP GKE cluster with VPC and networking modules
+version: "1.0.0"
+
+variables:
+  - name: project_name
+    description: Name of the project
+    required: true
+  - name: gcp_project_id
+    description: GCP project ID
+    required: true
+  - name: gcp_region
+    description: GCP region
+    default: asia-northeast1
+  - name: environment
+    description: Environment name (dev, stg, prod)
+    default: dev
+
+files:
+  - main.tf.tmpl
+  - variables.tf.tmpl
+  - outputs.tf.tmpl
+  - providers.tf.tmpl
+  - backend.tf.tmpl
+  - .tflint.hcl
+  - .pre-commit-config.yaml
+  - .gitignore
+  - modules/vpc/main.tf.tmpl
+  - modules/vpc/variables.tf.tmpl
+  - modules/vpc/outputs.tf.tmpl
+  - modules/gke/main.tf.tmpl
+  - modules/gke/variables.tf.tmpl
+  - modules/gke/outputs.tf.tmpl
+
+post_create:
+  - terraform fmt -recursive
+  - terraform init
