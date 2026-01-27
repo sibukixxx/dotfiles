@@ -10,6 +10,7 @@ set -euo pipefail
 TEMPLATES_DIR="${TF_TEMPLATES_DIR:-$HOME/.config/terraform/templates}"
 DEFAULT_AWS_REGION="ap-northeast-1"
 DEFAULT_GCP_REGION="asia-northeast1"
+DEFAULT_AZURE_REGION="japaneast"
 DEFAULT_ENVIRONMENT="dev"
 
 # Colors
@@ -48,9 +49,10 @@ Commands:
     <template> <name>       Create new project from template
 
 Options:
-    -r, --region <region>   AWS/GCP region (default: ap-northeast-1 for AWS)
+    -r, --region <region>   AWS/GCP/Azure region (default varies by provider)
     -e, --env <env>         Environment (dev, stg, prod) (default: dev)
     -p, --project-id <id>   GCP project ID (required for GCP templates)
+    -s, --subscription-id <id>  Azure subscription ID (required for Azure templates)
     --no-git                Don't initialize git repository
     --no-init               Don't run terraform init
     --no-hooks              Don't install pre-commit hooks
@@ -61,6 +63,7 @@ Examples:
     tf-new aws-basic my-project
     tf-new aws-basic my-project -r us-east-1 -e prod
     tf-new gcp-basic my-project -p my-gcp-project-id
+    tf-new azure-basic my-project -s 12345678-1234-1234-1234-123456789012
 
 Templates:
 EOF
@@ -103,6 +106,7 @@ process_template_file() {
     local region="$4"
     local environment="$5"
     local gcp_project_id="${6:-}"
+    local azure_subscription_id="${7:-}"
 
     # Remove .tmpl extension if present
     dst="${dst%.tmpl}"
@@ -114,8 +118,10 @@ process_template_file() {
     sed -e "s/{{PROJECT_NAME}}/$project_name/g" \
         -e "s/{{AWS_REGION}}/$region/g" \
         -e "s/{{GCP_REGION}}/$region/g" \
+        -e "s/{{AZURE_REGION}}/$region/g" \
         -e "s/{{ENVIRONMENT}}/$environment/g" \
         -e "s/{{GCP_PROJECT_ID}}/$gcp_project_id/g" \
+        -e "s/{{AZURE_SUBSCRIPTION_ID}}/$azure_subscription_id/g" \
         "$src" > "$dst"
 }
 
@@ -125,9 +131,10 @@ create_project() {
     local region="$3"
     local environment="$4"
     local gcp_project_id="$5"
-    local init_git="$6"
-    local run_init="$7"
-    local install_hooks="$8"
+    local azure_subscription_id="$6"
+    local init_git="$7"
+    local run_init="$8"
+    local install_hooks="$9"
 
     local template_dir="$TEMPLATES_DIR/$template_name"
 
@@ -144,10 +151,18 @@ create_project() {
         exit 1
     fi
 
+    # Check for Azure template requirements
+    if [[ "$template_name" == azure-* ]] && [[ -z "$azure_subscription_id" ]]; then
+        print_error "Azure subscription ID is required for Azure templates. Use -s or --subscription-id option."
+        exit 1
+    fi
+
     # Set default region based on template type
     if [[ -z "$region" ]]; then
         if [[ "$template_name" == gcp-* ]]; then
             region="$DEFAULT_GCP_REGION"
+        elif [[ "$template_name" == azure-* ]]; then
+            region="$DEFAULT_AZURE_REGION"
         else
             region="$DEFAULT_AWS_REGION"
         fi
@@ -176,7 +191,7 @@ create_project() {
         if [[ "$file" == *.tmpl ]]; then
             # Process template file
             dst_path="${dst_path%.tmpl}"
-            process_template_file "$file" "$dst_path" "$project_name" "$region" "$environment" "$gcp_project_id"
+            process_template_file "$file" "$dst_path" "$project_name" "$region" "$environment" "$gcp_project_id" "$azure_subscription_id"
         else
             # Copy file as-is
             mkdir -p "$(dirname "$dst_path")"
@@ -262,6 +277,7 @@ main() {
     local region=""
     local environment="$DEFAULT_ENVIRONMENT"
     local gcp_project_id=""
+    local azure_subscription_id=""
     local init_git="true"
     local run_init="true"
     local install_hooks="true"
@@ -287,6 +303,10 @@ main() {
                 ;;
             -p|--project-id)
                 gcp_project_id="$2"
+                shift 2
+                ;;
+            -s|--subscription-id)
+                azure_subscription_id="$2"
                 shift 2
                 ;;
             --no-git)
@@ -346,7 +366,7 @@ main() {
             fi
 
             create_project "$template_name" "$project_name" "$region" "$environment" \
-                "$gcp_project_id" "$init_git" "$run_init" "$install_hooks"
+                "$gcp_project_id" "$azure_subscription_id" "$init_git" "$run_init" "$install_hooks"
             ;;
     esac
 }
