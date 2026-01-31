@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "deno run --allow-read --allow-write --allow-run --allow-env ~/.claude/hooks/session-start.ts"
+            "command": "bun run ~/.claude/hooks/session-start.ts"
           }
         ],
         "description": "Initialize session: show git status, current task, and restore state"
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "deno run --allow-read --allow-env ~/.claude/hooks/user-prompt.ts"
+            "command": "bun run ~/.claude/hooks/user-prompt.ts"
           }
         ],
         "description": "Detect intent and provide contextual hints"
@@ -55,7 +55,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "deno run --allow-read --allow-write --allow-run --allow-env ~/.claude/hooks/format.ts"
+            "command": "bun run ~/.claude/hooks/format.ts"
           }
         ],
         "description": "Auto-format files after edits"
@@ -65,7 +65,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "deno run --allow-read --allow-write --allow-run --allow-env ~/.claude/hooks/auto-git-add.ts"
+            "command": "bun run ~/.claude/hooks/auto-git-add.ts"
           }
         ],
         "description": "Auto-stage tracked files after edits"
@@ -75,7 +75,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "deno run --allow-read --allow-write --allow-run --allow-env ~/.claude/hooks/error-detector.ts"
+            "command": "bun run ~/.claude/hooks/error-detector.ts"
           }
         ],
         "description": "Detect TypeScript and lint errors after edits"
@@ -87,7 +87,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "deno run --allow-read --allow-write --allow-run --allow-env ~/.claude/hooks/session-stop.ts"
+            "command": "bun run ~/.claude/hooks/session-stop.ts"
           }
         ],
         "description": "Save session state and check for uncommitted changes"

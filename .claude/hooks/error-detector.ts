@@ -1,11 +1,12 @@
-import $ from "jsr:@david/dax";
-import { extname } from "jsr:@std/path";
+import { $ } from "bun";
+import { extname } from "node:path";
+import { existsSync, writeFileSync, appendFileSync } from "node:fs";
 import type {
   FileModificationToolParams,
   PostToolUseHookData,
 } from "./types.ts";
 
-const STATUS_DIR = `${Deno.env.get("HOME")}/.claude/status`;
+const STATUS_DIR = `${process.env.HOME}/.claude/status`;
 const ERROR_LOG = `${STATUS_DIR}/errors.md`;
 
 type ErrorInfo = {
@@ -26,7 +27,7 @@ async function checkTypeScriptErrors(filePath: string): Promise<ErrorInfo[]> {
 
   try {
     // Check if tsconfig exists
-    const tsconfigExists = await $.path("tsconfig.json").exists();
+    const tsconfigExists = existsSync("tsconfig.json");
     if (!tsconfigExists) {
       return errors;
     }
@@ -64,8 +65,7 @@ async function checkLintErrors(filePath: string): Promise<ErrorInfo[]> {
 
   try {
     // Try biome first
-    const biomeConfigExists = await $.path("biome.json").exists() ||
-      await $.path("biome.jsonc").exists();
+    const biomeConfigExists = existsSync("biome.json") || existsSync("biome.jsonc");
 
     if (biomeConfigExists) {
       try {
@@ -102,7 +102,7 @@ function getSuggestionForError(errorCode: string): string | undefined {
   return suggestions[errorCode];
 }
 
-async function logErrors(errors: ErrorInfo[]): Promise<void> {
+function logErrors(errors: ErrorInfo[]): void {
   if (errors.length === 0) return;
 
   const timestamp = new Date().toISOString();
@@ -119,17 +119,20 @@ async function logErrors(errors: ErrorInfo[]): Promise<void> {
   }
 
   try {
-    await Deno.writeTextFile(ERROR_LOG, content, { append: true });
+    if (existsSync(ERROR_LOG)) {
+      appendFileSync(ERROR_LOG, content);
+    } else {
+      writeFileSync(ERROR_LOG, `# Error Log\n${content}`);
+    }
   } catch {
-    // Create file if doesn't exist
-    await Deno.writeTextFile(ERROR_LOG, `# Error Log\n${content}`);
+    writeFileSync(ERROR_LOG, `# Error Log\n${content}`);
   }
 }
 
 async function main() {
   try {
-    const data: PostToolUseHookData<FileModificationToolParams> =
-      await new Response(Deno.stdin.readable).json();
+    const input = await Bun.stdin.text();
+    const data: PostToolUseHookData<FileModificationToolParams> = JSON.parse(input);
 
     // Only process file modification tools
     if (!["Write", "Edit", "MultiEdit"].includes(data.tool_name)) {
@@ -166,7 +169,7 @@ async function main() {
       }
 
       // Log to file
-      await logErrors(errors);
+      logErrors(errors);
     }
   } catch (error) {
     // Fail silently

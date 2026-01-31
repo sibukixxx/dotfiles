@@ -1,12 +1,19 @@
-import $ from "jsr:@david/dax";
+import { $ } from "bun";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import type { SessionStartHookData, SessionState } from "./types.ts";
 
-const STATUS_DIR = `${Deno.env.get("HOME")}/.claude/status`;
+const STATUS_DIR = `${process.env.HOME}/.claude/status`;
 const CURRENT_FILE = `${STATUS_DIR}/current.md`;
 const STATE_FILE = `${STATUS_DIR}/session_state.json`;
 
-async function ensureStatusDir() {
-  await $`mkdir -p ${STATUS_DIR}/queue`;
+function ensureStatusDir() {
+  if (!existsSync(STATUS_DIR)) {
+    mkdirSync(STATUS_DIR, { recursive: true });
+  }
+  const queueDir = `${STATUS_DIR}/queue`;
+  if (!existsSync(queueDir)) {
+    mkdirSync(queueDir, { recursive: true });
+  }
 }
 
 async function getGitStatus(): Promise<string[]> {
@@ -26,36 +33,35 @@ async function getGitBranch(): Promise<string> {
   }
 }
 
-async function getCurrentTask(): Promise<string | null> {
+function getCurrentTask(): string | null {
   try {
-    const content = await Deno.readTextFile(CURRENT_FILE);
+    const content = readFileSync(CURRENT_FILE, "utf-8");
     return content.trim() || null;
   } catch {
     return null;
   }
 }
 
-async function loadSessionState(): Promise<SessionState | null> {
+function loadSessionState(): SessionState | null {
   try {
-    const content = await Deno.readTextFile(STATE_FILE);
+    const content = readFileSync(STATE_FILE, "utf-8");
     return JSON.parse(content);
   } catch {
     return null;
   }
 }
 
-async function saveSessionState(state: SessionState): Promise<void> {
-  await ensureStatusDir();
-  await Deno.writeTextFile(STATE_FILE, JSON.stringify(state, null, 2));
+function saveSessionState(state: SessionState): void {
+  ensureStatusDir();
+  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
 }
 
 async function main() {
   try {
-    const data: SessionStartHookData = await new Response(
-      Deno.stdin.readable,
-    ).json();
+    const input = await Bun.stdin.text();
+    const data: SessionStartHookData = JSON.parse(input);
 
-    await ensureStatusDir();
+    ensureStatusDir();
 
     const messages: string[] = [];
 
@@ -77,13 +83,13 @@ async function main() {
     }
 
     // 2. Check for current task
-    const currentTask = await getCurrentTask();
+    const currentTask = getCurrentTask();
     if (currentTask) {
       messages.push(`\n📋 Current Task:\n${currentTask}`);
     }
 
     // 3. Load previous session state
-    const previousState = await loadSessionState();
+    const previousState = loadSessionState();
     if (previousState?.task_stack && previousState.task_stack.length > 0) {
       messages.push(
         `\n📚 Task Stack (${previousState.task_stack.length} items):`,
@@ -103,7 +109,7 @@ async function main() {
       uncommitted_files: gitChanges,
       notes: [],
     };
-    await saveSessionState(newState);
+    saveSessionState(newState);
 
     // Output session info
     console.log("━".repeat(50));

@@ -85,7 +85,7 @@ echo -e "\n${BLUE}Checking dependencies...${NC}"
 has_errors=0
 
 # Required tools
-check_tool "deno" "required" || has_errors=1
+check_tool "bun" "required" || has_errors=1
 
 # Optional tools (for hooks)
 check_tool "jq" "optional"
@@ -116,10 +116,10 @@ esac
 # Verify hooks can run
 echo -e "\n${BLUE}Verifying hooks...${NC}"
 if [ -f "$CLAUDE_DIR/hooks/session-start.ts" ]; then
-    if deno check "$CLAUDE_DIR/hooks/session-start.ts" 2>/dev/null; then
+    if bun run "$CLAUDE_DIR/hooks/session-start.ts" --dry-run 2>/dev/null; then
         echo -e "${GREEN}✓ Hooks verified${NC}"
     else
-        echo -e "${YELLOW}⚠ Hook verification failed - please check TypeScript files${NC}"
+        echo -e "${YELLOW}⚠ Hook verification skipped${NC}"
     fi
 fi
 

@@ -1,5 +1,5 @@
-import { parseArgs } from "jsr:@std/cli/parse-args";
-import $ from "jsr:@david/dax";
+import { $ } from "bun";
+import { parseArgs } from "util";
 
 type Notification = {
   session_id: string;
@@ -8,14 +8,17 @@ type Notification = {
   title: string;
 };
 
-const flags = parseArgs(Deno.args, {
-  string: ["type"],
+const { values: flags } = parseArgs({
+  args: Bun.argv.slice(2),
+  options: {
+    type: { type: "string" },
+  },
 });
 
 // When called from Notification hooks
 async function notify() {
-  const input: Notification = await new Response(Deno.stdin.readable).json();
-  await $`terminal-notifier -title "${input.title}" -message "${input.message}" -sound default`;
+  const input: Notification = await Bun.stdin.json();
+  await $`terminal-notifier -title ${input.title} -message ${input.message} -sound default`;
 }
 
 // When called from Stop hooks
@@ -34,6 +37,6 @@ async function main() {
   }
 }
 
-if (Deno.build.os === "darwin") {
+if (process.platform === "darwin") {
   await main();
 }

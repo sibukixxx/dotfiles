@@ -1,5 +1,6 @@
-import $ from "jsr:@david/dax";
-import { extname } from "jsr:@std/path";
+import { $ } from "bun";
+import { extname } from "node:path";
+import { existsSync } from "node:fs";
 import type {
   FileModificationToolParams,
   PostToolUseHookData,
@@ -11,13 +12,13 @@ async function formatFile(filePath: string) {
   try {
     switch (ext) {
       case ".go":
-        await $`gofmt -w ${filePath}`;
+        await $`gofmt -w ${filePath}`.quiet();
         console.log(`Formatted Go file: ${filePath}`);
         break;
 
       case ".rs":
         // Use rustfmt if available
-        await $`rustfmt ${filePath}`;
+        await $`rustfmt ${filePath}`.quiet();
         console.log(`Formatted Rust file: ${filePath}`);
         break;
 
@@ -26,22 +27,21 @@ async function formatFile(filePath: string) {
       case ".js":
       case ".jsx": {
         // Check if node_modules exists (Node.js project)
-        const nodeModulesExists = await $.path("node_modules").exists();
+        const nodeModulesExists = existsSync("node_modules");
 
         if (nodeModulesExists) {
           // Check for biome config
-          const biomeConfigExists = await $.path("biome.json").exists() ||
-            await $.path("biome.jsonc").exists();
+          const biomeConfigExists = existsSync("biome.json") || existsSync("biome.jsonc");
 
           // Check for oxfmt config
-          const oxfmtConfigExists = await $.path("oxfmt.toml").exists();
+          const oxfmtConfigExists = existsSync("oxfmt.toml");
 
           let formatted = false;
 
           // Use biome for formatting if config exists
           if (biomeConfigExists) {
             try {
-              await $`npx @biomejs/biome format --write ${filePath}`;
+              await $`npx @biomejs/biome format --write ${filePath}`.quiet();
               console.log(
                 `Formatted TypeScript/JavaScript file with Biome: ${filePath}`,
               );
@@ -54,7 +54,7 @@ async function formatFile(filePath: string) {
           // Use oxfmt for formatting if config exists
           if (oxfmtConfigExists) {
             try {
-              await $`npx oxfmt ${filePath}`;
+              await $`npx oxfmt ${filePath}`.quiet();
               console.log(
                 `Formatted TypeScript/JavaScript file with oxfmt: ${filePath}`,
               );
@@ -68,11 +68,8 @@ async function formatFile(filePath: string) {
             console.log(`No formatter available for: ${filePath}`);
           }
         } else {
-          // Use deno fmt as default
-          await $`deno fmt ${filePath}`;
-          console.log(
-            `Formatted TypeScript/JavaScript file with Deno: ${filePath}`,
-          );
+          // Use bun format as default (or skip)
+          console.log(`No node_modules found, skipping format for: ${filePath}`);
         }
         break;
       }
@@ -81,7 +78,7 @@ async function formatFile(filePath: string) {
       case ".jsonc": {
         // Use jq to format JSON files
         try {
-          await $`jq . ${filePath} > ${filePath}.tmp && mv ${filePath}.tmp ${filePath}`;
+          await $`jq . ${filePath} > ${filePath}.tmp && mv ${filePath}.tmp ${filePath}`.quiet();
           console.log(`Formatted JSON file with jq: ${filePath}`);
         } catch {
           console.log(`Failed to format JSON file: ${filePath}`);
@@ -99,8 +96,8 @@ async function formatFile(filePath: string) {
 
 async function main() {
   try {
-    const data: PostToolUseHookData<FileModificationToolParams> =
-      await new Response(Deno.stdin.readable).json();
+    const input = await Bun.stdin.text();
+    const data: PostToolUseHookData<FileModificationToolParams> = JSON.parse(input);
 
     // Handle different tool types
     switch (data.tool_name) {
@@ -126,7 +123,7 @@ async function main() {
   } catch (error) {
     console.error("Error in main function:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await $`echo ${`FATAL ERROR: ${errorMessage}`} >> /tmp/claude_hook_format.log`;
+    console.error(`FATAL ERROR: ${errorMessage}`);
   }
 }
 

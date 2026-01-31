@@ -95,9 +95,8 @@ function getIntentHint(intent: Intent): string {
 
 async function main() {
   try {
-    const data: UserPromptSubmitHookData = await new Response(
-      Deno.stdin.readable,
-    ).json();
+    const input = await Bun.stdin.text();
+    const data: UserPromptSubmitHookData = JSON.parse(input);
 
     const intent = detectIntent(data.prompt);
 

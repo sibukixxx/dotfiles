@@ -75,7 +75,7 @@ The `types.ts` file provides TypeScript types for all hook events:
 
 ## Dependencies
 
-- **Deno** (required): Runtime for TypeScript hooks
+- **Bun** (required): Runtime for TypeScript hooks
 - **jq** (optional): JSON formatting
 - **gofmt/rustfmt/biome** (optional): Language-specific formatters
 
@@ -89,7 +89,7 @@ Hooks are configured in `~/.claude/settings.json`:
     "SessionStart": [
       {
         "matcher": "*",
-        "hooks": [{ "type": "command", "command": "deno run ... session-start.ts" }]
+        "hooks": [{ "type": "command", "command": "bun run ~/.claude/hooks/session-start.ts" }]
       }
     ],
     "UserPromptSubmit": [...],
@@ -112,7 +112,7 @@ The format hook runs after Write, Edit, or MultiEdit operations and automaticall
 
 - `.go` files - formatted with `gofmt`
 - `.rs` files - formatted with `rustfmt`
-- `.ts`, `.tsx`, `.js`, `.jsx` files - formatted with Biome (for Node.js projects) or Deno
+- `.ts`, `.tsx`, `.js`, `.jsx` files - formatted with Biome
 - `.json`, `.jsonc` files - formatted with `jq`
 
 ## Auto Git Add Hook

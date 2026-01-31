@@ -1,7 +1,8 @@
-import $ from "jsr:@david/dax";
+import { $ } from "bun";
+import { readFileSync, writeFileSync, appendFileSync, existsSync } from "node:fs";
 import type { SessionState, StopHookData } from "./types.ts";
 
-const STATUS_DIR = `${Deno.env.get("HOME")}/.claude/status`;
+const STATUS_DIR = `${process.env.HOME}/.claude/status`;
 const STATE_FILE = `${STATUS_DIR}/session_state.json`;
 const LOG_FILE = `${STATUS_DIR}/session_log.md`;
 
@@ -14,25 +15,25 @@ async function getGitStatus(): Promise<string[]> {
   }
 }
 
-async function loadSessionState(): Promise<SessionState | null> {
+function loadSessionState(): SessionState | null {
   try {
-    const content = await Deno.readTextFile(STATE_FILE);
+    const content = readFileSync(STATE_FILE, "utf-8");
     return JSON.parse(content);
   } catch {
     return null;
   }
 }
 
-async function saveSessionState(state: SessionState): Promise<void> {
-  await Deno.writeTextFile(STATE_FILE, JSON.stringify(state, null, 2));
+function saveSessionState(state: SessionState): void {
+  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
 }
 
-async function appendSessionLog(
+function appendSessionLog(
   sessionId: string,
   startedAt: string,
   endedAt: string,
   uncommittedFiles: string[],
-): Promise<void> {
+): void {
   const logEntry = `
 ## Session: ${sessionId}
 - **Started**: ${startedAt}
@@ -44,25 +45,26 @@ ${uncommittedFiles.length > 0 ? uncommittedFiles.map((f) => `  - ${f}`).join("\n
 `;
 
   try {
-    await Deno.writeTextFile(LOG_FILE, logEntry, { append: true });
+    if (existsSync(LOG_FILE)) {
+      appendFileSync(LOG_FILE, logEntry);
+    } else {
+      writeFileSync(LOG_FILE, `# Claude Code Session Log\n\n${logEntry}`);
+    }
   } catch {
-    // Create new file if doesn't exist
-    await Deno.writeTextFile(
-      LOG_FILE,
-      `# Claude Code Session Log\n\n${logEntry}`,
-    );
+    writeFileSync(LOG_FILE, `# Claude Code Session Log\n\n${logEntry}`);
   }
 }
 
 async function main() {
   try {
-    const data: StopHookData = await new Response(Deno.stdin.readable).json();
+    const input = await Bun.stdin.text();
+    const data: StopHookData = JSON.parse(input);
 
     const messages: string[] = [];
     const endedAt = new Date().toISOString();
 
     // 1. Load current session state
-    const state = await loadSessionState();
+    const state = loadSessionState();
 
     // 2. Check git status
     const gitChanges = await getGitStatus();
@@ -80,10 +82,10 @@ async function main() {
     if (state) {
       state.last_activity = endedAt;
       state.uncommitted_files = gitChanges;
-      await saveSessionState(state);
+      saveSessionState(state);
 
       // 4. Append to session log
-      await appendSessionLog(
+      appendSessionLog(
         data.session_id,
         state.started_at,
         endedAt,

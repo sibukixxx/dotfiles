@@ -1,4 +1,4 @@
-import $ from "jsr:@david/dax";
+import { $ } from "bun";
 import type {
   FileModificationToolParams,
   PostToolUseHookData,
@@ -50,8 +50,8 @@ async function gitAddFile(filePath: string): Promise<void> {
 
 async function main() {
   try {
-    const data: PostToolUseHookData<FileModificationToolParams> =
-      await new Response(Deno.stdin.readable).json();
+    const input = await Bun.stdin.text();
+    const data: PostToolUseHookData<FileModificationToolParams> = JSON.parse(input);
 
     // Only process file modification tools
     if (!["Write", "Edit", "MultiEdit"].includes(data.tool_name)) {
