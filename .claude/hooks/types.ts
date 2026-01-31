@@ -1,4 +1,5 @@
-// Type definitions for Claude Code PostToolUse hook
+// Type definitions for Claude Code Hooks
+// Supports: SessionStart, UserPromptSubmit, PostToolUse, Stop
 
 // Tool response types based on actual log data
 export type WriteToolResponse = {
@@ -140,3 +141,80 @@ export function isMultiEditToolResponse(
 
 // Generic tool params type for other tools
 export type ToolParams = FileModificationToolParams | Record<string, unknown>;
+
+// ============================================
+// SessionStart Hook Types
+// ============================================
+export type SessionStartHookData = {
+  session_id: string;
+  transcript_path: string;
+  hook_event_name: "SessionStart";
+  cwd: string;
+};
+
+// ============================================
+// UserPromptSubmit Hook Types
+// ============================================
+export type UserPromptSubmitHookData = {
+  session_id: string;
+  transcript_path: string;
+  hook_event_name: "UserPromptSubmit";
+  prompt: string;
+  cwd: string;
+};
+
+// ============================================
+// Stop Hook Types
+// ============================================
+export type StopHookData = {
+  session_id: string;
+  transcript_path: string;
+  hook_event_name: "Stop";
+  stop_reason: "end_turn" | "tool_use" | "max_tokens" | "stop_sequence";
+  cwd: string;
+};
+
+// ============================================
+// Union type for all hook data
+// ============================================
+export type HookData =
+  | SessionStartHookData
+  | UserPromptSubmitHookData
+  | PostToolUseHookData
+  | StopHookData;
+
+// ============================================
+// State Management Types
+// ============================================
+export type TaskPriority = "p1" | "p2" | "p3";
+
+export type TaskState = {
+  id: string;
+  title: string;
+  description?: string;
+  priority: TaskPriority;
+  status: "pending" | "in_progress" | "completed" | "blocked";
+  created_at: string;
+  updated_at: string;
+  context?: Record<string, unknown>;
+};
+
+export type SessionState = {
+  session_id: string;
+  started_at: string;
+  last_activity: string;
+  current_task?: TaskState;
+  task_stack: TaskState[];
+  uncommitted_files: string[];
+  notes: string[];
+};
+
+// ============================================
+// Hook Result Types
+// ============================================
+export type HookResult = {
+  success: boolean;
+  message?: string;
+  inject_context?: string; // Context to inject into conversation
+  block?: boolean; // Whether to block the operation
+};
