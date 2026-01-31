@@ -186,6 +186,13 @@ else
 fi
 
 # =============================================================================
+# Ensure critical scripts are loaded (fallback if sheldon missed them)
+# =============================================================================
+if ! command -v wta &>/dev/null; then
+  [[ -f ${XDG_CONFIG_HOME}/zsh/fzf-worktree.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/fzf-worktree.zsh
+fi
+
+# =============================================================================
 # VCS info for RPROMPT (after sheldon to avoid conflicts with zoxide)
 # =============================================================================
 autoload -Uz vcs_info
