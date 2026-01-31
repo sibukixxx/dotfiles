@@ -1,5 +1,11 @@
 # Claude Code - ignore cache/history, keep config
 .claude/*
 !.claude/CLAUDE.md
+!.claude/settings.json
 !.claude/settings.local.json
+!.claude/install.sh
 !.claude/rules/
+!.claude/agents/
+!.claude/commands/
+!.claude/hooks/
+!.claude/skills/
