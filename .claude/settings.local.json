@@ -14,7 +14,9 @@
       "Bash(git -C /Users/sibukixxx/dotfiles mv:*)",
       "Bash(chezmoi add:*)",
       "Bash(gh api:*)",
-      "Bash(/Users/yuichi.takada/ghq/github.com/sibukixxx/dotfiles/dot_local/bin/executable_agent-skills:*)"
+      "Bash(/Users/sibukixxx/ghq/github.com/sibukixxx/dotfiles/dot_local/bin/executable_agent-skills:*)",
+      "Bash(sheldon lock:*)"
     ]
   }
 }
+
