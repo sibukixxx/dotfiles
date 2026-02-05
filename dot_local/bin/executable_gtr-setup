@@ -1,0 +1,149 @@
+#!/bin/bash
+# git-worktree-runner (gtr) セットアップスクリプト
+# このスクリプトは git-worktree-runner をインストールし、プロジェクト用の設定を行います
+
+set -e
+
+GTR_REPO="https://github.com/coderabbitai/git-worktree-runner.git"
+GTR_INSTALL_DIR="${HOME}/.local/share/git-worktree-runner"
+GTR_BIN="/usr/local/bin/git-gtr"
+
+# カラー出力
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# git-worktree-runner がインストール済みか確認
+check_gtr_installed() {
+    if command -v git-gtr &> /dev/null; then
+        log_info "git-gtr は既にインストールされています"
+        return 0
+    fi
+    return 1
+}
+
+# git-worktree-runner をインストール
+install_gtr() {
+    log_info "git-worktree-runner をインストールしています..."
+
+    # インストールディレクトリの作成
+    mkdir -p "$(dirname "$GTR_INSTALL_DIR")"
+
+    # 既存のインストールがあれば削除
+    if [ -d "$GTR_INSTALL_DIR" ]; then
+        log_warn "既存のインストールを削除しています..."
+        rm -rf "$GTR_INSTALL_DIR"
+    fi
+
+    # リポジトリをクローン
+    git clone "$GTR_REPO" "$GTR_INSTALL_DIR"
+
+    # シンボリックリンクを作成
+    if [ -L "$GTR_BIN" ]; then
+        sudo rm "$GTR_BIN"
+    fi
+    sudo ln -s "${GTR_INSTALL_DIR}/bin/git-gtr" "$GTR_BIN"
+
+    log_info "git-worktree-runner のインストールが完了しました"
+}
+
+# プロジェクト用の gtr 設定
+configure_project() {
+    log_info "プロジェクト用の gtr 設定を行っています..."
+
+    # ワークツリーの作成先を .git 以下に設定（Git管理外）
+    # これにより、リポジトリのルートディレクトリが散らからない
+    REPO_ROOT=$(git rev-parse --show-toplevel)
+    WORKTREES_DIR="${REPO_ROOT}/.git/worktrees-src"
+    mkdir -p "$WORKTREES_DIR"
+    git gtr config set gtr.worktrees.base "$WORKTREES_DIR"
+    log_info "ワークツリー作成先を ${WORKTREES_DIR} に設定しました"
+
+    # デフォルトエディタの設定（Cursor を優先、なければ VS Code）
+    if command -v cursor &> /dev/null; then
+        git gtr config set gtr.editor.default cursor
+        log_info "デフォルトエディタを Cursor に設定しました"
+    elif command -v code &> /dev/null; then
+        git gtr config set gtr.editor.default vscode
+        log_info "デフォルトエディタを VS Code に設定しました"
+    fi
+
+    # デフォルト AI ツールの設定（Claude Code を優先）
+    if command -v claude &> /dev/null; then
+        git gtr config set gtr.ai.default claude
+        log_info "デフォルト AI ツールを Claude Code に設定しました"
+    fi
+
+    # ワークツリー作成時にコピーするファイルの設定
+    # 環境設定ファイル
+    git gtr config add gtr.copy.include ".env"
+    git gtr config add gtr.copy.include ".env.local"
+    git gtr config add gtr.copy.include "frontend/.env.local"
+    git gtr config add gtr.copy.include "backend-go/.env"
+    git gtr config add gtr.copy.include "backend/.env"
+
+    # IDE設定
+    git gtr config add gtr.copy.include ".idea/**"
+    git gtr config add gtr.copy.include ".vscode/**"
+
+    log_info "プロジェクト設定が完了しました"
+}
+
+# ワークツリーディレクトリの設定確認
+show_worktree_info() {
+    REPO_ROOT=$(git rev-parse --show-toplevel)
+    WORKTREES_DIR="${REPO_ROOT}/.git/worktrees-src"
+
+    echo ""
+    log_info "=== git-worktree-runner 設定完了 ==="
+    echo ""
+    echo "ワークツリー保存先: ${WORKTREES_DIR}"
+    echo ""
+    echo "使い方:"
+    echo "  git gtr new <branch>     - 新しいワークツリーを作成"
+    echo "  git gtr editor <branch>  - エディタでワークツリーを開く"
+    echo "  git gtr ai <branch>      - AI ツールでワークツリーを開く"
+    echo "  git gtr run <branch> <cmd> - ワークツリーでコマンドを実行"
+    echo "  git gtr list             - ワークツリー一覧を表示"
+    echo "  git gtr rm <branch>      - ワークツリーを削除"
+    echo ""
+    echo "例:"
+    echo "  git gtr new feat/new-feature    - 新機能用のワークツリーを作成"
+    echo "  git gtr ai feat/new-feature     - Claude Code で作業開始"
+    echo "  git gtr run feat/new-feature 'make test' - テスト実行"
+    echo ""
+}
+
+# メイン処理
+main() {
+    log_info "git-worktree-runner セットアップを開始します..."
+
+    # インストール確認
+    if ! check_gtr_installed; then
+        install_gtr
+    fi
+
+    # プロジェクト設定
+    configure_project
+
+    # 情報表示
+    show_worktree_info
+
+    log_info "セットアップが完了しました"
+}
+
+# スクリプト実行
+main "$@"

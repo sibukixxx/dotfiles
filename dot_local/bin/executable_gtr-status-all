@@ -1,0 +1,106 @@
+#!/bin/bash
+# 全ワークツリーの状況を一覧表示
+# 各ブランチの変更状況、コミット数、プッシュ状態を確認
+
+set -e
+
+# カラー出力
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+# ヘッダー
+echo ""
+echo -e "${CYAN}=== Git Worktree 状況一覧 ===${NC}"
+echo ""
+printf "%-30s %-15s %-10s %-10s %s\n" "ブランチ" "変更ファイル" "コミット" "プッシュ" "PR"
+printf "%-30s %-15s %-10s %-10s %s\n" "------------------------------" "---------------" "----------" "----------" "---"
+
+# ワークツリー一覧を取得
+while read -r line; do
+    # メインリポジトリはスキップ
+    if [[ "$line" == *"(bare)"* ]]; then
+        continue
+    fi
+
+    # パスとブランチを抽出
+    WORKTREE_PATH=$(echo "$line" | awk '{print $1}')
+    BRANCH=$(echo "$line" | sed 's/.*\[\(.*\)\].*/\1/' | sed 's/\]$//')
+
+    # メインワークツリーの判定（ブランチ名のみの場合）
+    if [[ "$BRANCH" == "$line" ]]; then
+        BRANCH=$(cd "$WORKTREE_PATH" && git branch --show-current 2>/dev/null || echo "unknown")
+    fi
+
+    cd "$WORKTREE_PATH" 2>/dev/null || continue
+
+    # 変更ファイル数
+    CHANGES=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$CHANGES" -gt 0 ]; then
+        CHANGES_STR="${YELLOW}${CHANGES} 変更${NC}"
+    else
+        CHANGES_STR="${GREEN}なし${NC}"
+    fi
+
+    # develop からのコミット数
+    COMMITS=$(git rev-list develop..HEAD --count 2>/dev/null || echo "?")
+    if [ "$COMMITS" == "?" ] || [ "$COMMITS" == "0" ]; then
+        COMMITS_STR="${YELLOW}${COMMITS}${NC}"
+    else
+        COMMITS_STR="${GREEN}${COMMITS}${NC}"
+    fi
+
+    # プッシュ状態
+    UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo "")
+    if [ -z "$UPSTREAM" ]; then
+        PUSH_STR="${YELLOW}未設定${NC}"
+    else
+        AHEAD=$(git rev-list @{u}..HEAD --count 2>/dev/null || echo "0")
+        if [ "$AHEAD" -gt 0 ]; then
+            PUSH_STR="${YELLOW}+${AHEAD}${NC}"
+        else
+            PUSH_STR="${GREEN}同期済${NC}"
+        fi
+    fi
+
+    # PR 状態 (gh コマンドがある場合)
+    PR_STR="-"
+    if command -v gh &>/dev/null; then
+        PR_NUM=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+        if [ -n "$PR_NUM" ]; then
+            PR_STATE=$(gh pr view "$PR_NUM" --json state --jq '.state' 2>/dev/null || echo "")
+            case "$PR_STATE" in
+                "OPEN")
+                    PR_STR="${GREEN}#${PR_NUM}${NC}"
+                    ;;
+                "MERGED")
+                    PR_STR="${CYAN}#${PR_NUM} merged${NC}"
+                    ;;
+                "CLOSED")
+                    PR_STR="${RED}#${PR_NUM} closed${NC}"
+                    ;;
+                *)
+                    PR_STR="#${PR_NUM}"
+                    ;;
+            esac
+        fi
+    fi
+
+    # 出力
+    printf "%-30s " "$BRANCH"
+    printf "%-15b " "$CHANGES_STR"
+    printf "%-10b " "$COMMITS_STR"
+    printf "%-10b " "$PUSH_STR"
+    printf "%b\n" "$PR_STR"
+
+done < <(git worktree list)
+
+echo ""
+echo -e "${CYAN}凡例:${NC}"
+echo "  変更ファイル: ワークツリー内の未コミット変更"
+echo "  コミット: develop からのコミット数"
+echo "  プッシュ: リモートとの差分 (+N = N件未プッシュ)"
+echo "  PR: プルリクエスト番号"
+echo ""

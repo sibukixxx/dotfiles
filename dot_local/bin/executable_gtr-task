@@ -1,0 +1,56 @@
+#!/bin/bash
+# git-worktree-runner でワークツリーを作成し、タスク指示付きで AI エージェントを起動
+# 使い方: gtr-task <branch> "<task-instruction>"
+
+set -e
+
+BRANCH="$1"
+TASK="$2"
+
+# カラー出力
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# 引数チェック
+if [ -z "$BRANCH" ]; then
+    log_error "ブランチ名が必要です"
+    echo "使い方: $0 <branch> \"<task-instruction>\""
+    echo ""
+    echo "例:"
+    echo "  $0 feat/add-login \"ログイン機能を実装してください\""
+    echo "  $0 fix/bug-123 \"Issue #123 のバグを修正してください\""
+    exit 1
+fi
+
+if [ -z "$TASK" ]; then
+    log_error "タスク指示が必要です"
+    echo "使い方: $0 <branch> \"<task-instruction>\""
+    exit 1
+fi
+
+# ワークツリーが既に存在するか確認
+WORKTREE_PATH=$(git gtr go "$BRANCH" 2>/dev/null || echo "")
+
+if [ -z "$WORKTREE_PATH" ]; then
+    log_info "ワークツリー '$BRANCH' を作成しています..."
+    git gtr new "$BRANCH"
+    WORKTREE_PATH=$(git gtr go "$BRANCH")
+fi
+
+log_info "ワークツリーパス: $WORKTREE_PATH"
+log_info "タスク: $TASK"
+
+# Claude Code をタスク指示付きで起動
+log_info "Claude Code を起動しています..."
+cd "$WORKTREE_PATH"
+claude "$TASK"

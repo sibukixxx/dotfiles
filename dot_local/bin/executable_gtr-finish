@@ -1,0 +1,251 @@
+#!/bin/bash
+# git-worktree-runner でタスク完了後の処理を行う
+# - 変更状況の確認
+# - プッシュ
+# - PR 作成
+#
+# 使い方: gtr-finish <branch> [--push] [--pr]
+#
+# 注意: このスクリプトはワークツリー内からでも実行可能です。
+#       メインリポジトリを自動検出します。
+
+set -e
+
+BRANCH="$1"
+shift || true
+
+DO_PUSH=false
+DO_PR=false
+
+# オプション解析
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --push)
+            DO_PUSH=true
+            shift
+            ;;
+        --pr)
+            DO_PR=true
+            DO_PUSH=true  # PR には push が必要
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+# カラー出力
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+log_section() {
+    echo ""
+    echo -e "${CYAN}=== $1 ===${NC}"
+}
+
+# 引数チェック
+if [ -z "$BRANCH" ]; then
+    log_error "ブランチ名が必要です"
+    echo ""
+    echo "使い方: $0 <branch> [options]"
+    echo ""
+    echo "オプション:"
+    echo "  --push    リモートにプッシュ"
+    echo "  --pr      プルリクエストを作成 (--push を含む)"
+    echo ""
+    echo "例:"
+    echo "  $0 feat/feature-a           # 状況確認のみ"
+    echo "  $0 feat/feature-a --push    # プッシュまで"
+    echo "  $0 feat/feature-a --pr      # PR 作成まで"
+    exit 1
+fi
+
+# メインリポジトリのルートを検出する関数
+# ワークツリー内からでもメインリポジトリを見つける
+find_main_repo_root() {
+    local current_root
+    current_root=$(git rev-parse --show-toplevel 2>/dev/null)
+
+    if [ -z "$current_root" ]; then
+        echo ""
+        return 1
+    fi
+
+    # .git がディレクトリかファイルかで判断
+    # ワークツリーの場合は .git がファイル（gitdir: ... を含む）
+    if [ -f "$current_root/.git" ]; then
+        # ワークツリー内にいる場合、.git ファイルからメインリポジトリのパスを取得
+        local gitdir
+        gitdir=$(grep "^gitdir:" "$current_root/.git" | sed 's/^gitdir: //')
+
+        # gitdir は相対パスの場合があるので絶対パスに変換
+        if [[ "$gitdir" != /* ]]; then
+            gitdir="$current_root/$gitdir"
+        fi
+
+        # .git/worktrees/xxx から .git を取得し、その親ディレクトリがメインリポジトリ
+        # パス例: /path/to/repo/.git/worktrees/branch-name
+        local main_git_dir
+        main_git_dir=$(cd "$gitdir/../.." 2>/dev/null && pwd)
+
+        # main_git_dir が .git ディレクトリなので、その親がリポジトリルート
+        echo "$(dirname "$main_git_dir")"
+    else
+        # メインリポジトリ内にいる場合
+        echo "$current_root"
+    fi
+}
+
+# メインリポジトリを検出
+MAIN_REPO_ROOT=$(find_main_repo_root)
+if [ -z "$MAIN_REPO_ROOT" ]; then
+    log_error "Gitリポジトリが見つかりません"
+    exit 1
+fi
+
+log_info "メインリポジトリ: $MAIN_REPO_ROOT"
+
+# メインリポジトリに移動してから git gtr を実行
+WORKTREE_PATH=$(cd "$MAIN_REPO_ROOT" && git gtr go "$BRANCH" 2>/dev/null || echo "")
+
+if [ -z "$WORKTREE_PATH" ]; then
+    log_error "ワークツリー '$BRANCH' が見つかりません"
+    exit 1
+fi
+
+log_info "ワークツリー: $WORKTREE_PATH"
+cd "$WORKTREE_PATH"
+
+# 1. 変更状況の確認
+log_section "変更状況"
+git status
+
+# 未コミットの変更があるか確認
+if [ -n "$(git status --porcelain)" ]; then
+    log_warn "未コミットの変更があります"
+    echo ""
+    read -p "続行しますか? (y/N): " REPLY
+    if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
+        log_info "中断しました"
+        exit 0
+    fi
+fi
+
+# 2. コミットログの確認
+log_section "最近のコミット"
+git log --oneline -5
+
+# developとの差分を確認
+log_section "develop からの差分"
+DIFF_STAT=$(git diff develop...HEAD --stat 2>/dev/null || echo "")
+if [ -n "$DIFF_STAT" ]; then
+    echo "$DIFF_STAT"
+else
+    log_warn "develop との差分がないか、develop ブランチが存在しません"
+fi
+
+# 3. プッシュ
+if [ "$DO_PUSH" = true ]; then
+    log_section "プッシュ"
+
+    # リモートブランチの確認
+    if git ls-remote --exit-code --heads origin "$BRANCH" &>/dev/null; then
+        log_info "リモートブランチが存在します。更新をプッシュ..."
+        git push
+    else
+        log_info "新しいリモートブランチを作成..."
+        git push -u origin "$BRANCH"
+    fi
+
+    log_info "プッシュ完了"
+fi
+
+# 4. PR 作成
+if [ "$DO_PR" = true ]; then
+    log_section "プルリクエスト"
+
+    # gh コマンドの確認
+    if ! command -v gh &>/dev/null; then
+        log_error "GitHub CLI (gh) がインストールされていません"
+        log_info "インストール: brew install gh"
+        exit 1
+    fi
+
+    # 既存の PR があるか確認
+    EXISTING_PR=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+    if [ -n "$EXISTING_PR" ]; then
+        log_warn "既存の PR #$EXISTING_PR があります"
+        PR_URL=$(gh pr view "$EXISTING_PR" --json url --jq '.url')
+        log_info "URL: $PR_URL"
+    else
+        log_info "新しい PR を作成します..."
+
+        # PR タイトルを生成（最新コミットメッセージから）
+        PR_TITLE=$(git log -1 --format="%s")
+
+        # PR 本文を生成
+        PR_BODY=$(cat <<EOF
+## 概要
+<!-- 変更内容を簡潔に説明 -->
+
+## 変更内容
+$(git log develop..HEAD --format="- %s" 2>/dev/null || echo "- 変更内容")
+
+## テスト
+- [ ] ローカルでテスト済み
+- [ ] lint/type-check 通過
+
+---
+このPRは git-worktree-runner を使用して作成されました。
+EOF
+)
+
+        echo ""
+        echo "タイトル: $PR_TITLE"
+        echo ""
+        read -p "PR を作成しますか? (y/N): " REPLY
+        if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+            gh pr create --base develop --title "$PR_TITLE" --body "$PR_BODY"
+        else
+            log_info "PR 作成をスキップしました"
+            log_info "手動で作成: gh pr create --base develop"
+        fi
+    fi
+fi
+
+# 5. サマリー
+log_section "サマリー"
+echo "ブランチ: $BRANCH"
+echo "パス: $WORKTREE_PATH"
+
+if [ "$DO_PUSH" = true ]; then
+    echo "プッシュ: 完了"
+else
+    echo "プッシュ: 未実行 (--push オプションで実行)"
+fi
+
+if [ "$DO_PR" = true ]; then
+    echo "PR: 処理済み"
+else
+    echo "PR: 未実行 (--pr オプションで実行)"
+fi
+
+echo ""
+log_info "完了"

@@ -1,0 +1,175 @@
+#!/bin/bash
+# git-worktree-runner で複数のタスクを並行起動
+# タスク定義ファイルから読み込んで、各ワークツリーで AI エージェントを起動
+#
+# 使い方: gtr-batch <tasks-file>
+# タスクファイル形式 (YAML-like):
+#   feat/feature-a: "機能Aを実装してください"
+#   fix/bug-123: "Issue #123 を修正してください"
+
+set -e
+
+TASKS_FILE="$1"
+
+# カラー出力
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+log_task() {
+    echo -e "${CYAN}[TASK]${NC} $1"
+}
+
+# 引数チェック
+if [ -z "$TASKS_FILE" ]; then
+    log_error "タスクファイルが必要です"
+    echo ""
+    echo "使い方: $0 <tasks-file>"
+    echo ""
+    echo "タスクファイル形式:"
+    echo "  feat/feature-a: \"機能Aを実装してください\""
+    echo "  fix/bug-123: \"Issue #123 を修正してください\""
+    echo ""
+    echo "例:"
+    echo "  $0 tasks.txt"
+    exit 1
+fi
+
+if [ ! -f "$TASKS_FILE" ]; then
+    log_error "タスクファイルが見つかりません: $TASKS_FILE"
+    exit 1
+fi
+
+# タスク数をカウント
+TASK_COUNT=$(grep -c '^[^#]' "$TASKS_FILE" 2>/dev/null || echo "0")
+log_info "タスクファイル: $TASKS_FILE ($TASK_COUNT タスク)"
+echo ""
+
+# ワークツリーを作成
+log_info "=== ワークツリーを作成 ==="
+while IFS=: read -r BRANCH TASK; do
+    # コメント行と空行をスキップ
+    [[ "$BRANCH" =~ ^#.*$ ]] && continue
+    [[ -z "$BRANCH" ]] && continue
+
+    # 前後の空白を削除
+    BRANCH=$(echo "$BRANCH" | xargs)
+    TASK=$(echo "$TASK" | xargs | sed 's/^"//;s/"$//')
+
+    if [ -z "$BRANCH" ] || [ -z "$TASK" ]; then
+        continue
+    fi
+
+    log_task "ブランチ: $BRANCH"
+
+    # ワークツリーが既に存在するか確認
+    if git gtr go "$BRANCH" &>/dev/null; then
+        log_warn "  既存のワークツリーを使用"
+    else
+        log_info "  ワークツリーを作成中..."
+        git gtr new "$BRANCH"
+    fi
+done < "$TASKS_FILE"
+
+echo ""
+log_info "=== AI エージェントを起動 ==="
+echo ""
+
+# 各タスクの起動コマンドを表示
+log_info "以下のコマンドで各エージェントを起動できます:"
+echo ""
+
+while IFS=: read -r BRANCH TASK; do
+    # コメント行と空行をスキップ
+    [[ "$BRANCH" =~ ^#.*$ ]] && continue
+    [[ -z "$BRANCH" ]] && continue
+
+    BRANCH=$(echo "$BRANCH" | xargs)
+    TASK=$(echo "$TASK" | xargs | sed 's/^"//;s/"$//')
+
+    if [ -z "$BRANCH" ] || [ -z "$TASK" ]; then
+        continue
+    fi
+
+    WORKTREE_PATH=$(git gtr go "$BRANCH")
+    echo "# $BRANCH"
+    echo "cd \"$WORKTREE_PATH\" && claude \"$TASK\""
+    echo ""
+done < "$TASKS_FILE"
+
+echo ""
+log_info "ヒント: 各コマンドを別々のターミナルで実行してください"
+log_info "または tmux を使用して並行実行できます"
+
+# tmux が利用可能な場合の自動起動オプション
+if command -v tmux &>/dev/null; then
+    echo ""
+    read -p "tmux で並行起動しますか? (y/N): " REPLY
+    if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+        SESSION_NAME="gtr-tasks-$(date +%H%M%S)"
+
+        # タスク情報を配列に格納
+        declare -a BRANCHES
+        declare -a TASKS
+        declare -a PATHS
+
+        while IFS=: read -r BRANCH TASK; do
+            [[ "$BRANCH" =~ ^#.*$ ]] && continue
+            [[ -z "$BRANCH" ]] && continue
+
+            BRANCH=$(echo "$BRANCH" | xargs)
+            TASK=$(echo "$TASK" | xargs | sed 's/^"//;s/"$//')
+
+            if [ -z "$BRANCH" ] || [ -z "$TASK" ]; then
+                continue
+            fi
+
+            BRANCHES+=("$BRANCH")
+            TASKS+=("$TASK")
+            PATHS+=("$(git gtr go "$BRANCH")")
+        done < "$TASKS_FILE"
+
+        if [ ${#BRANCHES[@]} -eq 0 ]; then
+            log_error "有効なタスクがありません"
+            exit 1
+        fi
+
+        log_info "tmux セッション '$SESSION_NAME' を起動しています..."
+        echo ""
+
+        # 最初のウィンドウでセッションを作成
+        tmux new-session -d -s "$SESSION_NAME" -c "${PATHS[0]}" -n "${BRANCHES[0]}"
+        tmux send-keys -t "$SESSION_NAME" "claude \"${TASKS[0]}\"" C-m
+
+        # 残りのタスク用にウィンドウを作成
+        for i in $(seq 1 $((${#BRANCHES[@]} - 1))); do
+            tmux new-window -t "$SESSION_NAME" -c "${PATHS[$i]}" -n "${BRANCHES[$i]}"
+            tmux send-keys -t "$SESSION_NAME" "claude \"${TASKS[$i]}\"" C-m
+        done
+
+        echo ""
+        log_info "tmux キーバインド:"
+        echo "  Ctrl+b n  - 次のウィンドウへ"
+        echo "  Ctrl+b p  - 前のウィンドウへ"
+        echo "  Ctrl+b w  - ウィンドウ一覧"
+        echo "  Ctrl+b d  - デタッチ (tmux attach -t $SESSION_NAME で再接続)"
+        echo ""
+
+        # tmux セッションにアタッチ
+        tmux attach -t "$SESSION_NAME"
+    fi
+fi
