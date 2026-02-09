@@ -161,12 +161,22 @@ map("n", "<leader>fg", tb.live_grep,  { desc = "ripgrep 検索" })
 map("n", "<leader>fb", tb.buffers,    { desc = "バッファ一覧" })
 map("n", "<leader>fh", tb.help_tags,  { desc = "ヘルプ検索" })
 
--- 9) Treesitter
-require("nvim-treesitter.configs").setup({
-  ensure_installed = { "lua","vim","vimdoc","javascript","typescript","tsx","python","json","yaml","markdown" },
-  highlight = { enable = true },
-  indent = { enable = true },
+-- 9) Treesitter (new API: highlight/indent are built-in since Neovim 0.10+)
+vim.treesitter.start = vim.treesitter.start or function() end
+vim.api.nvim_create_autocmd("FileType", {
+  callback = function(ev)
+    if pcall(vim.treesitter.start, ev.buf) then
+      vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    end
+  end,
 })
+-- Install parsers via :TSInstall or uncomment below:
+-- vim.api.nvim_create_autocmd("VimEnter", {
+--   callback = function()
+--     local ensure = { "lua","vim","vimdoc","javascript","typescript","tsx","python","json","yaml","markdown" }
+--     require("nvim-treesitter.install").install(ensure)
+--   end,
+-- })
 
 -- 10) Mason
 require("mason").setup()
