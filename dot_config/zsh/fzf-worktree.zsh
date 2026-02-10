@@ -129,7 +129,7 @@ wt_cleanup() {
 
   # List worktrees to remove
   local worktrees
-  worktrees=$(git worktree list | grep -E "${base}-wt[0-9]+" | awk '{print $1}')
+  worktrees=$(git worktree list | command grep -E "${base}-wt[0-9]+" | awk '{print $1}')
 
   if [[ -z "$worktrees" ]]; then
     echo "No worktrees matching pattern: ${base}-wt*"
