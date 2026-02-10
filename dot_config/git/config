@@ -120,7 +120,7 @@
 
 	# log graph
 	graph = log --graph -10 --branches --remotes --tags --format=format:'%Cgreen%h %Creset* %<(75,trunc)%s (%cN, %ar) %Cred%d' --date-order
-	lga = log --graph --all --color --pretty='%x09%h %cn%x09%s %Cred%d%Creset'
+	lga = log --graph --all --color --pretty='%x09%h %Cgreen%cs%Creset %cn%x09%s %Cred%d%Creset'
 	gra = log --graph --all --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
 
 	# diff
