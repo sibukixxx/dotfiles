@@ -145,14 +145,14 @@ gcloud_project_prompt() {
 
 PS1='[@${HOST%%.*} %1~] $(gcloud_project_prompt)%(!.#.$) '
 
-# VCS info is configured after sheldon to avoid conflicts with zoxide etc.
+# VCS info is configured after sheldon to avoid conflicts with other tools.
 
 # =============================================================================
 # Auto-install missing CLI tools (macOS only)
 # =============================================================================
 if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
-  _essential_tools=(eza bat rg fd zoxide fzf peco ghq sheldon zellij)
-  _brew_names=(eza bat ripgrep fd zoxide fzf peco ghq sheldon zellij)
+  _essential_tools=(eza bat rg fd fzf peco ghq sheldon zellij)
+  _brew_names=(eza bat ripgrep fd fzf peco ghq sheldon zellij)
   _missing_tools=()
   for i in {1..${#_essential_tools[@]}}; do
     command -v "${_essential_tools[$i]}" &>/dev/null || _missing_tools+=("${_brew_names[$i]}")

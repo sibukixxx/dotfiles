@@ -508,7 +508,6 @@ verify-setup
 - [ ] `bat` - `cat` の代替
 - [ ] `rg` (ripgrep) - `grep` の代替
 - [ ] `fd` - `find` の代替
-- [ ] `zoxide` - スマート `cd`
 - [ ] `fzf` - ファジーファインダー
 - [ ] `ghq` - リポジトリ管理
 

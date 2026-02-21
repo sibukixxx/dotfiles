@@ -1,12 +1,4 @@
 # =============================================================================
-# zoxide - smarter cd command
-# =============================================================================
-if command -v zoxide &>/dev/null; then
-  # Use --cmd cd to replace cd command directly (avoids alias issues)
-  eval "$(zoxide init zsh --cmd cd)"
-fi
-
-# =============================================================================
 # fzf - fuzzy finder
 # =============================================================================
 if command -v fzf &>/dev/null; then

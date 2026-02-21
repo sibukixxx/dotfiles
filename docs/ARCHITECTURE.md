@@ -189,7 +189,6 @@
 │  │ ├── fd-find     # 高速 find                                     │   │
 │  │ ├── bat         # cat + シンタックスハイライト                   │   │
 │  │ ├── eza         # モダン ls                                     │   │
-│  │ ├── zoxide      # スマート cd                                   │   │
 │  │ ├── sheldon     # zsh プラグイン管理                            │   │
 │  │ └── zellij      # ターミナルマルチプレクサ                       │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
@@ -441,7 +440,7 @@ dotfiles/
 │   │   └── lua/             # Lua モジュール
 │   │
 │   ├── zsh/                 # zsh モジュール群
-│   │   ├── tools.zsh        # zoxide, fzf, ghq 統合
+│   │   ├── tools.zsh        # fzf, ghq 統合
 │   │   ├── peco.zsh         # peco フォールバック
 │   │   ├── fzf-worktree.zsh # git worktree + fzf
 │   │   ├── mac.zsh          # macOS 固有設定
@@ -736,8 +735,6 @@ echo "Installing..."
 │     │     ├── zsh-syntax-highlighting                          │
 │     │     ├── zsh-completions                                  │
 │     │     └── zsh-history-substring-search                     │
-│     │                                                           │
-│     ├── zoxide (ディレクトリジャンプ)                           │
 │     │                                                           │
 │     ├── fzf (ファジーファインダー)                              │
 │     │                                                           │

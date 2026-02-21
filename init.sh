@@ -246,7 +246,6 @@ install_rust_tools() {
     "fd-find"      # fd - fast find
     "bat"          # cat with syntax highlighting
     "eza"          # modern ls replacement
-    "zoxide"       # smarter cd
     "sheldon"      # shell plugin manager
     "zellij"       # terminal multiplexer
   )
@@ -514,7 +513,6 @@ verify_tools() {
     "git"
     "sheldon"
     "zellij"
-    "zoxide"
     "fzf"
     "peco"
     "ghq"
@@ -577,7 +575,6 @@ print_instructions() {
   echo "    zellij           # Start terminal multiplexer"
   echo "    zs main          # Attach to 'main' session"
   echo "    gcd              # Jump to ghq repository with fzf"
-  echo "    z <dir>          # Smart directory jump with zoxide"
   echo ""
   echo "  Cloud CLI quick commands:"
   echo "    gcloud projects list        # List GCP projects"

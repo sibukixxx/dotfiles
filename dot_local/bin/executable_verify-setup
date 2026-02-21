@@ -71,7 +71,6 @@ check_cmd "eza" "Modern ls replacement"
 check_cmd "bat" "Cat with syntax highlighting"
 check_cmd "rg" "Ripgrep (fast grep)"
 check_cmd "fd" "Fast find"
-check_cmd "zoxide" "Smart cd"
 echo ""
 
 echo "== Shell Environment =="

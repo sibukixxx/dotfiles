@@ -26,7 +26,6 @@
     fd           # fast find
     bat          # cat with syntax highlighting
     eza          # modern ls replacement
-    zoxide       # smarter cd
     fzf          # fuzzy finder
 
     # Development
@@ -66,11 +65,6 @@
   };
 
   programs.fzf = {
-    enable = true;
-    enableZshIntegration = false;  # We handle this in our zshrc
-  };
-
-  programs.zoxide = {
     enable = true;
     enableZshIntegration = false;  # We handle this in our zshrc
   };

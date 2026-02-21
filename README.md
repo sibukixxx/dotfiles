@@ -78,7 +78,7 @@ macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://
 |------|------|
 | **chezmoi 管理** | テンプレート機能、マシン固有設定、安全なシークレット管理 |
 | **マルチプラットフォーム** | macOS, Linux, WSL をシームレスにサポート |
-| **モダン CLI** | Rust製の高速ツール群（eza, bat, ripgrep, fd, zoxide） |
+| **モダン CLI** | Rust製の高速ツール群（eza, bat, ripgrep, fd） |
 | **プラグイン管理** | Sheldon による高速な zsh プラグイン管理 |
 | **ターミナルマルチプレクサ** | Zellij（tmux 代替、より直感的） |
 | **パッケージマネージャ** | macOS: Homebrew / Linux: Nix + Home Manager |
@@ -114,7 +114,6 @@ macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://
 | **[bat](https://github.com/sharkdp/bat)** | `cat` | シンタックスハイライト、行番号 |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)** | `grep` | 高速、`.gitignore` 対応 |
 | **[fd](https://github.com/sharkdp/fd)** | `find` | 高速、直感的な構文 |
-| **[zoxide](https://github.com/ajeetdsouza/zoxide)** | `cd` | 学習型ディレクトリジャンプ |
 | **[fzf](https://github.com/junegunn/fzf)** | - | ファジーファインダー |
 
 ### 開発ツール
@@ -272,7 +271,7 @@ dotfiles/
 ├── dot_config/
 │   ├── nvim/                  # Neovim 設定
 │   ├── zsh/                   # zsh モジュール
-│   │   ├── tools.zsh          # ツール統合（zoxide/fzf/ghq）
+│   │   ├── tools.zsh          # ツール統合（fzf/ghq）
 │   │   ├── alias/             # エイリアス定義
 │   │   ├── mac.zsh            # macOS 固有
 │   │   └── linux.zsh          # Linux 固有
@@ -335,8 +334,6 @@ dotfiles/
 |------|------|
 | `Ctrl+G` | ghq リポジトリを fzf で選択 |
 | `Ctrl+R` | 履歴を fzf で検索 |
-| `z <dir>` | zoxide でスマートジャンプ |
-| `zi` | zoxide インタラクティブ選択 |
 
 ### zsh コマンド
 
