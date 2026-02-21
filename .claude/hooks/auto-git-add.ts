@@ -5,7 +5,7 @@ import type {
 } from "./types.ts";
 
 // Files to exclude from auto-staging
-const EXCLUDE_PATTERNS = [
+export const EXCLUDE_PATTERNS = [
   /\.env$/,
   /\.env\..+$/,
   /credentials/i,
@@ -17,11 +17,11 @@ const EXCLUDE_PATTERNS = [
   /\.DS_Store$/,
 ];
 
-function shouldExclude(filePath: string): boolean {
+export function shouldExclude(filePath: string): boolean {
   return EXCLUDE_PATTERNS.some((pattern) => pattern.test(filePath));
 }
 
-async function isInGitRepo(): Promise<boolean> {
+export async function isInGitRepo(): Promise<boolean> {
   try {
     await $`git rev-parse --is-inside-work-tree`.quiet();
     return true;
@@ -30,7 +30,7 @@ async function isInGitRepo(): Promise<boolean> {
   }
 }
 
-async function isFileTracked(filePath: string): Promise<boolean> {
+export async function isFileTracked(filePath: string): Promise<boolean> {
   try {
     await $`git ls-files --error-unmatch ${filePath}`.quiet();
     return true;
@@ -39,12 +39,58 @@ async function isFileTracked(filePath: string): Promise<boolean> {
   }
 }
 
-async function gitAddFile(filePath: string): Promise<void> {
+export async function gitAddFile(filePath: string): Promise<boolean> {
   try {
     await $`git add ${filePath}`.quiet();
     console.log(`[auto-git-add] Staged: ${filePath}`);
+    return true;
   } catch (error) {
     console.error(`[auto-git-add] Failed to stage ${filePath}:`, error);
+    return false;
+  }
+}
+
+export function isFileModificationTool(toolName: string): boolean {
+  return ["Write", "Edit", "MultiEdit"].includes(toolName);
+}
+
+export async function processAutoGitAdd(
+  data: PostToolUseHookData<FileModificationToolParams>
+): Promise<{
+  action: "staged" | "excluded" | "new_file" | "not_git_repo" | "skipped";
+  filePath?: string;
+}> {
+  // Only process file modification tools
+  if (!isFileModificationTool(data.tool_name)) {
+    return { action: "skipped" };
+  }
+
+  // Check if we're in a git repo
+  if (!(await isInGitRepo())) {
+    return { action: "not_git_repo" };
+  }
+
+  const filePath = data.tool_input?.file_path;
+  if (!filePath) {
+    return { action: "skipped" };
+  }
+
+  // Check exclusion patterns
+  if (shouldExclude(filePath)) {
+    console.log(`[auto-git-add] Excluded (sensitive): ${filePath}`);
+    return { action: "excluded", filePath };
+  }
+
+  // Only auto-add if file is already tracked
+  const isTracked = await isFileTracked(filePath);
+
+  if (isTracked) {
+    await gitAddFile(filePath);
+    return { action: "staged", filePath };
+  } else {
+    console.log(`[auto-git-add] New file (not auto-staged): ${filePath}`);
+    console.log(`[auto-git-add] Use 'git add ${filePath}' to stage manually`);
+    return { action: "new_file", filePath };
   }
 }
 
@@ -52,43 +98,13 @@ async function main() {
   try {
     const input = await Bun.stdin.text();
     const data: PostToolUseHookData<FileModificationToolParams> = JSON.parse(input);
-
-    // Only process file modification tools
-    if (!["Write", "Edit", "MultiEdit"].includes(data.tool_name)) {
-      return;
-    }
-
-    // Check if we're in a git repo
-    if (!(await isInGitRepo())) {
-      return;
-    }
-
-    const filePath = data.tool_input?.file_path;
-    if (!filePath) {
-      return;
-    }
-
-    // Check exclusion patterns
-    if (shouldExclude(filePath)) {
-      console.log(`[auto-git-add] Excluded (sensitive): ${filePath}`);
-      return;
-    }
-
-    // Only auto-add if file is already tracked (avoid adding new untracked files)
-    const isTracked = await isFileTracked(filePath);
-
-    if (isTracked) {
-      await gitAddFile(filePath);
-    } else {
-      // For new files, just notify
-      console.log(`[auto-git-add] New file (not auto-staged): ${filePath}`);
-      console.log(`[auto-git-add] Use 'git add ${filePath}' to stage manually`);
-    }
+    await processAutoGitAdd(data);
   } catch (error) {
-    // Fail silently - don't block tool execution
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[auto-git-add error]: ${errorMessage}`);
   }
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}
