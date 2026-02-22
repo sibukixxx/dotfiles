@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Claude Code configuration setup
+# Runs automatically when .claude/install.sh changes
+# install.sh hash: {{ include ".claude/install.sh" | sha256sum }}
+
+set -e
+
+echo "==> Setting up Claude Code configuration..."
+
+bash "{{ .chezmoi.sourceDir }}/.claude/install.sh"
