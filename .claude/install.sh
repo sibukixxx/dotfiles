@@ -80,12 +80,27 @@ link_if_not_exists "$DOTFILES_CLAUDE/contexts" "$CLAUDE_DIR/contexts" "contexts"
 link_if_not_exists "$DOTFILES_CLAUDE/settings.json" "$CLAUDE_DIR/settings.json" "settings.json"
 link_if_not_exists "$DOTFILES_CLAUDE/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md" "CLAUDE.md"
 
+# Install bun if not present
+install_bun() {
+    echo -e "${BLUE}Installing bun...${NC}"
+    if curl -fsSL https://bun.sh/install | bash; then
+        # Add to PATH for current session
+        export PATH="$HOME/.bun/bin:$PATH"
+        echo -e "${GREEN}✓ bun installed: $(bun --version)${NC}"
+    else
+        echo -e "${RED}✗ bun installation failed${NC}"
+        return 1
+    fi
+}
+
 # Check dependencies
 echo -e "\n${BLUE}Checking dependencies...${NC}"
 has_errors=0
 
 # Required tools
-check_tool "bun" "required" || has_errors=1
+if ! check_tool "bun" "required"; then
+    install_bun || has_errors=1
+fi
 
 # Optional tools (for hooks)
 check_tool "jq" "optional"
