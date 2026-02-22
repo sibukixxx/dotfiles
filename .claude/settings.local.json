@@ -18,7 +18,8 @@
       "Bash(sheldon lock:*)",
       "Bash(chezmoi apply:*)",
       "Bash(nvim:*)",
-      "Bash(cargo install:*)"
+      "Bash(cargo install:*)",
+      "Bash(bash:*)"
     ]
   }
 }
