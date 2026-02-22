@@ -15,8 +15,10 @@
       "Bash(chezmoi add:*)",
       "Bash(gh api:*)",
       "Bash(/Users/sibukixxx/ghq/github.com/sibukixxx/dotfiles/dot_local/bin/executable_agent-skills:*)",
-      "Bash(sheldon lock:*)"
+      "Bash(sheldon lock:*)",
+      "Bash(chezmoi apply:*)",
+      "Bash(nvim:*)",
+      "Bash(cargo install:*)"
     ]
   }
 }
-
