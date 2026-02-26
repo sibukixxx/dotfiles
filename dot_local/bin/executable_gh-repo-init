@@ -1,0 +1,266 @@
+#!/bin/bash
+# gh-repo-init - GitHub リポジトリの初期設定を一括で行うスクリプト
+# Usage: gh-repo-init [options]
+#
+# .git 配下であればどこからでも実行可能。
+# 対話モード（デフォルト）またはオプション指定で設定をカスタマイズ可能。
+
+set -e
+
+# ─── カラー出力 ───────────────────────────────────────────
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m'
+
+log_info()    { echo -e "${GREEN}[✓]${NC} $1"; }
+log_warn()    { echo -e "${YELLOW}[!]${NC} $1"; }
+log_error()   { echo -e "${RED}[✗]${NC} $1" >&2; }
+log_section() { echo -e "\n${CYAN}${BOLD}── $1 ──${NC}"; }
+log_run()     { echo -e "${DIM}  → $1${NC}"; }
+
+# ─── ヘルプ ───────────────────────────────────────────────
+usage() {
+    cat <<'HELP'
+Usage: gh-repo-init [OPTIONS]
+
+GitHub リポジトリの初期設定を一括で行う。
+
+Options:
+  -y, --yes             対話をスキップしてデフォルト設定を適用
+  -d, --description STR リポジトリの説明を設定
+  -t, --topics T1,T2    トピックをカンマ区切りで追加
+  --no-labels           ラベル設定をスキップ
+  --no-security         セキュリティ設定をスキップ
+  --no-branch-protection ブランチ保護をスキップ
+  --dry-run             実行せずコマンドを表示
+  -h, --help            このヘルプを表示
+
+Examples:
+  gh-repo-init                          # 対話モード
+  gh-repo-init -y                       # デフォルトで全設定
+  gh-repo-init -y -d "My awesome app"   # 説明付きで全設定
+  gh-repo-init -y --no-labels           # ラベル以外を設定
+HELP
+    exit 0
+}
+
+# ─── デフォルト設定 ───────────────────────────────────────
+AUTO_YES=false
+DRY_RUN=false
+OPT_DESCRIPTION=""
+OPT_TOPICS=""
+SKIP_LABELS=false
+SKIP_SECURITY=false
+SKIP_BRANCH_PROTECTION=false
+
+# ─── 引数パース ───────────────────────────────────────────
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -y|--yes)             AUTO_YES=true; shift ;;
+        -d|--description)     OPT_DESCRIPTION="$2"; shift 2 ;;
+        -t|--topics)          OPT_TOPICS="$2"; shift 2 ;;
+        --no-labels)          SKIP_LABELS=true; shift ;;
+        --no-security)        SKIP_SECURITY=true; shift ;;
+        --no-branch-protection) SKIP_BRANCH_PROTECTION=true; shift ;;
+        --dry-run)            DRY_RUN=true; shift ;;
+        -h|--help)            usage ;;
+        *)                    log_error "Unknown option: $1"; usage ;;
+    esac
+done
+
+# ─── 前提チェック ─────────────────────────────────────────
+if ! command -v gh &>/dev/null; then
+    log_error "gh (GitHub CLI) がインストールされていません"
+    echo "  Install: brew install gh"
+    exit 1
+fi
+
+if ! gh auth status &>/dev/null; then
+    log_error "GitHub にログインしていません"
+    echo "  Run: gh auth login"
+    exit 1
+fi
+
+if ! git rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
+    log_error "git リポジトリ内で実行してください"
+    exit 1
+fi
+
+# リポジトリ情報を取得
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner' 2>/dev/null) || {
+    log_error "GitHub リモートリポジトリが見つかりません"
+    echo "  Run: gh repo create"
+    exit 1
+}
+DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef -q '.defaultBranchRef.name')
+
+echo -e "${BOLD}Repository: ${CYAN}${REPO}${NC} (branch: ${DEFAULT_BRANCH})"
+
+# ─── ユーティリティ ───────────────────────────────────────
+run_cmd() {
+    local desc="$1"
+    shift
+    if $DRY_RUN; then
+        echo -e "${DIM}  [dry-run] $*${NC}"
+    else
+        log_run "$desc"
+        "$@" 2>/dev/null || log_warn "Failed: $desc"
+    fi
+}
+
+confirm() {
+    if $AUTO_YES; then return 0; fi
+    local prompt="$1"
+    read -rp "$(echo -e "${YELLOW}?${NC} ${prompt} [Y/n] ")" answer
+    [[ -z "$answer" || "$answer" =~ ^[Yy] ]]
+}
+
+# ─── 1. リポジトリ基本設定 ────────────────────────────────
+log_section "リポジトリ基本設定"
+
+if [[ -n "$OPT_DESCRIPTION" ]]; then
+    run_cmd "説明を設定" gh repo edit --description "$OPT_DESCRIPTION"
+fi
+
+# マージ戦略: squash merge のみ有効化
+if confirm "マージ戦略を squash merge のみにしますか？"; then
+    run_cmd "squash merge を有効化"    gh repo edit --enable-squash-merge
+    run_cmd "merge commit を無効化"    gh repo edit --enable-merge-commit=false
+    run_cmd "rebase merge を無効化"    gh repo edit --enable-rebase-merge=false
+    log_info "マージ戦略: squash merge only"
+
+    # squash merge のコミットメッセージ形式
+    run_cmd "squash commit title = PR_TITLE" \
+        gh api "repos/${REPO}" -X PATCH -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=COMMIT_MESSAGES --silent
+    log_info "squash commit 形式: PR Title + Commit Messages"
+fi
+
+# マージ後にブランチを自動削除
+if confirm "マージ後にブランチを自動削除しますか？"; then
+    run_cmd "auto-delete branch" gh repo edit --delete-branch-on-merge
+    log_info "マージ後のブランチ自動削除: ON"
+fi
+
+# auto-merge & allow-update-branch
+if confirm "Auto-merge と Allow update branch を有効にしますか？"; then
+    run_cmd "auto-merge 有効化"        gh repo edit --enable-auto-merge
+    run_cmd "allow update branch 有効化" gh repo edit --allow-update-branch
+    log_info "Auto-merge & Allow update branch: ON"
+fi
+
+# 不要な機能を無効化
+if confirm "Wiki と Projects を無効にしますか？"; then
+    run_cmd "Wiki 無効化"     gh repo edit --enable-wiki=false
+    run_cmd "Projects 無効化" gh repo edit --enable-projects=false
+    log_info "Wiki & Projects: OFF"
+fi
+
+# ─── 2. トピック設定 ──────────────────────────────────────
+if [[ -n "$OPT_TOPICS" ]]; then
+    log_section "トピック設定"
+    IFS=',' read -ra TOPICS <<< "$OPT_TOPICS"
+    for topic in "${TOPICS[@]}"; do
+        topic=$(echo "$topic" | xargs) # trim whitespace
+        run_cmd "トピック追加: ${topic}" gh repo edit --add-topic "$topic"
+    done
+    log_info "トピック設定完了"
+fi
+
+# ─── 3. セキュリティ設定 ──────────────────────────────────
+if ! $SKIP_SECURITY; then
+    if confirm "セキュリティ設定を有効にしますか？ (secret scanning, Dependabot)"; then
+        log_section "セキュリティ設定"
+
+        run_cmd "Secret scanning 有効化" \
+            gh repo edit --enable-secret-scanning --enable-secret-scanning-push-protection
+        log_info "Secret scanning & push protection: ON"
+
+        run_cmd "Dependabot alerts 有効化" \
+            gh api "repos/${REPO}/vulnerability-alerts" -X PUT --silent
+        log_info "Dependabot vulnerability alerts: ON"
+
+        run_cmd "Dependabot auto-fix 有効化" \
+            gh api "repos/${REPO}/automated-security-fixes" -X PUT --silent
+        log_info "Dependabot automated security fixes: ON"
+    fi
+fi
+
+# ─── 4. ラベル設定 ────────────────────────────────────────
+if ! $SKIP_LABELS; then
+    if confirm "Conventional Commit ラベルを作成しますか？"; then
+        log_section "ラベル設定"
+
+        declare -A LABELS=(
+            ["feat"]="0E8A16:新機能"
+            ["fix"]="D93F0B:バグ修正"
+            ["docs"]="0075CA:ドキュメント"
+            ["refactor"]="5319E7:リファクタリング"
+            ["test"]="1D76DB:テスト"
+            ["chore"]="FBCA04:メンテナンス"
+            ["perf"]="FF6600:パフォーマンス改善"
+            ["ci"]="E4E669:CI/CD"
+            ["style"]="F9D0C4:スタイル"
+            ["priority:high"]="B60205:優先度:高"
+            ["priority:medium"]="FBCA04:優先度:中"
+            ["priority:low"]="C2E0C6:優先度:低"
+            ["good first issue"]="7057FF:初心者向け"
+        )
+
+        for label in "${!LABELS[@]}"; do
+            IFS=':' read -r color desc <<< "${LABELS[$label]}"
+            run_cmd "ラベル: ${label}" \
+                gh label create "$label" --color "$color" --description "$desc" --force
+        done
+
+        # デフォルトラベルで不要なものを削除
+        for default_label in "bug" "duplicate" "enhancement" "help wanted" "invalid" "question" "wontfix"; do
+            run_cmd "デフォルトラベル削除: ${default_label}" \
+                gh label delete "$default_label" --yes 2>/dev/null || true
+        done
+
+        log_info "ラベル設定完了"
+    fi
+fi
+
+# ─── 5. ブランチ保護 ──────────────────────────────────────
+if ! $SKIP_BRANCH_PROTECTION; then
+    if confirm "${DEFAULT_BRANCH} ブランチの保護ルールを設定しますか？"; then
+        log_section "ブランチ保護 (${DEFAULT_BRANCH})"
+
+        PROTECTION_JSON=$(cat <<PEOF
+{
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true,
+    "require_last_push_approval": false
+  },
+  "required_status_checks": null,
+  "enforce_admins": false,
+  "restrictions": null,
+  "required_linear_history": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "required_conversation_resolution": true
+}
+PEOF
+        )
+
+        run_cmd "ブランチ保護ルールを設定" \
+            gh api "repos/${REPO}/branches/${DEFAULT_BRANCH}/protection" \
+                -X PUT \
+                --input <(echo "$PROTECTION_JSON") \
+                --silent
+        log_info "ブランチ保護: ON (PR必須, linear history, conversation resolution)"
+    fi
+fi
+
+# ─── 完了 ─────────────────────────────────────────────────
+log_section "設定完了"
+echo -e "  リポジトリ: ${CYAN}https://github.com/${REPO}${NC}"
+echo -e "  設定画面:   ${CYAN}https://github.com/${REPO}/settings${NC}"
+echo ""
+log_info "gh-repo-init が完了しました"
