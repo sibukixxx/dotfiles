@@ -19,7 +19,10 @@
       "Bash(chezmoi apply:*)",
       "Bash(nvim:*)",
       "Bash(cargo install:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(gh label:*)",
+      "Bash(gh secret:*)",
+      "Bash(gh variable:*)"
     ]
   }
 }
