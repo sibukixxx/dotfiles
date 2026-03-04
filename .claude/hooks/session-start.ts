@@ -148,7 +148,14 @@ export async function processSessionStart(data: SessionStartHookData): Promise<{
 
 async function main() {
   try {
-    const input = await Bun.stdin.text();
+    const stdinPromise = Bun.stdin.text();
+    const timeoutPromise = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), 5000)
+    );
+    const input = await Promise.race([stdinPromise, timeoutPromise]);
+    if (input === null || input.trim() === "") {
+      return;
+    }
     const data: SessionStartHookData = JSON.parse(input);
     await processSessionStart(data);
   } catch (error) {

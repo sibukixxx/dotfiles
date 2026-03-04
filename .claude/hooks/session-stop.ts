@@ -133,7 +133,14 @@ export async function processSessionStop(data: StopHookData): Promise<{
 
 async function main() {
   try {
-    const input = await Bun.stdin.text();
+    const stdinPromise = Bun.stdin.text();
+    const timeoutPromise = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), 5000)
+    );
+    const input = await Promise.race([stdinPromise, timeoutPromise]);
+    if (input === null || input.trim() === "") {
+      return;
+    }
     const data: StopHookData = JSON.parse(input);
     await processSessionStop(data);
   } catch (error) {
