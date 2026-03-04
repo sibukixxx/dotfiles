@@ -77,3 +77,24 @@ alias glog='git log --oneline --graph --decorate'
 alias path='echo -e ${PATH//:/\\n}'
 alias now='date +"%Y-%m-%d %H:%M:%S"'
 alias week='date +%V'
+
+# =============================================================================
+# Codex + Claude Commands Bridge
+# =============================================================================
+if command -v codex-claude-command &>/dev/null; then
+  # Direct command names (Claude custom commands compatibility)
+  alias ship='codex-claude-command ship'
+  alias commit-push='codex-claude-command commit-push'
+
+  ccmd() { codex-claude-command "$@"; }
+  cask() { codex-claude-command ask "$@"; }
+  cplan() { codex-claude-command plan "$@"; }
+  cspec() { codex-claude-command spec "$@"; }
+  cimpl() { codex-claude-command impl "$@"; }
+  ctdd() { codex-claude-command tdd "$@"; }
+  creview() { codex-claude-command review "$@"; }
+  cinterview() { codex-claude-command interview "$@"; }
+  cship() { codex-claude-command ship "$@"; }
+  ccommit() { codex-claude-command commit-push "$@"; }
+  ccreate-skill() { codex-claude-command create-skill "$@"; }
+fi

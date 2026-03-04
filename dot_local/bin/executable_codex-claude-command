@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+#
+# codex-claude-command
+# Use Claude command definitions (.claude/commands/*.md) as Codex prompts.
+#
+# Usage:
+#   codex-claude-command <command> [task...]
+#   ccmd <command> [task...]   # via zsh function
+#
+
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  cat <<'EOF'
+Usage: codex-claude-command <command> [task...]
+
+Examples:
+  codex-claude-command plan "認証をJWT化したい"
+  codex-claude-command review
+EOF
+  exit 1
+fi
+
+if ! command -v codex >/dev/null 2>&1; then
+  echo "Error: codex command not found in PATH" >&2
+  exit 1
+fi
+
+command_name="$1"
+shift || true
+
+commands_dir="${CLAUDE_COMMANDS_DIR:-$HOME/.claude/commands}"
+command_file="${commands_dir}/${command_name}.md"
+
+if [[ ! -f "$command_file" ]]; then
+  echo "Error: command definition not found: $command_file" >&2
+  echo "Available commands:" >&2
+  find "$commands_dir" -maxdepth 1 -type f -name '*.md' -exec basename {} .md \; | sort >&2 || true
+  exit 1
+fi
+
+command_body="$(cat "$command_file")"
+user_task="${*:-}"
+
+prompt_header=$'以下は Claude Code のカスタムコマンド定義です。内容を読み取り、Codex 環境で実行可能な形に解釈して作業を進めてください。\nClaude 固有の記法（例: $1, $ARGUMENTS, AskUserQuestion, TodoWrite）やツール名は、Codex で利用可能な機能に適切に置き換えてください。'
+
+if [[ -n "$user_task" ]]; then
+  prompt_header+=$'\n\nユーザーからの追加指示:\n'"$user_task"
+fi
+
+prompt_header+=$'\n\n--- コマンド定義開始 ---\n'
+prompt_header+="$command_body"
+prompt_header+=$'\n--- コマンド定義終了 ---\n'
+
+exec codex "$prompt_header"
