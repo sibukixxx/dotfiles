@@ -49,7 +49,20 @@ fi
 # Verify installations
 # =============================================================================
 echo "==> Verifying tool installations..."
-tools=(zsh nvim git sheldon zellij fzf ghq eza bat rg fd)
+tool_manifest="{{ .chezmoi.sourceDir }}/dot_config/zsh/tool-manifest.sh"
+if [[ -f "$tool_manifest" ]]; then
+    # shellcheck source=/dev/null
+    source "$tool_manifest"
+fi
+
+if [[ ${#DOTFILES_CORE_TOOLS[@]} -gt 0 ]]; then
+    tools=("${DOTFILES_CORE_TOOLS[@]}")
+else
+    tools=(zsh nvim git sheldon zellij fzf ghq eza bat rg fd)
+fi
+
+# Keep peco visible as optional tool in quick verification.
+tools+=(peco)
 missing=()
 
 for tool in "${tools[@]}"; do

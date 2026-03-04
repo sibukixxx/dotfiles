@@ -5,6 +5,7 @@ export LANG=ja_JP.UTF-8
 export LC_CTYPE=ja_JP.UTF-8
 export DOTFILES=$HOME/dotfiles
 export XDG_CONFIG_HOME=$HOME/.config
+[[ -f ${XDG_CONFIG_HOME}/zsh/tool-manifest.sh ]] && source ${XDG_CONFIG_HOME}/zsh/tool-manifest.sh
 
 # Editor (prefer nvim)
 if command -v nvim &>/dev/null; then
@@ -128,6 +129,12 @@ function history-all { history -E 1 }
 # Prompt
 # =============================================================================
 gcloud_project_prompt() {
+  # New: show active configuration name (set by gcloud.zsh chpwd hook)
+  if [[ -n "$CLOUDSDK_ACTIVE_CONFIG_NAME" ]]; then
+    print -r "%F{cyan}(gcloud:${CLOUDSDK_ACTIVE_CONFIG_NAME})%f"
+    return 0
+  fi
+  # Legacy: .gcloud-project file
   local dir="$PWD" marker="" project=""
   while [[ "$dir" != "/" ]]; do
     if [[ -f "$dir/.gcloud-project" ]]; then
@@ -151,17 +158,19 @@ PS1='[@${HOST%%.*} %1~] $(gcloud_project_prompt)%(!.#.$) '
 # Auto-install missing CLI tools (macOS only)
 # =============================================================================
 if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
-  _essential_tools=(eza bat rg fd fzf peco ghq sheldon zellij)
-  _brew_names=(eza bat ripgrep fd fzf peco ghq sheldon zellij)
+  if [[ ${#DOTFILES_BREW_ESSENTIAL_TOOLS[@]} -eq 0 ]] || [[ ${#DOTFILES_BREW_FORMULAS[@]} -eq 0 ]]; then
+    DOTFILES_BREW_ESSENTIAL_TOOLS=(eza bat rg fd fzf peco ghq sheldon zellij)
+    DOTFILES_BREW_FORMULAS=(eza bat ripgrep fd fzf peco ghq sheldon zellij)
+  fi
   _missing_tools=()
-  for i in {1..${#_essential_tools[@]}}; do
-    command -v "${_essential_tools[$i]}" &>/dev/null || _missing_tools+=("${_brew_names[$i]}")
+  for i in {1..${#DOTFILES_BREW_ESSENTIAL_TOOLS[@]}}; do
+    command -v "${DOTFILES_BREW_ESSENTIAL_TOOLS[$i]}" &>/dev/null || _missing_tools+=("${DOTFILES_BREW_FORMULAS[$i]}")
   done
   if [[ ${#_missing_tools[@]} -gt 0 ]]; then
     echo "Installing missing tools: ${_missing_tools[*]}"
     brew install "${_missing_tools[@]}"
   fi
-  unset _essential_tools _brew_names _missing_tools i
+  unset _missing_tools i
 fi
 
 # =============================================================================
@@ -179,6 +188,8 @@ else
   [[ -f ${XDG_CONFIG_HOME}/zsh/peco.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/peco.zsh
   [[ -f ${XDG_CONFIG_HOME}/zsh/fzf-worktree.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/fzf-worktree.zsh
   [[ -f ${XDG_CONFIG_HOME}/zsh/alias/common_alias.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/alias/common_alias.zsh
+  [[ -f ${XDG_CONFIG_HOME}/zsh/gcloud.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/gcloud.zsh
+  [[ -f ${XDG_CONFIG_HOME}/zsh/codex-claude-command.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/codex-claude-command.zsh
   if [[ "$(uname)" == "Darwin" ]]; then
     [[ -f ${XDG_CONFIG_HOME}/zsh/mac.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/mac.zsh
     [[ -f ${XDG_CONFIG_HOME}/zsh/alias/mac_alias.zsh ]] && source ${XDG_CONFIG_HOME}/zsh/alias/mac_alias.zsh

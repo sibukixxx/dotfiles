@@ -3,6 +3,13 @@
 set -e
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TOOL_MANIFEST="$DOTFILES_DIR/dot_config/zsh/tool-manifest.sh"
+
+if [[ -f "$TOOL_MANIFEST" ]]; then
+  # Shared tool definitions used by setup/verification.
+  # shellcheck source=dot_config/zsh/tool-manifest.sh
+  source "$TOOL_MANIFEST"
+fi
 
 echo "==> Starting dotfiles setup..."
 echo "    Dotfiles directory: $DOTFILES_DIR"
@@ -322,6 +329,51 @@ install_opencode() {
 }
 
 # =============================================================================
+# Agent Browser (headless browser CLI for AI agents)
+# =============================================================================
+install_agent_browser() {
+  if command -v agent-browser &>/dev/null; then
+    echo "==> Agent Browser already installed"
+    return 0
+  fi
+
+  echo "==> Installing Agent Browser..."
+  case "$OS_TYPE" in
+    macos)
+      # Installed via Brewfile
+      echo "    Agent Browser installed via Homebrew"
+      ;;
+    wsl|linux)
+      if command -v npm &>/dev/null; then
+        npm install -g agent-browser
+      else
+        echo "    Warning: npm not found. Install Node.js first, then run:"
+        echo "      npm install -g agent-browser"
+      fi
+      ;;
+  esac
+}
+
+# =============================================================================
+# RTK (Rust Token Killer) - AI context compression proxy
+# =============================================================================
+install_rtk() {
+  if command -v rtk &>/dev/null; then
+    echo "==> RTK already installed"
+  else
+    echo "==> Installing RTK..."
+    curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
+  fi
+
+  # Setup global hook for Claude Code
+  if command -v rtk &>/dev/null; then
+    echo "    Initializing RTK global hook..."
+    rtk init --global
+    echo "    RTK setup complete"
+  fi
+}
+
+# =============================================================================
 # Agent Skills Package Manager
 # =============================================================================
 install_agent_skills() {
@@ -507,24 +559,21 @@ install_fonts() {
 verify_tools() {
   echo "==> Verifying tool installations..."
 
-  local tools=(
-    "zsh"
-    "nvim"
-    "git"
-    "sheldon"
-    "zellij"
-    "fzf"
-    "peco"
-    "ghq"
-    "eza"
-    "bat"
-    "rg"
-    "fd"
-    "gcloud"
-    "aws"
-    "opencode"
-    "agent-skills"
-  )
+  local tools=()
+  if [[ ${#DOTFILES_CORE_TOOLS[@]} -gt 0 ]]; then
+    tools=("${DOTFILES_CORE_TOOLS[@]}")
+  else
+    tools=(zsh nvim git sheldon zellij fzf ghq eza bat rg fd)
+  fi
+
+  if [[ ${#DOTFILES_VERIFY_EXTRA_TOOLS[@]} -gt 0 ]]; then
+    tools+=("${DOTFILES_VERIFY_EXTRA_TOOLS[@]}")
+  else
+    tools+=(gcloud aws opencode agent-skills)
+  fi
+
+  # peco is optional in some setups, but still useful to surface.
+  tools+=(peco)
   local missing=()
 
   for tool in "${tools[@]}"; do
@@ -631,6 +680,8 @@ main() {
   setup_fzf
   install_cloud_cli
   install_opencode
+  install_agent_browser
+  install_rtk
   install_agent_skills
   install_fonts
   verify_tools
