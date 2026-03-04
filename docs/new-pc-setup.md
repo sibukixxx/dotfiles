@@ -236,6 +236,7 @@ chezmoi cd && git remote set-url origin git@github.com:sibukixxx/dotfiles.git
 | **IDE・エディタ** | VS Code, JetBrains Toolbox | WebStorm等はToolbox経由 |
 | **コンテナ** | OrbStack | Docker/Linux VM |
 | **生産性** | Alfred, Clipy, Obsidian, Dropbox | |
+| **セキュリティ** | 1Password CLI | APIキー管理（`op` コマンド） |
 | **AI** | Claude Desktop | |
 | **その他** | Kindle, Steam | |
 

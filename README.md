@@ -138,6 +138,7 @@ Brewfile で管理されているアプリケーション:
 | **IDE・エディタ** | VS Code, JetBrains Toolbox |
 | **コンテナ** | OrbStack |
 | **生産性** | Alfred, Clipy, Obsidian, Dropbox |
+| **セキュリティ** | 1Password CLI |
 | **AI** | Claude Desktop |
 | **その他** | Kindle, Steam |
 
@@ -273,6 +274,7 @@ dotfiles/
 │   ├── zsh/                   # zsh モジュール
 │   │   ├── tools.zsh          # ツール統合（fzf/ghq）
 │   │   ├── alias/             # エイリアス定義
+│   │   ├── gcloud.zsh         # gcloud 接続先管理
 │   │   ├── mac.zsh            # macOS 固有
 │   │   └── linux.zsh          # Linux 固有
 │   ├── ghostty/               # Ghostty 設定
@@ -280,10 +282,12 @@ dotfiles/
 │   ├── zellij/                # Zellij 設定
 │   ├── sheldon/               # プラグイン管理
 │   ├── git/                   # Git 設定（XDG準拠）
+│   ├── api-costs/             # APIキー・従量課金ダッシュボード設定
 │   └── karabiner/             # キーリマッパー（macOS）
 │
 ├── dot_local/bin/             # カスタムスクリプト
 │   ├── executable_verify-setup
+│   ├── executable_api-costs
 │   └── executable_clone-all-repos
 │
 ├── nix/
@@ -294,6 +298,8 @@ dotfiles/
 │
 └── docs/
     ├── ARCHITECTURE.md        # アーキテクチャ解説
+    ├── api-key-management.md  # APIキー運用（1Password CLI/direnv/gitleaks）
+    ├── api-costs.md           # APIコスト集計コマンド
     ├── TROUBLESHOOTING.md     # トラブルシューティング
     ├── new-pc-setup.md        # 新規 PC セットアップ
     └── zellij.md              # Zellij ガイド
@@ -345,6 +351,8 @@ dotfiles/
 | `fcd` | fzf でディレクトリ選択して cd |
 | `fbr` | fzf で git ブランチ切り替え |
 | `flog` | fzf で git ログを閲覧 |
+| `gsc` | fzf で gcloud configuration を切り替え |
+| `api-costs` | APIキー一覧と月次コストを集計表示 |
 
 ---
 
@@ -537,8 +545,10 @@ home-manager switch
 | [CHANGELOG.md](CHANGELOG.md) | 変更履歴 |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 全体設計、フロー図、ディレクトリ構造 |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | よくある問題と解決策 |
+| [api-key-management.md](docs/api-key-management.md) | APIキー登録・運用手順（1Password CLI + direnv + gitleaks） |
 | [new-pc-setup.md](docs/new-pc-setup.md) | 新規 PC セットアップの詳細ガイド |
 | [zellij.md](docs/zellij.md) | Zellij の使い方ガイド |
+| [gcloud.md](docs/gcloud.md) | gcloud 接続先管理（fzf スイッチャー + ディレクトリ自動切り替え） |
 
 ---
 
