@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+find_runner() {
+  if [[ -x "./.claude/skills/autonomous-improve-loop/scripts/improve-loop.sh" ]]; then
+    echo "./.claude/skills/autonomous-improve-loop/scripts/improve-loop.sh"
+    return
+  fi
+  if [[ -x "$HOME/.claude/skills/autonomous-improve-loop/scripts/improve-loop.sh" ]]; then
+    echo "$HOME/.claude/skills/autonomous-improve-loop/scripts/improve-loop.sh"
+    return
+  fi
+  echo ""
+}
+
+runner="$(find_runner)"
+if [[ -z "$runner" ]]; then
+  echo "improve-loop.sh not found." >&2
+  echo "Expected: .claude/skills/autonomous-improve-loop/scripts/improve-loop.sh" >&2
+  exit 1
+fi
+
+exec "$runner" "$@"
+
