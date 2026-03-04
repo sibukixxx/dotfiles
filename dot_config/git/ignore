@@ -26,3 +26,10 @@ cache/
 
 # Claude Code
 **/.claude/settings.local.json
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+.envrc
+.direnv/

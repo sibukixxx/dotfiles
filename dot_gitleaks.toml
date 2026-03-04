@@ -1,0 +1,18 @@
+title = "Global gitleaks config for personal development"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow harmless placeholders and 1Password secret references"
+regexes = [
+  '''(?i)(example|sample|dummy|test)[_-]?(api|token|secret|key)''',
+  '''op://[A-Za-z0-9 _./-]+''',
+]
+paths = [
+  '''(^|/)\.direnv/''',
+  '''(^|/)node_modules/''',
+  '''(^|/)vendor/''',
+  '''(^|/)dist/''',
+  '''(^|/)coverage/''',
+]
