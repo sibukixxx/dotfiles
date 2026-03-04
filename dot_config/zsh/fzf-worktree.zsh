@@ -40,15 +40,61 @@ zle -N fzf-worktree
 bindkey '^n' fzf-worktree
 
 # =============================================================================
-# Claude Agents with Git Worktrees (pure tmux, no xpanes required)
+# AI Agents with Git Worktrees (pure tmux, no xpanes required)
 # =============================================================================
 
-# Create N tmux panes with git worktrees, each running claude
-# Usage: wt_agents [num_agents] [--no-claude]
+# Create N tmux panes with git worktrees, each running selected AI command
+# Usage: wt_agents [num_agents] [--ai <command>] [--no-ai]
+# Examples:
+#   wt_agents 3 --ai claude
+#   wt_agents 2 --ai codex
+#   wt_agents --ai "opencode --session dev"
 wt_agents() {
-  local n="${1:-3}"
-  local no_claude=false
-  [[ "$2" == "--no-claude" ]] && no_claude=true
+  local n="3"
+  local ai_cmd="claude"
+  local no_ai=false
+
+  # Parse arguments
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --ai=*)
+        ai_cmd="${1#*=}"
+        shift
+        ;;
+      --ai|-a)
+        if [[ -z "$2" ]]; then
+          echo "Error: --ai requires a command"
+          echo "Usage: wt_agents [num_agents] [--ai <command>] [--no-ai]"
+          return 1
+        fi
+        ai_cmd="$2"
+        shift 2
+        ;;
+      --no-ai|--no-claude)
+        no_ai=true
+        shift
+        ;;
+      -h|--help)
+        echo "Usage: wt_agents [num_agents] [--ai <command>] [--no-ai]"
+        echo ""
+        echo "Options:"
+        echo "  --ai, -a <command>   AI command to launch in each pane (default: claude)"
+        echo "  --no-ai              Create panes only, do not launch AI command"
+        echo "  --no-claude          Backward-compatible alias of --no-ai"
+        return 0
+        ;;
+      *)
+        if [[ "$1" =~ '^[0-9]+$' ]]; then
+          n="$1"
+          shift
+        else
+          echo "Error: Unknown argument: $1"
+          echo "Usage: wt_agents [num_agents] [--ai <command>] [--no-ai]"
+          return 1
+        fi
+        ;;
+    esac
+  done
 
   # Verify we're in a git repo
   local root
@@ -61,6 +107,14 @@ wt_agents() {
   if [[ -z "$TMUX" ]]; then
     echo "Error: Not in a tmux session"
     return 1
+  fi
+
+  if ! $no_ai; then
+    local ai_bin="${ai_cmd%% *}"
+    if ! command -v "$ai_bin" &>/dev/null; then
+      echo "Error: AI command not found: $ai_bin"
+      return 1
+    fi
   fi
 
   local base="$(basename "$root")"
@@ -97,14 +151,14 @@ wt_agents() {
     if $first; then
       # First pane: change directory in current pane
       cd "$wt_dir"
-      $no_claude || tmux send-keys "claude" C-m
+      $no_ai || tmux send-keys "$ai_cmd" C-m
       first=false
     else
       # Subsequent panes: split and send commands
-      if $no_claude; then
+      if $no_ai; then
         tmux split-window -h -c "$wt_dir"
       else
-        tmux split-window -h -c "$wt_dir" "claude"
+        tmux split-window -h -c "$wt_dir" "$ai_cmd"
       fi
     fi
   done
@@ -112,7 +166,11 @@ wt_agents() {
   # Arrange panes evenly
   tmux select-layout tiled
 
-  echo "Created ${#wt_paths[@]} panes with worktrees"
+  if $no_ai; then
+    echo "Created ${#wt_paths[@]} panes with worktrees (AI launch disabled)"
+  else
+    echo "Created ${#wt_paths[@]} panes with worktrees (AI: $ai_cmd)"
+  fi
 }
 
 # Cleanup worktrees created by wt_agents
@@ -163,4 +221,3 @@ wt_cleanup() {
 # Quick aliases
 alias wta='wt_agents'
 alias wtc='wt_cleanup'
-
