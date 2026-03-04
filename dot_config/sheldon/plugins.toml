@@ -86,6 +86,14 @@ profiles = ["linux"]
 local = "~/.config/zsh"
 use = ["agent-skills.zsh"]
 
+[plugins.dotfiles-codex-claude-command]
+local = "~/.config/zsh"
+use = ["codex-claude-command.zsh"]
+
+[plugins.dotfiles-gcloud]
+local = "~/.config/zsh"
+use = ["gcloud.zsh"]
+
 [plugins.dotfiles-terraform]
 local = "~/.config/zsh"
 use = ["terraform.zsh"]
