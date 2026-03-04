@@ -1,5 +1,6 @@
 # Mac App Store CLI (for Xcode, etc.)
 brew "mas"
+tap "manaflow-ai/cmux"   # cmux Homebrew tap
 
 # =============================================================================
 # Core CLI Tools
@@ -62,6 +63,7 @@ brew "readline"
 # =============================================================================
 # Terminal Emulators
 # =============================================================================
+cask "cmux"              # Agent-first terminal workspace manager
 cask "ghostty"           # Modern GPU-accelerated terminal (primary)
 cask "alacritty"         # GPU-accelerated terminal emulator (backup)
 
@@ -94,10 +96,12 @@ cask "alfred"            # Spotlight replacement
 cask "clipy"             # Clipboard manager
 cask "obsidian"          # Note-taking
 cask "dropbox"           # Cloud storage
+cask "1password-cli"     # 1Password CLI (op) for secrets management
 
 # =============================================================================
 # AI Tools
 # =============================================================================
+brew "agent-browser"     # Headless browser automation CLI for AI agents
 cask "claude"            # Claude Desktop
 
 # =============================================================================
