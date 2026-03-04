@@ -1,0 +1,291 @@
+#!/usr/bin/env bash
+#
+# api-costs - API key inventory and monthly cost dashboard
+#
+# Usage:
+#   api-costs [--month YYYY-MM] [--service NAME] [--json]
+#
+# Config:
+#   ~/.config/api-costs/config.json (or $API_COSTS_CONFIG)
+#
+# Notes:
+# - list_keys_cmd must output a JSON array.
+# - monthly_cost_cmd must output a JSON number/string, or object:
+#   {"amount": 12.34, "currency": "USD"}
+#
+
+set -euo pipefail
+
+CONFIG_FILE="${API_COSTS_CONFIG:-$HOME/.config/api-costs/config.json}"
+MONTH="$(date +%Y-%m)"
+SERVICE_FILTER=""
+OUTPUT_JSON=0
+
+usage() {
+  cat <<'EOF'
+Usage: api-costs [options]
+
+Options:
+  --month YYYY-MM   Target month (default: current month)
+  --service NAME    Show only one service from config
+  --json            Print machine-readable JSON
+  -h, --help        Show this help
+EOF
+}
+
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Error: required command not found: $1" >&2
+    exit 1
+  fi
+}
+
+validate_month() {
+  local value="$1"
+  if [[ ! "$value" =~ ^[0-9]{4}-[0-9]{2}$ ]]; then
+    echo "Error: --month must be YYYY-MM (received: $value)" >&2
+    exit 1
+  fi
+}
+
+render_template() {
+  local template="$1"
+  local rendered="${template//\{\{month\}\}/$MONTH}"
+  rendered="${rendered//\{\{month_start\}\}/$MONTH-01}"
+  echo "$rendered"
+}
+
+run_command() {
+  local cmd="$1"
+  local __out_var="$2"
+  local __err_var="$3"
+  local output
+  local err_file
+  err_file="$(mktemp)"
+
+  if output="$(bash -lc "$cmd" 2>"$err_file")"; then
+    printf -v "$__out_var" '%s' "$output"
+    printf -v "$__err_var" ''
+    rm -f "$err_file"
+    return 0
+  fi
+
+  printf -v "$__out_var" ''
+  printf -v "$__err_var" '%s' "$(cat "$err_file")"
+  rm -f "$err_file"
+  return 1
+}
+
+normalize_keys() {
+  local raw="$1"
+  echo "$raw" | jq -c '
+    if type != "array" then
+      error("list_keys_cmd must output a JSON array")
+    else
+      map(
+        if type == "string" then
+          {name: ., id: null, created_at: null, last_used_at: null, status: null}
+        elif type == "object" then
+          {
+            name: (.name // .label // .id // .key // .api_key // "unnamed"),
+            id: (.id // .key // .api_key // null),
+            created_at: (.created_at // .created // null),
+            last_used_at: (.last_used_at // .last_used // null),
+            status: (.status // null)
+          }
+        else
+          empty
+        end
+      )
+    end
+  '
+}
+
+parse_amount() {
+  local raw="$1"
+  echo "$raw" | jq -r '
+    if type == "number" then
+      .
+    elif type == "string" then
+      (tonumber? // error("monthly_cost_cmd string must be numeric"))
+    elif type == "object" then
+      (.amount // error("monthly_cost_cmd object requires .amount") | tonumber)
+    else
+      error("monthly_cost_cmd output must be number, numeric string, or object")
+    end
+  '
+}
+
+parse_currency() {
+  local raw="$1"
+  local fallback="$2"
+  echo "$raw" | jq -r --arg fallback "$fallback" '
+    if type == "object" then
+      (.currency // $fallback)
+    else
+      $fallback
+    end
+  '
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --month)
+      shift
+      [[ $# -gt 0 ]] || { echo "Error: --month requires a value" >&2; exit 1; }
+      MONTH="$1"
+      validate_month "$MONTH"
+      ;;
+    --service)
+      shift
+      [[ $# -gt 0 ]] || { echo "Error: --service requires a value" >&2; exit 1; }
+      SERVICE_FILTER="$1"
+      ;;
+    --json)
+      OUTPUT_JSON=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Error: unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+require_cmd jq
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "Error: config not found: $CONFIG_FILE" >&2
+  echo "Create from: ~/.config/api-costs/config.example.json" >&2
+  exit 1
+fi
+
+if ! jq -e '.services and (.services | type == "array")' "$CONFIG_FILE" >/dev/null; then
+  echo "Error: invalid config format. Expected: {\"services\": [...]}" >&2
+  exit 1
+fi
+
+json_rows="[]"
+summary_lines=""
+has_service=0
+
+if [[ $OUTPUT_JSON -eq 0 ]]; then
+  echo "API Costs Dashboard"
+  echo "Month: $MONTH"
+  echo ""
+  printf "%-20s %-10s %-12s %-10s %s\n" "SERVICE" "KEYS" "COST" "CURRENCY" "STATUS"
+  printf "%-20s %-10s %-12s %-10s %s\n" "--------------------" "----------" "------------" "----------" "------"
+fi
+
+while IFS= read -r service_json; do
+  name="$(echo "$service_json" | jq -r '.name')"
+  currency="$(echo "$service_json" | jq -r '.currency // "USD"')"
+  list_keys_cmd="$(echo "$service_json" | jq -r '.list_keys_cmd // empty')"
+  monthly_cost_cmd="$(echo "$service_json" | jq -r '.monthly_cost_cmd // empty')"
+
+  if [[ -n "$SERVICE_FILTER" && "$name" != "$SERVICE_FILTER" ]]; then
+    continue
+  fi
+
+  has_service=1
+  status="ok"
+  error_msg=""
+  keys_json="[]"
+  key_count=0
+  amount="0"
+
+  if [[ -n "$list_keys_cmd" ]]; then
+    rendered_cmd="$(render_template "$list_keys_cmd")"
+    keys_raw=""
+    keys_err=""
+    if run_command "$rendered_cmd" keys_raw keys_err; then
+      if keys_json="$(normalize_keys "$keys_raw" 2>/dev/null)"; then
+        key_count="$(echo "$keys_json" | jq 'length')"
+      else
+        status="warning"
+        error_msg="invalid keys JSON"
+      fi
+    else
+      status="warning"
+      error_msg="keys command failed: ${keys_err:-unknown error}"
+    fi
+  fi
+
+  if [[ -n "$monthly_cost_cmd" ]]; then
+    rendered_cmd="$(render_template "$monthly_cost_cmd")"
+    cost_raw=""
+    cost_err=""
+    if run_command "$rendered_cmd" cost_raw cost_err; then
+      if amount="$(parse_amount "$cost_raw" 2>/dev/null)"; then
+        currency="$(parse_currency "$cost_raw" "$currency" 2>/dev/null || echo "$currency")"
+      else
+        status="warning"
+        if [[ -n "$error_msg" ]]; then
+          error_msg="$error_msg; invalid cost JSON"
+        else
+          error_msg="invalid cost JSON"
+        fi
+      fi
+    else
+      status="warning"
+      if [[ -n "$error_msg" ]]; then
+        error_msg="$error_msg; cost command failed: ${cost_err:-unknown error}"
+      else
+        error_msg="cost command failed: ${cost_err:-unknown error}"
+      fi
+    fi
+  fi
+
+  if [[ $OUTPUT_JSON -eq 0 ]]; then
+    printf "%-20s %-10s %-12s %-10s %s\n" "$name" "$key_count" "$amount" "$currency" "$status"
+    if [[ -n "$error_msg" ]]; then
+      printf "  ! %s\n" "$error_msg"
+    fi
+
+    if [[ "$key_count" -gt 0 ]]; then
+      echo "$keys_json" | jq -r '.[] | "  - \(.name)\(if .id then " (\(.id))" else "" end)\(if .created_at then " created:\(.created_at)" else "" end)\(if .last_used_at then " last_used:\(.last_used_at)" else "" end)\(if .status then " status:\(.status)" else "" end)"'
+    fi
+  fi
+
+  summary_lines+="$currency $amount"$'\n'
+
+  row="$(jq -cn \
+    --arg name "$name" \
+    --arg currency "$currency" \
+    --arg status "$status" \
+    --arg error "$error_msg" \
+    --argjson keys "$keys_json" \
+    --argjson key_count "$key_count" \
+    --argjson amount "$amount" \
+    '{service:$name,key_count:$key_count,cost:{amount:$amount,currency:$currency},status:$status,error:(if ($error|length) > 0 then $error else null end),keys:$keys}')"
+  json_rows="$(echo "$json_rows" | jq --argjson row "$row" '. + [$row]')"
+done < <(jq -c '.services[]' "$CONFIG_FILE")
+
+if [[ "$has_service" -eq 0 ]]; then
+  echo "Error: no matching services found" >&2
+  exit 1
+fi
+
+total_json="$(printf '%s' "$summary_lines" \
+  | awk 'NF==2 {sum[$1]+=$2} END {for (c in sum) printf("{\"currency\":\"%s\",\"amount\":%.8f}\n", c, sum[c])}' \
+  | jq -s 'sort_by(.currency)')"
+
+if [[ $OUTPUT_JSON -eq 1 ]]; then
+  jq -n \
+    --arg month "$MONTH" \
+    --arg config "$CONFIG_FILE" \
+    --argjson services "$json_rows" \
+    --argjson totals "$total_json" \
+    '{month:$month,config:$config,services:$services,totals:$totals}'
+  exit 0
+fi
+
+echo ""
+echo "Totals"
+echo "------"
+echo "$total_json" | jq -r '.[] | "  \(.currency): \(.amount)"'

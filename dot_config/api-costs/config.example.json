@@ -1,0 +1,16 @@
+{
+  "services": [
+    {
+      "name": "openai",
+      "currency": "USD",
+      "list_keys_cmd": "echo '[{\"name\":\"backend\",\"id\":\"sk-openai-1\"},{\"name\":\"batch\",\"id\":\"sk-openai-2\"}]'",
+      "monthly_cost_cmd": "echo '{\"amount\": 12.34, \"currency\": \"USD\"}'"
+    },
+    {
+      "name": "anthropic",
+      "currency": "USD",
+      "list_keys_cmd": "echo '[{\"name\":\"prod\",\"id\":\"sk-ant-1\"}]'",
+      "monthly_cost_cmd": "echo '{\"amount\": 8.5, \"currency\": \"USD\"}'"
+    }
+  ]
+}
