@@ -1,5 +1,12 @@
 # CLAUDE.md - Global Project Guidelines
 
+## z-ai/ directory
+
+- `z-ai/` is globally gitignored.
+- This directory is used for local AI documents such as plans and progress
+  tracking.
+- Do NOT ask whether `z-ai/` is gitignored — it always is.
+
 ## Testing Philosophy (t-wada Style)
 
 このプロジェクトでは、和田卓人（t-wada）氏のテスト駆動開発の哲学に基づいてテストを行う。
