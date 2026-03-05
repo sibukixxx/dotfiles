@@ -131,7 +131,7 @@ esac
 # Verify hooks can run
 echo -e "\n${BLUE}Verifying hooks...${NC}"
 if [ -f "$CLAUDE_DIR/hooks/session-start.ts" ]; then
-    if bun run "$CLAUDE_DIR/hooks/session-start.ts" --dry-run 2>/dev/null; then
+    if bun run "$CLAUDE_DIR/hooks/session-start.ts" --dry-run < /dev/null 2>/dev/null; then
         echo -e "${GREEN}✓ Hooks verified${NC}"
     else
         echo -e "${YELLOW}⚠ Hook verification skipped${NC}"
