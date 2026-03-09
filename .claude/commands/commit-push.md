@@ -7,6 +7,9 @@ argument-hint: "[--no-push]"
 
 Task tool で `commit-pusher` サブエージェントを起動してコミット＆プッシュを実行。
 
+- Conventional Commit の `type` は `feat` / `fix` など標準の英語表記を使う
+- コミットメッセージの件名と本文は日本語で作成する
+
 - 引数なし → コミット後にプッシュ
 - `--no-push` → コミットのみ
 
