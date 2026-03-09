@@ -31,6 +31,8 @@ brew "go"
 brew "pyenv"
 brew "nodebrew"
 brew "gh"                # GitHub CLI
+brew "direnv"            # per-directory environment variables
+brew "fastlane"          # iOS automation (screenshots, deploy)
 
 # =============================================================================
 # Cloud CLI Tools

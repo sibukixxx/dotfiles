@@ -5,6 +5,7 @@ DOTFILES_CORE_TOOLS=(
   zsh
   nvim
   git
+  direnv
   sheldon
   zellij
   fzf

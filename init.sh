@@ -180,6 +180,7 @@ install_apt_packages() {
     git
     zsh
     peco
+    direnv
   )
 
   sudo apt-get update
