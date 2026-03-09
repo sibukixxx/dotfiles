@@ -49,27 +49,17 @@ fi
 
 # =============================================================================
 # Navigation
+# NOTE: .., ..., .... are now zeno.zsh abbreviations
 # =============================================================================
-alias ..='cd ..'
-alias ...='cd ../..'
-alias ....='cd ../../..'
-
 alias pu="pushd"
 alias po="popd"
 
 # =============================================================================
 # Git Shortcuts
+# NOTE: Most git shortcuts are now zeno.zsh abbreviations (see ~/.config/zeno/config.yml)
+# Only keeping 'g' as alias since single-char abbr can conflict with zeno
 # =============================================================================
 alias g='git'
-alias gs='git status'
-alias ga='git add'
-alias gc='git commit'
-alias gp='git push'
-alias gl='git pull'
-alias gd='git diff'
-alias gco='git checkout'
-alias gb='git branch'
-alias glog='git log --oneline --graph --decorate'
 
 # =============================================================================
 # Misc

@@ -1,0 +1,270 @@
+# =============================================================================
+# zeno.zsh configuration
+# Abbreviation expansions & completions
+# =============================================================================
+
+snippets:
+  # ---------------------------------------------------------------------------
+  # Git
+  # ---------------------------------------------------------------------------
+  - name: git status
+    keyword: gs
+    snippet: git status
+
+  - name: git add
+    keyword: ga
+    snippet: git add
+
+  - name: git add all
+    keyword: gaa
+    snippet: git add -A
+
+  - name: git commit
+    keyword: gc
+    snippet: git commit
+
+  - name: git commit with message
+    keyword: gcm
+    snippet: git commit -m '{{cursor}}'
+
+  - name: git push
+    keyword: gp
+    snippet: git push
+
+  - name: git push (set upstream)
+    keyword: gpu
+    snippet: git push -u origin $(git branch --show-current)
+
+  - name: git pull
+    keyword: gl
+    snippet: git pull
+
+  - name: git diff
+    keyword: gd
+    snippet: git diff
+
+  - name: git diff staged
+    keyword: gds
+    snippet: git diff --staged
+
+  - name: git checkout
+    keyword: gco
+    snippet: git checkout
+
+  - name: git branch
+    keyword: gb
+    snippet: git branch
+
+  - name: git log (graph)
+    keyword: glog
+    snippet: git log --oneline --graph --decorate
+
+  - name: git log (short)
+    keyword: glo
+    snippet: git log --oneline -20
+
+  - name: git stash
+    keyword: gst
+    snippet: git stash
+
+  - name: git stash pop
+    keyword: gstp
+    snippet: git stash pop
+
+  - name: git rebase
+    keyword: grb
+    snippet: git rebase
+
+  - name: git worktree list
+    keyword: gwtl
+    snippet: git worktree list
+
+  - name: git worktree add
+    keyword: gwta
+    snippet: git worktree add
+
+  # ---------------------------------------------------------------------------
+  # Docker / Docker Compose
+  # ---------------------------------------------------------------------------
+  - name: docker compose up
+    keyword: dcu
+    snippet: docker compose up -d
+
+  - name: docker compose down
+    keyword: dcd
+    snippet: docker compose down
+
+  - name: docker compose logs
+    keyword: dcl
+    snippet: docker compose logs -f
+
+  - name: docker compose ps
+    keyword: dcps
+    snippet: docker compose ps
+
+  - name: docker compose build
+    keyword: dcb
+    snippet: docker compose build
+
+  # ---------------------------------------------------------------------------
+  # Zellij
+  # ---------------------------------------------------------------------------
+  - name: zellij
+    keyword: zj
+    snippet: zellij
+
+  - name: zellij attach
+    keyword: zja
+    snippet: zellij attach
+
+  - name: zellij list sessions
+    keyword: zjl
+    snippet: zellij list-sessions
+
+  # ---------------------------------------------------------------------------
+  # Claude / AI
+  # ---------------------------------------------------------------------------
+  - name: claude
+    keyword: cc
+    snippet: claude
+
+  - name: claude --continue
+    keyword: ccc
+    snippet: claude --continue
+
+  - name: claude --resume
+    keyword: ccr
+    snippet: claude --resume
+
+  # ---------------------------------------------------------------------------
+  # Navigation
+  # ---------------------------------------------------------------------------
+  - name: parent dir
+    keyword: ..
+    snippet: cd ..
+
+  - name: grandparent dir
+    keyword: ...
+    snippet: cd ../..
+
+  - name: great-grandparent dir
+    keyword: ....
+    snippet: cd ../../..
+
+  # ---------------------------------------------------------------------------
+  # Common options (context-based, expand mid-command)
+  # ---------------------------------------------------------------------------
+  - name: "pipe to less"
+    keyword: "|l"
+    snippet: "| less"
+    context:
+      lbuffer: ".+"
+
+  - name: "pipe to head"
+    keyword: "|h"
+    snippet: "| head -20"
+    context:
+      lbuffer: ".+"
+
+  - name: "pipe to grep"
+    keyword: "|g"
+    snippet: "| grep '{{cursor}}'"
+    context:
+      lbuffer: ".+"
+
+  - name: "pipe to fzf"
+    keyword: "|f"
+    snippet: "| fzf"
+    context:
+      lbuffer: ".+"
+
+  - name: "redirect stderr"
+    keyword: "2>"
+    snippet: "2>&1"
+    context:
+      lbuffer: ".+"
+
+  - name: "redirect to /dev/null"
+    keyword: ">/dev"
+    snippet: ">/dev/null 2>&1"
+    context:
+      lbuffer: ".+"
+
+  # ---------------------------------------------------------------------------
+  # Misc
+  # ---------------------------------------------------------------------------
+  - name: which
+    keyword: wh
+    snippet: which
+
+  - name: chezmoi apply
+    keyword: cza
+    snippet: chezmoi apply
+
+  - name: chezmoi diff
+    keyword: czd
+    snippet: chezmoi diff
+
+  - name: chezmoi edit
+    keyword: cze
+    snippet: chezmoi edit
+
+completions:
+  # ---------------------------------------------------------------------------
+  # ghq + fzf
+  # ---------------------------------------------------------------------------
+  - name: ghq
+    patterns:
+      - "^cd $"
+      - "^code $"
+      - "^nvim $"
+    sourceCommand: "ghq list --full-path"
+    options:
+      --prompt: "'Repository> '"
+      --preview: "eza --tree --icons --color=always --level=2 {}"
+
+  # ---------------------------------------------------------------------------
+  # git branch
+  # ---------------------------------------------------------------------------
+  - name: git branch select
+    patterns:
+      - "^git checkout $"
+      - "^git switch $"
+      - "^git merge $"
+      - "^git rebase $"
+      - "^git branch -d $"
+    sourceCommand: "git branch --format='%(refname:short)' | sort"
+    options:
+      --prompt: "'Branch> '"
+      --preview: "git log --oneline --graph --color=always {}"
+
+  # ---------------------------------------------------------------------------
+  # git worktree
+  # ---------------------------------------------------------------------------
+  - name: git worktree select
+    patterns:
+      - "^git worktree remove $"
+    sourceCommand: "git worktree list | tail -n +2 | awk '{print $1}'"
+    options:
+      --prompt: "'Worktree> '"
+
+  # ---------------------------------------------------------------------------
+  # docker container
+  # ---------------------------------------------------------------------------
+  - name: docker container select
+    patterns:
+      - "^docker (exec|logs|stop|kill|rm|inspect) $"
+    sourceCommand: "docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}'"
+    options:
+      --prompt: "'Container> '"
+
+  # ---------------------------------------------------------------------------
+  # kill process
+  # ---------------------------------------------------------------------------
+  - name: kill process
+    patterns:
+      - "^kill $"
+      - "^kill -9 $"
+    sourceCommand: "ps -eo pid,user,comm | sed 1d"
+    options:
+      --prompt: "'Kill Process> '"

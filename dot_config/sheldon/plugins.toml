@@ -33,6 +33,9 @@ apply = ["defer"]
 github = "zsh-users/zsh-history-substring-search"
 apply = ["defer"]
 
+[plugins.zeno]
+github = "yuki-yano/zeno.zsh"
+
 # =============================================================================
 # Prompt (optional - uncomment if you want to use starship or pure)
 # =============================================================================
@@ -89,6 +92,10 @@ use = ["agent-skills.zsh"]
 [plugins.dotfiles-codex-claude-command]
 local = "~/.config/zsh"
 use = ["codex-claude-command.zsh"]
+
+[plugins.dotfiles-zeno]
+local = "~/.config/zsh"
+use = ["zeno.zsh"]
 
 [plugins.dotfiles-gcloud]
 local = "~/.config/zsh"
