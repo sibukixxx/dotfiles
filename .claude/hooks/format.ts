@@ -17,7 +17,7 @@ export function getFileExtension(filePath: string): string {
 }
 
 export function isFormattableExtension(ext: string): boolean {
-  const formattable = [".go", ".rs", ".ts", ".tsx", ".js", ".jsx", ".json", ".jsonc"];
+  const formattable = [".go", ".rs", ".ts", ".tsx", ".js", ".jsx", ".json", ".jsonc", ".swift", ".lua"];
   return formattable.includes(ext);
 }
 
@@ -89,6 +89,34 @@ export async function formatJsonFile(filePath: string): Promise<FormatResult> {
   }
 }
 
+export async function formatSwiftFile(filePath: string): Promise<FormatResult> {
+  try {
+    await $`swift-format -i ${filePath}`.quiet();
+    console.log(`Formatted Swift file: ${filePath}`);
+    return { formatted: true, formatter: "swift-format" };
+  } catch {
+    try {
+      await $`swiftformat ${filePath}`.quiet();
+      console.log(`Formatted Swift file: ${filePath}`);
+      return { formatted: true, formatter: "swiftformat" };
+    } catch (error) {
+      console.error(`Error formatting ${filePath}:`, error);
+      return { formatted: false, error: String(error) };
+    }
+  }
+}
+
+export async function formatLuaFile(filePath: string): Promise<FormatResult> {
+  try {
+    await $`stylua ${filePath}`.quiet();
+    console.log(`Formatted Lua file: ${filePath}`);
+    return { formatted: true, formatter: "stylua" };
+  } catch (error) {
+    console.error(`Error formatting ${filePath}:`, error);
+    return { formatted: false, error: String(error) };
+  }
+}
+
 export async function formatFile(filePath: string): Promise<FormatResult> {
   const ext = getFileExtension(filePath);
 
@@ -105,6 +133,10 @@ export async function formatFile(filePath: string): Promise<FormatResult> {
     case ".json":
     case ".jsonc":
       return formatJsonFile(filePath);
+    case ".swift":
+      return formatSwiftFile(filePath);
+    case ".lua":
+      return formatLuaFile(filePath);
     default:
       console.log(`No formatter configured for extension: ${ext}`);
       return { formatted: false, error: "unsupported_extension" };

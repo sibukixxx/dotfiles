@@ -9,6 +9,8 @@ import {
   formatJsonFile,
   formatGoFile,
   formatRustFile,
+  formatSwiftFile,
+  formatLuaFile,
 } from "./format.ts";
 import type { PostToolUseHookData, FileModificationToolParams } from "./types.ts";
 
@@ -43,6 +45,14 @@ describe("getFileExtension", () => {
 
   it("returns .jsonc for JSONC files", () => {
     expect(getFileExtension("tsconfig.jsonc")).toBe(".jsonc");
+  });
+
+  it("returns .swift for Swift files", () => {
+    expect(getFileExtension("ViewController.swift")).toBe(".swift");
+  });
+
+  it("returns .lua for Lua files", () => {
+    expect(getFileExtension("init.lua")).toBe(".lua");
   });
 
   it("returns empty string for files without extension", () => {
@@ -97,6 +107,14 @@ describe("isFormattableExtension", () => {
 
   it("returns false for .txt", () => {
     expect(isFormattableExtension(".txt")).toBe(false);
+  });
+
+  it("returns true for .swift", () => {
+    expect(isFormattableExtension(".swift")).toBe(true);
+  });
+
+  it("returns true for .lua", () => {
+    expect(isFormattableExtension(".lua")).toBe(true);
   });
 
   it("returns false for empty string", () => {
@@ -236,6 +254,26 @@ describe("formatRustFile", () => {
   });
 });
 
+describe("formatSwiftFile", () => {
+  it("returns error for non-existent Swift file", async () => {
+    const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+    const logSpy = spyOn(console, "log").mockImplementation(() => {});
+    const result = await formatSwiftFile("/nonexistent/path/ViewController.swift");
+    expect(result.formatted).toBe(false);
+    consoleSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+});
+
+describe("formatLuaFile", () => {
+  it("returns error for non-existent Lua file", async () => {
+    const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+    const result = await formatLuaFile("/nonexistent/path/init.lua");
+    expect(result.formatted).toBe(false);
+    consoleSpy.mockRestore();
+  });
+});
+
 describe("formatFile routing", () => {
   it("routes .go files to formatGoFile", async () => {
     const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
@@ -293,6 +331,22 @@ describe("formatFile routing", () => {
     const result = await formatFile("/nonexistent/path/settings.jsonc");
     expect(result.formatted).toBe(false);
     expect(result.error).toBe("jq_failed");
+    consoleSpy.mockRestore();
+  });
+
+  it("routes .swift files to formatSwiftFile", async () => {
+    const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+    const logSpy = spyOn(console, "log").mockImplementation(() => {});
+    const result = await formatFile("/nonexistent/path/ViewController.swift");
+    expect(result.formatted).toBe(false);
+    consoleSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  it("routes .lua files to formatLuaFile", async () => {
+    const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+    const result = await formatFile("/nonexistent/path/init.lua");
+    expect(result.formatted).toBe(false);
     consoleSpy.mockRestore();
   });
 });
