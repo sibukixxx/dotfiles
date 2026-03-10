@@ -1,5 +1,10 @@
 # Sheldon configuration
 # https://sheldon.cli.rs/
+#
+# NOTE: All GitHub plugins use `proto = "https"` because:
+# - Git global config has `url.git@github.com:.insteadOf = https://github.com/`
+# - sheldon uses libgit2 which doesn't support the system SSH agent
+# - This forces sheldon to use HTTPS directly, bypassing the rewrite
 
 shell = "zsh"
 
@@ -15,26 +20,32 @@ defer = "{{ hooks?.pre | nl }}{% for file in files %}zsh-defer source \"{{ file 
 
 [plugins.zsh-defer]
 github = "romkatv/zsh-defer"
+proto = "https"
 
 [plugins.zsh-autosuggestions]
 github = "zsh-users/zsh-autosuggestions"
 use = ["{{ name }}.zsh"]
 apply = ["defer"]
+proto = "https"
 
 [plugins.zsh-syntax-highlighting]
 github = "zsh-users/zsh-syntax-highlighting"
 apply = ["defer"]
+proto = "https"
 
 [plugins.zsh-completions]
 github = "zsh-users/zsh-completions"
 apply = ["defer"]
+proto = "https"
 
 [plugins.zsh-history-substring-search]
 github = "zsh-users/zsh-history-substring-search"
 apply = ["defer"]
+proto = "https"
 
 [plugins.zeno]
 github = "yuki-yano/zeno.zsh"
+proto = "https"
 
 # =============================================================================
 # Prompt (optional - uncomment if you want to use starship or pure)
