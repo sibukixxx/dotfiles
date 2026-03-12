@@ -5,6 +5,9 @@ import type {
   FileModificationToolParams,
   PostToolUseHookData,
 } from "./types.ts";
+import { isFileModificationTool, readStdinWithTimeout } from "./utils.ts";
+
+export { isFileModificationTool };
 
 export type FormatResult = {
   formatted: boolean;
@@ -143,10 +146,6 @@ export async function formatFile(filePath: string): Promise<FormatResult> {
   }
 }
 
-export function isFileModificationTool(toolName: string): boolean {
-  return ["Write", "Edit", "MultiEdit"].includes(toolName);
-}
-
 export async function processFormat(
   data: PostToolUseHookData<FileModificationToolParams>
 ): Promise<FormatResult | null> {
@@ -168,20 +167,12 @@ export async function processFormat(
 
 async function main() {
   try {
-    const stdinPromise = Bun.stdin.text();
-    const timeoutPromise = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), 5000)
-    );
-    const input = await Promise.race([stdinPromise, timeoutPromise]);
-    if (input === null || input.trim() === "") {
-      return;
-    }
-    const data: PostToolUseHookData<FileModificationToolParams> = JSON.parse(input);
+    const data = await readStdinWithTimeout<PostToolUseHookData<FileModificationToolParams>>();
+    if (!data) return;
     await processFormat(data);
   } catch (error) {
-    console.error("Error in main function:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`FATAL ERROR: ${errorMessage}`);
+    console.error(`[format error]: ${errorMessage}`);
   }
 }
 

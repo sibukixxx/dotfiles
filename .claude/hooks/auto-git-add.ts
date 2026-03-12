@@ -3,6 +3,9 @@ import type {
   FileModificationToolParams,
   PostToolUseHookData,
 } from "./types.ts";
+import { isFileModificationTool, readStdinWithTimeout } from "./utils.ts";
+
+export { isFileModificationTool };
 
 // Files to exclude from auto-staging
 export const EXCLUDE_PATTERNS = [
@@ -50,10 +53,6 @@ export async function gitAddFile(filePath: string): Promise<boolean> {
   }
 }
 
-export function isFileModificationTool(toolName: string): boolean {
-  return ["Write", "Edit", "MultiEdit"].includes(toolName);
-}
-
 export async function processAutoGitAdd(
   data: PostToolUseHookData<FileModificationToolParams>
 ): Promise<{
@@ -96,15 +95,8 @@ export async function processAutoGitAdd(
 
 async function main() {
   try {
-    const stdinPromise = Bun.stdin.text();
-    const timeoutPromise = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), 5000)
-    );
-    const input = await Promise.race([stdinPromise, timeoutPromise]);
-    if (input === null || input.trim() === "") {
-      return;
-    }
-    const data: PostToolUseHookData<FileModificationToolParams> = JSON.parse(input);
+    const data = await readStdinWithTimeout<PostToolUseHookData<FileModificationToolParams>>();
+    if (!data) return;
     await processAutoGitAdd(data);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

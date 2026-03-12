@@ -1,38 +1,19 @@
-import { $ } from "bun";
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { dirname } from "node:path";
+import { readFileSync } from "node:fs";
 import type { SessionStartHookData, SessionState } from "./types.ts";
+import {
+  getGitStatus,
+  getGitBranch,
+  ensureStatusDir,
+  loadSessionState,
+  saveSessionState,
+  readStdinWithTimeout,
+  STATUS_DIR,
+  STATE_FILE,
+} from "./utils.ts";
 
-export const STATUS_DIR = `${process.env.HOME}/.claude/status`;
+export { getGitStatus, getGitBranch, ensureStatusDir, loadSessionState, saveSessionState, STATUS_DIR, STATE_FILE };
+
 export const CURRENT_FILE = `${STATUS_DIR}/current.md`;
-export const STATE_FILE = `${STATUS_DIR}/session_state.json`;
-
-export function ensureStatusDir(): void {
-  if (!existsSync(STATUS_DIR)) {
-    mkdirSync(STATUS_DIR, { recursive: true });
-  }
-  const queueDir = `${STATUS_DIR}/queue`;
-  if (!existsSync(queueDir)) {
-    mkdirSync(queueDir, { recursive: true });
-  }
-}
-
-export async function getGitStatus(): Promise<string[]> {
-  try {
-    const result = await $`git status --porcelain`.text();
-    return result.trim().split("\n").filter((line) => line.length > 0);
-  } catch {
-    return [];
-  }
-}
-
-export async function getGitBranch(): Promise<string> {
-  try {
-    return (await $`git branch --show-current`.text()).trim();
-  } catch {
-    return "unknown";
-  }
-}
 
 export function getCurrentTask(filePath: string = CURRENT_FILE): string | null {
   try {
@@ -41,26 +22,6 @@ export function getCurrentTask(filePath: string = CURRENT_FILE): string | null {
   } catch {
     return null;
   }
-}
-
-export function loadSessionState(filePath: string = STATE_FILE): SessionState | null {
-  try {
-    const content = readFileSync(filePath, "utf-8");
-    return JSON.parse(content);
-  } catch {
-    return null;
-  }
-}
-
-export function saveSessionState(state: SessionState, filePath: string = STATE_FILE): void {
-  // Ensure the default status directory exists (for default usage)
-  ensureStatusDir();
-  // Also ensure the parent directory of the given path exists (for custom paths)
-  const dir = dirname(filePath);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-  writeFileSync(filePath, JSON.stringify(state, null, 2));
 }
 
 export function buildSessionMessages(
@@ -148,15 +109,8 @@ export async function processSessionStart(data: SessionStartHookData): Promise<{
 
 async function main() {
   try {
-    const stdinPromise = Bun.stdin.text();
-    const timeoutPromise = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), 5000)
-    );
-    const input = await Promise.race([stdinPromise, timeoutPromise]);
-    if (input === null || input.trim() === "") {
-      return;
-    }
-    const data: SessionStartHookData = JSON.parse(input);
+    const data = await readStdinWithTimeout<SessionStartHookData>();
+    if (!data) return;
     await processSessionStart(data);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

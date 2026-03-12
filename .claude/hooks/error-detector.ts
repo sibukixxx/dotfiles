@@ -5,8 +5,10 @@ import type {
   FileModificationToolParams,
   PostToolUseHookData,
 } from "./types.ts";
+import { isFileModificationTool, readStdinWithTimeout, STATUS_DIR } from "./utils.ts";
 
-export const STATUS_DIR = `${process.env.HOME}/.claude/status`;
+export { isFileModificationTool, STATUS_DIR };
+
 export const ERROR_LOG = `${STATUS_DIR}/errors.md`;
 
 export type ErrorInfo = {
@@ -25,10 +27,6 @@ export function isTypeScriptFile(filePath: string): boolean {
 export function isJavaScriptFile(filePath: string): boolean {
   const ext = extname(filePath);
   return [".ts", ".tsx", ".js", ".jsx"].includes(ext);
-}
-
-export function isFileModificationTool(toolName: string): boolean {
-  return ["Write", "Edit", "MultiEdit"].includes(toolName);
 }
 
 export function getSuggestionForError(errorCode: string): string | undefined {
@@ -200,15 +198,8 @@ export async function processErrorDetection(
 
 async function main() {
   try {
-    const stdinPromise = Bun.stdin.text();
-    const timeoutPromise = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), 5000)
-    );
-    const input = await Promise.race([stdinPromise, timeoutPromise]);
-    if (input === null || input.trim() === "") {
-      return;
-    }
-    const data: PostToolUseHookData<FileModificationToolParams> = JSON.parse(input);
+    const data = await readStdinWithTimeout<PostToolUseHookData<FileModificationToolParams>>();
+    if (!data) return;
     await processErrorDetection(data);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

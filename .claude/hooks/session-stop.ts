@@ -1,32 +1,17 @@
-import { $ } from "bun";
-import { readFileSync, writeFileSync, appendFileSync, existsSync } from "node:fs";
+import { appendFileSync, writeFileSync, existsSync } from "node:fs";
 import type { SessionState, StopHookData } from "./types.ts";
+import {
+  getGitStatus,
+  loadSessionState,
+  saveSessionState,
+  readStdinWithTimeout,
+  STATUS_DIR,
+  STATE_FILE,
+} from "./utils.ts";
 
-export const STATUS_DIR = `${process.env.HOME}/.claude/status`;
-export const STATE_FILE = `${STATUS_DIR}/session_state.json`;
+export { getGitStatus, loadSessionState, saveSessionState, STATUS_DIR, STATE_FILE };
+
 export const LOG_FILE = `${STATUS_DIR}/session_log.md`;
-
-export async function getGitStatus(): Promise<string[]> {
-  try {
-    const result = await $`git status --porcelain`.text();
-    return result.trim().split("\n").filter((line) => line.length > 0);
-  } catch {
-    return [];
-  }
-}
-
-export function loadSessionState(filePath: string = STATE_FILE): SessionState | null {
-  try {
-    const content = readFileSync(filePath, "utf-8");
-    return JSON.parse(content);
-  } catch {
-    return null;
-  }
-}
-
-export function saveSessionState(state: SessionState, filePath: string = STATE_FILE): void {
-  writeFileSync(filePath, JSON.stringify(state, null, 2));
-}
 
 export function formatSessionLogEntry(
   sessionId: string,
@@ -133,15 +118,8 @@ export async function processSessionStop(data: StopHookData): Promise<{
 
 async function main() {
   try {
-    const stdinPromise = Bun.stdin.text();
-    const timeoutPromise = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), 5000)
-    );
-    const input = await Promise.race([stdinPromise, timeoutPromise]);
-    if (input === null || input.trim() === "") {
-      return;
-    }
-    const data: StopHookData = JSON.parse(input);
+    const data = await readStdinWithTimeout<StopHookData>();
+    if (!data) return;
     await processSessionStop(data);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

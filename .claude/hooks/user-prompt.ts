@@ -1,4 +1,5 @@
 import type { UserPromptSubmitHookData } from "./types.ts";
+import { readStdinWithTimeout } from "./utils.ts";
 
 // Intent detection patterns
 // Note: \b doesn't work with Japanese characters, so we use plain patterns for Japanese
@@ -138,15 +139,8 @@ export async function processPrompt(data: UserPromptSubmitHookData): Promise<{
 
 async function main() {
   try {
-    const stdinPromise = Bun.stdin.text();
-    const timeoutPromise = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), 5000)
-    );
-    const input = await Promise.race([stdinPromise, timeoutPromise]);
-    if (input === null || input.trim() === "") {
-      return;
-    }
-    const data: UserPromptSubmitHookData = JSON.parse(input);
+    const data = await readStdinWithTimeout<UserPromptSubmitHookData>();
+    if (!data) return;
     await processPrompt(data);
   } catch (error) {
     // Fail silently - don't block prompt submission

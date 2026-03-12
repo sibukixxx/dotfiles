@@ -1,42 +1,51 @@
 import { $ } from "bun";
 import { parseArgs } from "util";
 
-type Notification = {
+export type Notification = {
   session_id: string;
   transcript_path: string;
   message: string;
   title: string;
 };
 
-const { values: flags } = parseArgs({
-  args: Bun.argv.slice(2),
-  options: {
-    type: { type: "string" },
-  },
-});
+export type NotifyFlags = {
+  type?: string;
+};
+
+export function parseNotifyFlags(args: string[]): NotifyFlags {
+  const { values } = parseArgs({
+    args,
+    options: {
+      type: { type: "string" },
+    },
+  });
+  return values;
+}
 
 // When called from Notification hooks
-async function notify() {
-  const input: Notification = await Bun.stdin.json();
+export async function notify(input: Notification): Promise<void> {
   await $`terminal-notifier -title ${input.title} -message ${input.message} -sound default`;
 }
 
 // When called from Stop hooks
-async function notifyWhenStop() {
+export async function notifyWhenStop(): Promise<void> {
   await $`terminal-notifier -title "Claude Code" -message "Wait next action" -sound default`;
 }
 
-async function main() {
+export async function main(flags: NotifyFlags): Promise<void> {
   switch (flags.type) {
-    case "notify":
-      await notify();
+    case "notify": {
+      const input: Notification = await Bun.stdin.json();
+      await notify(input);
       break;
+    }
     case "stop":
       await notifyWhenStop();
       break;
   }
 }
 
-if (process.platform === "darwin") {
-  await main();
+if (import.meta.main && process.platform === "darwin") {
+  const flags = parseNotifyFlags(Bun.argv.slice(2));
+  await main(flags);
 }
