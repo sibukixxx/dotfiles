@@ -92,6 +92,18 @@ echo "== AI Agent Tools =="
 check_cmd "agent-skills" "Agent skills manager"
 echo ""
 
+echo "== Knowledge Base Tools =="
+check_cmd "qmd" "Local knowledge search (qmd)"
+if [[ -d "$HOME/obsidian-vault" ]]; then
+  echo -e "${GREEN}✓${NC} Obsidian vault exists ($HOME/obsidian-vault)"
+  ((check_passed++))
+else
+  echo -e "${YELLOW}!${NC} Obsidian vault not found ($HOME/obsidian-vault)"
+  echo "    Run: chezmoi apply to create vault"
+  ((check_warning++))
+fi
+echo ""
+
 echo "== Symlinks =="
 check_symlink "$HOME/.zshrc" "zsh config"
 check_symlink "$HOME/.config/nvim" "Neovim config"
