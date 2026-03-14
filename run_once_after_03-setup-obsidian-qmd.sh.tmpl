@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# Chezmoi run_once script: Setup Obsidian vault and qmd
+# This script runs ONCE after applying dotfiles
+
+set -e
+
+echo "==> Setting up Obsidian + qmd (local knowledge base)..."
+
+# =============================================================================
+# Obsidian Vault initialization
+# =============================================================================
+VAULT_DIR="$HOME/obsidian-vault"
+
+if [[ ! -d "$VAULT_DIR" ]]; then
+    echo "    Creating Obsidian vault at $VAULT_DIR..."
+    mkdir -p "$VAULT_DIR"
+
+    # Standard directory structure
+    mkdir -p "$VAULT_DIR/notes/inbox"
+    mkdir -p "$VAULT_DIR/notes/docs/records"
+    mkdir -p "$VAULT_DIR/notes/docs/howto"
+    mkdir -p "$VAULT_DIR/notes/projects"
+    mkdir -p "$VAULT_DIR/notes/daily"
+    mkdir -p "$VAULT_DIR/templates"
+
+    # Daily note template
+    cat > "$VAULT_DIR/templates/daily.md" << 'TEMPLATE'
+---
+title: "{{date:YYYY-MM-DD}}"
+created: "{{date:YYYY-MM-DD}}"
+tags:
+  - daily
+---
+
+## Tasks
+
+- [ ]
+
+## Notes
+
+## References
+
+TEMPLATE
+
+    # Research note template
+    cat > "$VAULT_DIR/templates/research.md" << 'TEMPLATE'
+---
+title: ""
+created: "{{date:YYYY-MM-DD}}"
+type: research
+query: ""
+tags:
+  - research
+sources: []
+draft: true
+---
+
+## Summary
+
+## Key Findings
+
+## References
+
+TEMPLATE
+
+    echo "    Obsidian vault created"
+else
+    echo "    Obsidian vault: OK ($VAULT_DIR)"
+fi
+
+# =============================================================================
+# qmd installation (npm global package)
+# =============================================================================
+if ! command -v qmd &>/dev/null; then
+    echo "    Installing qmd (local knowledge search)..."
+
+    # Prefer bun > pnpm > npm
+    if command -v bun &>/dev/null; then
+        bun install -g @tobilu/qmd || true
+    elif command -v pnpm &>/dev/null; then
+        pnpm install -g @tobilu/qmd || true
+    elif command -v npm &>/dev/null; then
+        npm install -g @tobilu/qmd || true
+    else
+        echo "    ⚠ No Node.js package manager found. Install Node.js first, then run:"
+        echo "      npm install -g @tobilu/qmd"
+    fi
+else
+    echo "    qmd: OK ($(qmd --version 2>/dev/null || echo 'installed'))"
+fi
+
+# =============================================================================
+# Register Obsidian vault as qmd collection
+# =============================================================================
+if command -v qmd &>/dev/null && [[ -d "$VAULT_DIR" ]]; then
+    echo "    Registering Obsidian vault with qmd..."
+    qmd collection add "$VAULT_DIR" 2>/dev/null || true
+
+    echo "    Building initial embeddings (this may take a moment)..."
+    qmd embed 2>/dev/null || true
+
+    echo "    qmd collection registered"
+fi
+
+# =============================================================================
+# Print setup info
+# =============================================================================
+echo ""
+echo "    Obsidian + qmd setup complete!"
+echo ""
+echo "    Usage:"
+echo "      qmd search 'keyword'     # BM25 full-text search"
+echo "      qmd vsearch 'concept'    # Semantic vector search"
+echo "      qmd query 'question'     # Hybrid search + LLM reranking"
+echo "      qmd embed                # Re-index after adding notes"
+echo ""
+echo "    Vault location: $VAULT_DIR"
