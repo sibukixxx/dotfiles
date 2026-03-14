@@ -1,4 +1,5 @@
-import { describe, it, expect, spyOn } from "bun:test";
+import { describe, it, expect, spyOn, afterEach } from "bun:test";
+import { writeFileSync, unlinkSync, existsSync } from "node:fs";
 import {
   getFileExtension,
   isFormattableExtension,
@@ -213,6 +214,41 @@ describe("formatFile", () => {
     expect(result.error).toBe("unsupported_extension");
     consoleSpy.mockRestore();
   });
+
+  it("returns unsupported_extension for .html files", async () => {
+    const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
+    const result = await formatFile("/path/to/index.html");
+    expect(result.formatted).toBe(false);
+    expect(result.error).toBe("unsupported_extension");
+    consoleSpy.mockRestore();
+  });
+
+  it("returns unsupported_extension for .css files", async () => {
+    const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
+    const result = await formatFile("/path/to/style.css");
+    expect(result.formatted).toBe(false);
+    expect(result.error).toBe("unsupported_extension");
+    consoleSpy.mockRestore();
+  });
+
+  it("returns unsupported_extension for files without extension", async () => {
+    const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
+    const result = await formatFile("/path/to/Makefile");
+    expect(result.formatted).toBe(false);
+    expect(result.error).toBe("unsupported_extension");
+    consoleSpy.mockRestore();
+  });
+
+  it("successfully formats a valid JSON file", async () => {
+    const testFile = "/tmp/claude-hooks-test-formatFile.json";
+    writeFileSync(testFile, '{"key":"value"}');
+    const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
+    const result = await formatFile(testFile);
+    expect(result.formatted).toBe(true);
+    expect(result.formatter).toBe("jq");
+    consoleSpy.mockRestore();
+    try { unlinkSync(testFile); } catch { /* ignore */ }
+  });
 });
 
 describe("formatTypeScriptFile", () => {
@@ -227,9 +263,35 @@ describe("formatTypeScriptFile", () => {
 });
 
 describe("formatJsonFile", () => {
+  const testJsonFile = "/tmp/claude-hooks-test-format.json";
+
+  afterEach(() => {
+    try {
+      if (existsSync(testJsonFile)) unlinkSync(testJsonFile);
+    } catch { /* ignore */ }
+  });
+
   it("returns error for non-existent file", async () => {
     const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
     const result = await formatJsonFile("/nonexistent/path/file.json");
+    expect(result.formatted).toBe(false);
+    expect(result.error).toBe("jq_failed");
+    consoleSpy.mockRestore();
+  });
+
+  it("formats valid JSON file successfully", async () => {
+    writeFileSync(testJsonFile, '{"b":2,"a":1}');
+    const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
+    const result = await formatJsonFile(testJsonFile);
+    expect(result.formatted).toBe(true);
+    expect(result.formatter).toBe("jq");
+    consoleSpy.mockRestore();
+  });
+
+  it("returns error for invalid JSON content", async () => {
+    writeFileSync(testJsonFile, '{invalid json}');
+    const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
+    const result = await formatJsonFile(testJsonFile);
     expect(result.formatted).toBe(false);
     expect(result.error).toBe("jq_failed");
     consoleSpy.mockRestore();
