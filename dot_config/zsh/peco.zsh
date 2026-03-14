@@ -44,7 +44,3 @@ function cdgo() {
   cd ${GOPATH}/src
 }
 
-function rgvim () {
-# file=$(rg $1 | peco --query "$LBUFFER" | awk -F":" '{print $1}')
-# vim ${file}
-}

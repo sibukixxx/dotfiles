@@ -16,7 +16,7 @@ fi
 alias asks='agent-skills sync'      # Sync skills to targets
 alias askl='agent-skills list'      # List available skills
 alias asku='agent-skills update'    # Update sources
-alias asks='agent-skills status'    # Show status
+alias askst='agent-skills status'   # Show status
 
 # Quick update and sync
 alias askup='agent-skills update && agent-skills sync'
