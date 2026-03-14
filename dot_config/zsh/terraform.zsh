@@ -286,6 +286,36 @@ tftest() {
 # =============================================================================
 # tfmodule - Manage and create Terraform modules
 # =============================================================================
+_tfmodule_check_placeholders() {
+    local module_dir="$1"
+    local matches=""
+    local -a files=()
+
+    [[ -f "$module_dir/main.tf" ]] && files+=("$module_dir/main.tf")
+    [[ -f "$module_dir/outputs.tf" ]] && files+=("$module_dir/outputs.tf")
+    [[ -f "$module_dir/README.md" ]] && files+=("$module_dir/README.md")
+
+    if [[ ${#files[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    matches=$(grep -nH -F \
+        -e "# TODO: Add your resources here" \
+        -e "# TODO: Add your outputs here" \
+        -e "TODO: Add module description here." \
+        -e "| TODO | TODO |" \
+        "${files[@]}" 2>/dev/null)
+
+    if [[ -n "$matches" ]]; then
+        echo "[ERROR] Legacy scaffold placeholders detected:"
+        echo "$matches"
+        echo "Replace the generated scaffold text before committing."
+        return 1
+    fi
+
+    return 0
+}
+
 tfmodule() {
     local command="${1:-help}"
     local module_name="${2:-}"
@@ -326,7 +356,8 @@ tfmodule() {
 # Main Module Configuration
 # =============================================================================
 
-# TODO: Add your resources here
+# Define the resources managed by this module below.
+# Keep provider and backend configuration in the root module when possible.
 EOF
 
             # Create variables.tf
@@ -363,7 +394,8 @@ EOF
 # Output Values
 # =============================================================================
 
-# TODO: Add your outputs here
+# Export the values consumers of this module need.
+# Regenerate module documentation after adding outputs.
 EOF
 
             # Create README.md
@@ -372,7 +404,9 @@ EOF
 
 ## Description
 
-TODO: Add module description here.
+Starter scaffold for the \`$module_name\` module.
+Document the resources this module manages, required providers, and any assumptions
+before publishing or reusing it.
 
 ## Usage
 
@@ -382,8 +416,12 @@ module "$module_name" {
 
   project_name = var.project_name
   environment  = var.environment
+  tags         = var.tags
 }
 \`\`\`
+
+Update the example above to match the real interface once the module resources
+and outputs are defined.
 
 ## Requirements
 
@@ -403,7 +441,7 @@ module "$module_name" {
 
 | Name | Description |
 |------|-------------|
-| TODO | TODO |
+| _none_ | Add outputs in \`outputs.tf\` when the module contract is defined. |
 EOF
 
             echo "[SUCCESS] Module created: $module_dir"
@@ -412,7 +450,8 @@ EOF
             echo "  1. Edit $module_dir/main.tf to add resources"
             echo "  2. Add required variables to $module_dir/variables.tf"
             echo "  3. Define outputs in $module_dir/outputs.tf"
-            echo "  4. Update $module_dir/README.md"
+            echo "  4. Refine $module_dir/README.md with the module purpose and usage"
+            echo "  5. Run tfmodule validate to catch legacy scaffold placeholders"
             ;;
         docs)
             if [[ -z "$module_name" ]]; then
@@ -450,9 +489,14 @@ EOF
             for module_dir in modules/*/; do
                 if [[ -d "$module_dir" ]]; then
                     local name
+                    local placeholder_output
                     name=$(basename "$module_dir")
                     echo -n "  $name: "
-                    if (cd "$module_dir" && terraform init -backend=false > /dev/null 2>&1 && terraform validate > /dev/null 2>&1); then
+                    if ! placeholder_output=$(_tfmodule_check_placeholders "$module_dir" 2>&1); then
+                        echo "✗ invalid (legacy placeholders detected)"
+                        echo "$placeholder_output" | sed 's/^/    /'
+                        has_error=1
+                    elif (cd "$module_dir" && terraform init -backend=false > /dev/null 2>&1 && terraform validate > /dev/null 2>&1); then
                         echo "✓ valid"
                     else
                         echo "✗ invalid"
