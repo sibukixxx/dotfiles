@@ -24,6 +24,7 @@ DOTFILES_VERIFY_EXTRA_TOOLS=(
   agent-browser
   rtk
   agent-skills
+  actrun
 )
 
 # Tools auto-installed from .zshrc on macOS if missing.

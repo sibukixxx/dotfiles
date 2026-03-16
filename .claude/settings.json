@@ -25,7 +25,18 @@
       "Bash(composer:*)",
       "Bash(make:*)"
     ],
-    "deny": [],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(chmod 777 *)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/credentials.json)"
+    ],
     "defaultMode": "bypassPermissions"
   },
   "hooks": {
@@ -98,6 +109,25 @@
           {
             "type": "command",
             "command": "./hooks/validate-bash.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/validate-read.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/plan-review-hook.sh",
+            "timeout": 300000
           }
         ]
       }
