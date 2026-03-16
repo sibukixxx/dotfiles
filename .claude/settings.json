@@ -120,6 +120,16 @@
             "command": "./hooks/validate-read.sh"
           }
         ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/plan-review-hook.sh",
+            "timeout": 300000
+          }
+        ]
       }
     ]
   },
