@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Install actrun (local GitHub Actions runner)
+# Hash: v1-actrun
+
+set -e
+
+echo "==> Installing actrun..."
+
+# =============================================================================
+# actrun - Local GitHub Actions Runner (MoonBit)
+# https://github.com/mizchi/actrun
+# =============================================================================
+
+if command -v actrun &>/dev/null; then
+    echo "    actrun: OK ($(actrun --version 2>/dev/null || echo 'installed'))"
+    exit 0
+fi
+
+echo "    Installing actrun via install.sh..."
+curl -fsSL https://raw.githubusercontent.com/mizchi/actrun/main/install.sh | INSTALL_DIR="${HOME}/.local/bin" sh
+
+if command -v actrun &>/dev/null; then
+    echo "    actrun: OK"
+else
+    echo "    actrun: installed to ~/.local/bin/actrun"
+    echo "    Note: Ensure ~/.local/bin is in your PATH"
+fi
+
+echo "    actrun installation complete"
