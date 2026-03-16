@@ -26,8 +26,8 @@ if [[ ! -d "$VAULT_DIR" ]]; then
     # Daily note template
     cat > "$VAULT_DIR/templates/daily.md" << 'TEMPLATE'
 ---
-title: "{{date:YYYY-MM-DD}}"
-created: "{{date:YYYY-MM-DD}}"
+title: "{{ "{{" }}date:YYYY-MM-DD{{ "}}" }}"
+created: "{{ "{{" }}date:YYYY-MM-DD{{ "}}" }}"
 tags:
   - daily
 ---
@@ -46,7 +46,7 @@ TEMPLATE
     cat > "$VAULT_DIR/templates/research.md" << 'TEMPLATE'
 ---
 title: ""
-created: "{{date:YYYY-MM-DD}}"
+created: "{{ "{{" }}date:YYYY-MM-DD{{ "}}" }}"
 type: research
 query: ""
 tags:
@@ -78,6 +78,12 @@ if ! command -v qmd &>/dev/null; then
     if command -v bun &>/dev/null; then
         bun install -g @tobilu/qmd || true
     elif command -v pnpm &>/dev/null; then
+        # Ensure global bin directory is configured
+        if [[ -z "${PNPM_HOME:-}" ]]; then
+            export PNPM_HOME="$HOME/Library/pnpm"
+            mkdir -p "$PNPM_HOME"
+            export PATH="$PNPM_HOME:$PATH"
+        fi
         pnpm install -g @tobilu/qmd || true
     elif command -v npm &>/dev/null; then
         npm install -g @tobilu/qmd || true
