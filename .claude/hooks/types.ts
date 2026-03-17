@@ -175,13 +175,24 @@ export type StopHookData = {
 };
 
 // ============================================
+// PreCompact Hook Types
+// ============================================
+export type PreCompactHookData = {
+  session_id: string;
+  transcript_path: string;
+  hook_event_name: "PreCompact";
+  cwd: string;
+};
+
+// ============================================
 // Union type for all hook data
 // ============================================
 export type HookData =
   | SessionStartHookData
   | UserPromptSubmitHookData
   | PostToolUseHookData
-  | StopHookData;
+  | StopHookData
+  | PreCompactHookData;
 
 // ============================================
 // State Management Types
