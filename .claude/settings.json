@@ -100,6 +100,26 @@
             "command": "bun run ~/.claude/hooks/session-stop.ts"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run ~/.claude/hooks/suggest-claude-md.ts"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run ~/.claude/hooks/suggest-claude-md.ts"
+          }
+        ]
       }
     ],
     "PreToolUse": [
