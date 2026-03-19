@@ -7,6 +7,7 @@ import {
   getSuggestionForError,
   parseTypeScriptError,
   formatErrorLogEntry,
+  formatStderrFeedback,
   logErrors,
   processErrorDetection,
   printErrors,
@@ -536,5 +537,80 @@ describe("formatErrorLogEntry edge cases", () => {
     }];
     const entry = formatErrorLogEntry(errors);
     expect(entry).toContain("Errors detected at");
+  });
+});
+
+describe("formatStderrFeedback", () => {
+  it("formats single error with line number", () => {
+    const errors: ErrorInfo[] = [{
+      file: "src/index.ts",
+      type: "typescript",
+      line: 10,
+      message: "TS2304: Cannot find name 'foo'",
+    }];
+    const result = formatStderrFeedback(errors, "src/index.ts");
+    expect(result).toContain("1 error(s) detected in src/index.ts");
+    expect(result).toContain("[typescript] L10");
+    expect(result).toContain("TS2304");
+  });
+
+  it("formats error with suggestion", () => {
+    const errors: ErrorInfo[] = [{
+      file: "src/index.ts",
+      type: "typescript",
+      line: 5,
+      message: "TS2304: Cannot find name 'x'",
+      suggestion: "Check if imported",
+    }];
+    const result = formatStderrFeedback(errors, "src/index.ts");
+    expect(result).toContain("→ Check if imported");
+  });
+
+  it("formats error without line number", () => {
+    const errors: ErrorInfo[] = [{
+      file: "src/index.ts",
+      type: "lint",
+      message: "Lint error",
+    }];
+    const result = formatStderrFeedback(errors, "src/index.ts");
+    expect(result).toContain("[lint]");
+    expect(result).not.toMatch(/L\d+/);
+  });
+
+  it("truncates to first 5 errors and shows remaining count", () => {
+    const errors: ErrorInfo[] = Array.from({ length: 7 }, (_, i) => ({
+      file: "src/index.ts",
+      type: "typescript" as const,
+      message: `Error ${i + 1}`,
+    }));
+    const result = formatStderrFeedback(errors, "src/index.ts");
+    expect(result).toContain("7 error(s) detected");
+    expect(result).toContain("Error 1");
+    expect(result).toContain("Error 5");
+    expect(result).not.toContain("Error 6");
+    expect(result).toContain("... and 2 more");
+  });
+
+  it("shows exactly 5 errors without truncation message", () => {
+    const errors: ErrorInfo[] = Array.from({ length: 5 }, (_, i) => ({
+      file: "src/index.ts",
+      type: "typescript" as const,
+      message: `Error ${i + 1}`,
+    }));
+    const result = formatStderrFeedback(errors, "src/index.ts");
+    expect(result).toContain("5 error(s) detected");
+    expect(result).toContain("Error 5");
+    expect(result).not.toContain("... and");
+  });
+
+  it("formats multiple errors with mixed types", () => {
+    const errors: ErrorInfo[] = [
+      { file: "src/index.ts", type: "typescript", line: 1, message: "TS error" },
+      { file: "src/index.ts", type: "lint", message: "Lint error" },
+    ];
+    const result = formatStderrFeedback(errors, "src/index.ts");
+    expect(result).toContain("2 error(s) detected");
+    expect(result).toContain("[typescript]");
+    expect(result).toContain("[lint]");
   });
 });
