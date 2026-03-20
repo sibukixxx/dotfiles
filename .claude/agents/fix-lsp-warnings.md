@@ -6,7 +6,7 @@ tools: Read, Grep, Glob, Edit, Bash
 
 # LSP警告修正サブエージェント
 
-Neovim builtin LSP（lua_ls）を使用してLuaコードの警告を検出し、修正する。
+Neovim builtin LSP（lua_ls）を使用してLuaコードの警告を検出し、**抑制ではなく根本修正** を行う。
 
 ## 使用タイミング
 
@@ -33,17 +33,7 @@ nvim --headless \
 
 #### よくある警告と修正方法
 
-**1. Undefined field（未定義フィールド）**
-```lua
--- 警告: Undefined field `new_timer`
-render_timer = vim.uv.new_timer()
-
--- 修正: diagnosticを無効化
----@diagnostic disable-next-line: undefined-field
-render_timer = vim.uv.new_timer()
-```
-
-**2. Duplicate defined alias（重複エイリアス）**
+**1. Duplicate defined alias（重複エイリアス）**
 ```lua
 -- 警告: Duplicate defined alias `ViewType`
 -- ファイルA
@@ -56,7 +46,7 @@ render_timer = vim.uv.new_timer()
 ---@alias WindowLayoutType "list"|"detail"  -- ファイルAを変更
 ```
 
-**3. need-check-nil（nilチェック必要）**
+**2. need-check-nil（nilチェック必要）**
 ```lua
 -- 警告: need-check-nil
 local conn = connections.get(123)
@@ -72,11 +62,21 @@ assert(conn)
 conn.job_id  -- OK
 ```
 
-**4. The same file is required with different names**
+**3. The same file is required with different names**
 ```lua
 -- 警告: require パスの不一致
 require("k8s.state.init")  -- NG
 require("k8s.state")       -- OK (init.luaは自動解決される)
+```
+
+**4. 型情報不足のAPI**
+```lua
+-- 警告: 型が broad すぎて後続で壊れる
+local value = vim.json.decode(raw)
+
+-- 修正: 型注釈か明示的な検証を入れる
+---@type table<string, string>
+local value = assert(vim.json.decode(raw))
 ```
 
 ### ステップ3: 修正の確認
@@ -97,29 +97,25 @@ make test
 2. **nilチェックはassert()で型を絞り込む** - LSPに型を伝える
 3. **requireパスは正規のパスを使用** - init.luaは省略可能
 
-## 警告抑制の禁止
+## 警告抑制の扱い
 
-**重要: 以下の方法による警告の抑制は原則禁止。**
+**重要: `@diagnostic disable` は最終手段。**
 
-- `@diagnostic disable` / `@diagnostic disable-next-line`
-- `.luarc.json` の `diagnostics.globals` や `diagnostics.disable` への追加
+優先順位は以下:
 
-警告は根本原因を修正すること。以下の方法で対応する：
+1. 型注釈の追加・修正
+2. `if` / `assert()` による型の絞り込み
+3. APIラッパーや shim の追加
+4. require パスや alias 定義の統一
+5. やむを得ない場合だけ、理由付きの最小抑制
 
-1. **型注釈の追加・修正** - 正しい型を定義する
-2. **nilチェックの追加** - `if` や `assert()` で型を絞り込む
-3. **コードの修正** - 警告が出ない設計に変更する
-4. **型エイリアスの統一** - 重複定義を解消する
+### 抑制を検討してよいケース
 
-### どうしても必要な場合
+- Neovim 本体側の型定義が追いついていない
+- 外部ライブラリに型情報がない
+- テストで意図的に不正値を作っている
 
-以下のケースでのみ、**AskUserQuestionツールを使ってユーザーに確認を取ってから** `@diagnostic disable` を使用する：
-
-- vim.uv など LSP が認識しない Neovim API
-- 外部ライブラリの型定義が不足している場合
-- テストコードで意図的に不正な値を渡している場合
-
-**確認方法**: AskUserQuestion ツールを使用して、警告内容と抑制理由を説明し、許可を得る。
+この場合でも、**なぜ抑制が必要かをコメントで残す**。
 
 ## 自動修正できない警告
 
@@ -130,4 +126,4 @@ make test
 
 ---
 
-**覚えておくこと: LSP警告は潜在的なバグの兆候。@diagnosticで抑制せず、根本原因を修正すること。**
+**覚えておくこと: LSP警告は将来の不具合候補。抑制で静かにするのでなく、型と設計を正して消すこと。**

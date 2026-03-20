@@ -21,6 +21,14 @@ tools: Bash, Read, Grep, Glob, TodoWrite
 - `--draft` → Draft PR を作成（マージはしない）
 - `--no-merge` → PR 作成まで（マージしない）
 
+## 基本原則
+
+- **無差別ステージング禁止**: `git add .` は使わない
+- **未理解の差分は ship しない**
+- **PR本文は差分の要約だけでなく、検証とリスクを書く**
+- **マージは条件付き**: チェック、レビュー状態、mergeability を確認してから行う
+- **base branch 直作業は慎重に扱う**
+
 ---
 
 ## Step 1: 事前確認
@@ -43,6 +51,7 @@ git diff --staged
 - 現在のブランチが main/master の場合 → 新しいブランチを作成してから作業
 - 変更がない場合 → 既存のコミットでPR作成に進む
 - すでにPRが存在する場合 → 既存PRを使う
+- 未追跡ファイルに秘密情報や生成物がないか確認する
 
 ### main/master ブランチの場合のブランチ作成
 
@@ -63,10 +72,8 @@ commit-pusher と同じロジックで、関心事ごとにコミットを分割
 ### コミット手順
 
 ```bash
-# すべての変更をステージング（未ステージの場合）
-git add .
-
-# 変更内容を確認
+# 関心事ごとに明示的にステージング
+git add <files>
 git diff --staged
 ```
 
@@ -88,6 +95,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 EOF
 )"
 ```
+
+**重要**:
+
+- 関心事が混在している場合は分割して複数コミットにする
+- 生成物、lockfile、設定変更は意図が明確な時だけ含める
+- 最低限の検証コマンドを可能なら実行し、PR本文に記載する
 
 **Emoji と Type の対応:**
 
@@ -146,9 +159,13 @@ git log --oneline ${BASE_BRANCH}..HEAD
 - 変更点1
 - 変更点2
 
-## Changes
-- `file1.ts`: 変更内容
-- `file2.ts`: 変更内容
+## Testing
+- 実行した確認1
+- 実行した確認2
+
+## Risks
+- 残るリスク1
+- ロールバック方針
 
 🤖 Generated with [Claude Code](https://claude.ai/code)
 ```
@@ -161,8 +178,11 @@ gh pr create --title "PR title" --body "$(cat <<'EOF'
 ## Summary
 - Change description
 
-## Changes
-- `file`: what changed
+## Testing
+- Ran targeted checks
+
+## Risks
+- Residual risk and rollback note
 
 🤖 Generated with [Claude Code](https://claude.ai/code)
 EOF
@@ -192,6 +212,12 @@ gh pr view --json statusCheckRollup,mergeable,mergeStateStatus
 - チェックなし → マージに進む
 - `--draft` or `--no-merge` → マージせず完了
 
+**マージ前の追加確認:**
+
+- `mergeable` が clean であること
+- requested changes やレビュー上のブロッカーがないこと
+- release を止める残存リスクがないこと
+
 ---
 
 ## Step 6: マージ
@@ -215,6 +241,8 @@ gh pr merge --merge --delete-branch
 git checkout ${BASE_BRANCH}
 git pull
 ```
+
+`git pull` が fast-forward できない場合は無理に進めず停止する。
 
 ---
 
@@ -255,6 +283,9 @@ PR:
 
 ### マージコンフリクトがある場合
 → コンフリクト内容をユーザーに報告して停止
+
+### 差分が混在しすぎている場合
+→ 関心事単位に分解できるまで停止
 
 ### gh CLI が未インストールの場合
 → エラーメッセージを表示して停止
