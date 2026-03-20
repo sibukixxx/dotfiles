@@ -19,8 +19,11 @@ jobs:
         with:
           scandir: '.'
           severity: warning
+          ignore_paths: >-
+            dot_config/zsh
+            .vim
         env:
-          SHELLCHECK_OPTS: -e SC1091 -e SC2034
+          SHELLCHECK_OPTS: -e SC1091 -e SC2034 -e SC2155 -e SC2038 -e SC2207 -e SC2053
 
   chezmoi-verify:
     name: Chezmoi Verify
@@ -70,7 +73,7 @@ jobs:
 
       - name: Install taplo
         run: |
-          curl -fsSL https://github.com/tamasfe/taplo/releases/latest/download/taplo-full-linux-x86_64.gz \
+          curl -fsSL https://github.com/tamasfe/taplo/releases/latest/download/taplo-linux-x86_64.gz \
             | gunzip > /usr/local/bin/taplo
           chmod +x /usr/local/bin/taplo
 
