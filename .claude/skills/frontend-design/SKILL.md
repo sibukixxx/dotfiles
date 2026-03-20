@@ -1,6 +1,11 @@
 ---
 name: frontend-design
-description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, or applications (examples include websites, landing pages, React components, HTML/CSS layouts, or when styling/beautifying any web UI). Generates creative, polished code and UI design that avoids generic AI aesthetics.
+description: |
+  プロダクション品質のフロントエンドUIを構築するスキル。Webコンポーネント、ページ、アプリケーションの設計・実装を支援。
+  AI臭いジェネリックなデザインを避け、洗練されたクリエイティブなコードを生成する。
+  「ウェブサイト作って」「ランディングページ」「Reactコンポーネント」「HTML/CSSレイアウト」「UIをきれいにして」などで発動。
+references:
+  - references/design-patterns.md
 ---
 
 # Frontend Design
@@ -23,8 +28,6 @@ Create production-quality frontend interfaces that are visually distinctive, wel
 
 ### Technology Selection
 
-Select based on project context:
-
 | Context | Recommended Stack |
 |---------|------------------|
 | Interactive apps, SPAs | React + Tailwind CSS |
@@ -34,70 +37,15 @@ Select based on project context:
 
 Default to **React + Tailwind CSS** when no specific requirement exists.
 
-## Task Workflows
+Design patterns, workflow details, and anti-patterns are in `references/design-patterns.md`.
 
-### Landing Page / Website
+## Troubleshooting
 
-1. **Structure Planning**
-   - Define sections: hero, features, CTA, footer
-   - Plan responsive breakpoints
-   - Identify key interactions
+### レスポンシブが崩れる場合
+mobile-first で実装し、ブレークポイントを段階的に追加。Tailwind の `sm:`, `md:`, `lg:` を活用。
 
-2. **Implementation**
-   - Start with mobile layout
-   - Build section by section
-   - Add micro-interactions last
+### アクセシビリティの問題
+`axe-core` や Lighthouse でチェック。ARIA ラベル、キーボードナビ、コントラスト比を確認。
 
-3. **Quality Check**
-   - Test all breakpoints
-   - Verify accessibility
-   - Optimize images and assets
-
-### React/Vue Component
-
-1. **Component Design**
-   - Define props interface clearly
-   - Plan variants and states (hover, active, disabled)
-   - Consider composition patterns
-
-2. **Implementation**
-   - Build base component first
-   - Add variants via props
-   - Extract reusable sub-components
-
-3. **Quality Check**
-   - Test all prop combinations
-   - Verify keyboard accessibility
-   - Document usage examples
-
-## Design Patterns
-
-### Color Usage
-```
-Primary: Use for main CTAs and key elements (sparingly)
-Secondary: Supporting elements, secondary actions
-Neutral: Text, backgrounds, borders (majority of UI)
-Accent: Highlights, success/error states
-```
-
-### Typography Scale
-```
-Headings: Clear hierarchy (h1 > h2 > h3)
-Body: 16px base, 1.5 line-height for readability
-Small: 14px for captions, metadata
-```
-
-### Spacing System
-```
-Use consistent increments: 4px, 8px, 16px, 24px, 32px, 48px, 64px
-Apply rhythm: same spacing within sections, larger between sections
-```
-
-## Anti-Patterns to Avoid
-
-- Over-styling (excessive shadows, gradients, animations)
-- Inconsistent spacing and alignment
-- Poor color contrast (accessibility failure)
-- Hardcoded values instead of design tokens
-- Overly complex component hierarchies
-- Ignoring mobile/responsive design
+### パフォーマンスが遅い場合
+不要な依存を削除。画像は最適化。CSS-in-JS より Tailwind を推奨。

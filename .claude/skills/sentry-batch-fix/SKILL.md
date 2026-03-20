@@ -83,3 +83,16 @@ Issue-1: <id/title>
 - API起因の不具合はタイムアウト・リトライ・サーキットブレーカを検討
 - 分析結果に推測を含むときは「推測」と明示する
 
+## Troubleshooting
+
+### SENTRY_AUTH_TOKEN が未設定の場合
+`export SENTRY_AUTH_TOKEN=<token>` で設定。Sentry Settings → API Tokens から `project:read`, `event:read`, `org:read` 権限で生成。
+
+### Issue が0件で返ってくる場合
+`--query` のフィルタを確認。`is:unresolved` を外して全件取得を試す。`SENTRY_ORG` が正しいか確認。
+
+### jq がインストールされていない場合
+`brew install jq` でインストール。
+
+### バッチ修正でテストが壊れる場合
+1件ずつ修正に切り替え、各修正後にテスト実行。`--max-diff-lines` を小さく設定。
