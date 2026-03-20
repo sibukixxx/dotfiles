@@ -1,21 +1,26 @@
 ---
 name: improve-english-prompt
 description: |
-  AI臭さ（AI slop）を検出・除去する英文改善スキル。プロンプト・ドキュメント・README・ブログ記事の
-  AI生成パターンを特定し、自然な人間らしい英語に書き換える。
-  「英語を直して」「AI臭い」「improve english」「英文改善」「deslopify」「tropes」などで発動。
+  AI臭さ（AI slop）を検出・除去する文章改善スキル。英語・日本語の両方に対応。
+  プロンプト・ドキュメント・README・ブログ記事・提案書のAI生成パターンを特定し、
+  自然な人間らしい文章に書き換える。
+  「英語を直して」「AI臭い」「improve english」「英文改善」「deslopify」「tropes」
+  「日本語を直して」「AI文体」「humanize」「文章改善」などで発動。
 references:
   - references/ai-writing-tropes.md
+  - references/ai-writing-tropes-ja.md
 ---
 
-# /improve-english-prompt - AI臭さを除去する英文プロンプト改善
+# /improve-english-prompt - AI臭さを除去する文章改善
 
-ユーザーが書いた英語テキストから AI Writing Tropes を検出し、自然な英語に書き換える。
+ユーザーが書いたテキストから AI Writing Tropes を検出し、自然な文章に書き換える。英語・日本語の両方に対応。
 
 ## Instructions
 
-1. ユーザーから英語テキスト（プロンプト、ドキュメント、README、ブログ記事など）を受け取る
-2. AI Writing Tropes チェックリスト（詳細は `references/ai-writing-tropes.md` を参照）に照らして問題箇所を検出する
+1. ユーザーからテキスト（プロンプト、ドキュメント、README、ブログ記事など）を受け取る
+2. **言語を自動判定** し、該当するチェックリストを適用:
+   - 英語 → `references/ai-writing-tropes.md`
+   - 日本語 → `references/ai-writing-tropes-ja.md`
 3. 検出結果を一覧で提示し、書き換え案を出力する
 4. 必要に応じてファイルを直接修正する
 
@@ -29,6 +34,7 @@ references:
 
 ## 主要トロープカテゴリ（クイックリファレンス）
 
+### 英語
 | カテゴリ | 代表パターン |
 |---------|------------|
 | Word Choice | "quietly", "delve", "tapestry", "serves as" |
@@ -37,6 +43,15 @@ references:
 | Tone | "Here's the kicker", "Think of it as...", stakes inflation |
 | Formatting | Em-dash addiction, bold-first bullets, unicode decoration |
 | Composition | Fractal summaries, dead metaphor, signposted conclusion |
+
+### 日本語
+| カテゴリ | 代表パターン |
+|---------|------------|
+| 語彙 | 「さらに」「加えて」連打、「包括的」「革新的」 |
+| 文構造 | 三点セット強制、定型結論「今後の展開が注目されます」 |
+| トーン | 曖昧な出典、過剰なヘッジング、追従的表現 |
+| 書式 | **太字:** 箇条書き、emダッシュ過用 |
+| 高次 | 魂のない平板な文章、チャットボット残留表現 |
 
 ## Output Format
 
