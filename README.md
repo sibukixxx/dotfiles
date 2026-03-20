@@ -16,6 +16,8 @@ macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://
 - [設計思想](#設計思想)
 - [特徴](#特徴)
 - [主なツール](#主なツール)
+- [Claude Code 統合](#claude-code-統合)
+- [CI/CD](#cicd)
 - [クイックスタート](#クイックスタート)
 - [キーバインド](#キーバインド)
 - [エイリアス](#エイリアス)
@@ -84,6 +86,9 @@ macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://
 | **パッケージマネージャ** | macOS: Homebrew / Linux: Nix + Home Manager |
 | **リポジトリ一括クローン** | 初期セットアップ時に GitHub 全リポジトリを自動クローン |
 | **SSH鍵暗号化** | age 暗号化で SSH 鍵を安全に管理・復元 |
+| **Claude Code 統合** | 30+ スキル、15 コマンド、カスタムフック、コーディングルール |
+| **CI/CD** | ShellCheck, YAML/TOML/Markdown lint, Brewfile 検証, Terraform lint/test |
+| **シークレット検出** | gitleaks による機密情報の自動検出 |
 
 ---
 
@@ -123,6 +128,18 @@ macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://
 | **[ghq](https://github.com/x-motemen/ghq)** | リポジトリ管理 (`~/workspace/github.com/...`) |
 | **[gh](https://cli.github.com/)** | GitHub CLI |
 | **[delta](https://github.com/dandavison/delta)** | Git diff ビューア |
+| **[direnv](https://direnv.net/)** | ディレクトリ別の環境変数管理 |
+| **[pre-commit](https://pre-commit.com/)** | Git フック管理フレームワーク |
+| **[gitleaks](https://gitleaks.io/)** | シークレット検出 |
+
+### セキュリティ・IaC ツール
+
+| ツール | 説明 |
+|--------|------|
+| **[tfsec](https://aquasecurity.github.io/tfsec/)** | Terraform セキュリティスキャナ |
+| **[tflint](https://github.com/terraform-linters/tflint)** | Terraform リンター |
+| **[checkov](https://www.checkov.io/)** | IaC セキュリティ・コンプライアンスチェック |
+| **[age](https://age-encryption.org/)** | ファイル暗号化（SSH鍵管理に使用） |
 
 ---
 
@@ -151,6 +168,65 @@ brew bundle --file=~/dotfiles/Brewfile
 
 ---
 
+## Claude Code 統合
+
+`.claude/` ディレクトリで Claude Code の開発ワークフローを管理。
+
+### カスタムコマンド（15種）
+
+| コマンド | 説明 |
+|----------|------|
+| `/spec` | 要件整理 → DESIGN.md + TODO.md 生成 |
+| `/plan` | 3モード対応のプランレビュー |
+| `/impl` | TDD に従った実装（Red→Green→Refactor） |
+| `/tdd` | テスト駆動開発ワークフロー |
+| `/review` | Fix-First コードレビュー |
+| `/ship` | レビュー → コミット → PR → マージの自動化 |
+| `/commit-push` | Conventional Commit でコミット＆プッシュ |
+| `/improve` | 自律改善ループ（QA→Fix→Refactor） |
+| `/debug` | エラー解析・原因特定・修正 |
+| `/ask` | 作業前のインタビューで認識合わせ |
+| `/interview` | DESIGN.md ベースの深掘りインタビュー |
+| `/opponent` | 賛成/反対の2エージェントで対立検証 |
+| `/worktree` | Git worktree の管理 |
+| `/review-checklist` | Pre-Landing レビューチェックリスト |
+| `/create-skill` | スキル作成・レビュー・修正 |
+
+### スキル（30+種）
+
+リサーチ、TDD、セキュリティ監査、フロントエンド設計、契約書作成、行政システム、
+プロモーション動画、CSV バリデーション、文体改善など多領域をカバー。
+
+### フック
+
+セッション開始/終了、プロンプト送信時、エラー検出、自動フォーマットなどの
+開発ワークフロー自動化フックを TypeScript で実装。
+
+### コーディングルール
+
+| ルール | 内容 |
+|--------|------|
+| `commit.md` | Conventional Commit + 絵文字プレフィックス |
+| `tdd.md` | t-wada 流 TDD（Red→Green→Refactor） |
+| `security.md` | OWASP Top 10 チェックリスト |
+| `ai-agent-o11y.md` | AI エージェントの Observability 設計 |
+
+---
+
+## CI/CD
+
+GitHub Actions で品質を自動検証。
+
+### ワークフロー
+
+| ワークフロー | ジョブ |
+|-------------|--------|
+| **ci.yml** | ShellCheck, Chezmoi テンプレート検証, YAML/TOML/Markdown lint, Brewfile 検証 |
+| **terraform-lint.yml** | Terraform Format, TFLint, CI テンプレート検証, ShellCheck |
+| **terraform-test.yml** | Terratest によるインフラテスト（週次 + 手動） |
+
+---
+
 ## クイックスタート
 
 ### 前提条件
@@ -171,6 +247,11 @@ brew bundle --file=~/dotfiles/Brewfile
 | `make packages` | パッケージ同期 | アプリ追加後 |
 | `make diff` | 適用前の差分確認 | 変更確認 |
 | `make edit` | 設定編集 | カスタマイズ |
+| `make lint` | 全リント実行 | コミット前 |
+| `make lint-shell` | ShellCheck | シェルスクリプト検証 |
+| `make lint-yaml` | YAML lint | YAML 検証 |
+| `make lint-toml` | TOML チェック | TOML 検証 |
+| `make clean` | キャッシュクリア | クリーンアップ |
 | `make help` | ヘルプ表示 | コマンド確認 |
 
 ### 新規インストール
@@ -265,8 +346,25 @@ chezmoi apply
 dotfiles/
 ├── .chezmoi.toml.tmpl         # chezmoi 設定テンプレート
 ├── .chezmoiignore             # 無視ファイル
+├── .gitleaks.toml             # シークレット検出設定
 ├── Makefile                   # セットアップコマンド
 ├── Brewfile                   # Homebrew パッケージ（macOS）
+│
+├── .claude/                   # Claude Code 統合
+│   ├── CLAUDE.md              # グローバル指示
+│   ├── commands/              # カスタムコマンド（15種）
+│   ├── skills/                # スキル（30+種）
+│   ├── hooks/                 # 開発ワークフロー自動化フック
+│   ├── agents/                # 特化型エージェント定義
+│   │   └── org/               # 組織エージェント
+│   └── rules/                 # コーディングルール
+│       ├── core/              # 共通（TDD, commit, security, o11y）
+│       └── backend/           # バックエンド（Go, Rust）
+│
+├── .github/workflows/         # CI/CD
+│   ├── ci.yml                 # ShellCheck, lint, Brewfile 検証
+│   ├── terraform-lint.yml     # Terraform lint
+│   └── terraform-test.yml     # Terratest（週次 + 手動）
 │
 ├── dot_zshrc                  # ~/.zshrc（メインエントリ）
 ├── dot_config/
@@ -275,6 +373,7 @@ dotfiles/
 │   │   ├── tools.zsh          # ツール統合（fzf/ghq）
 │   │   ├── alias/             # エイリアス定義
 │   │   ├── gcloud.zsh         # gcloud 接続先管理
+│   │   ├── fzf-worktree.zsh   # git worktree の fzf 操作
 │   │   ├── mac.zsh            # macOS 固有
 │   │   └── linux.zsh          # Linux 固有
 │   ├── ghostty/               # Ghostty 設定
@@ -282,16 +381,25 @@ dotfiles/
 │   ├── zellij/                # Zellij 設定
 │   ├── sheldon/               # プラグイン管理
 │   ├── git/                   # Git 設定（XDG準拠）
-│   ├── api-costs/             # APIキー・従量課金ダッシュボード設定
+│   ├── direnv/                # ディレクトリ別環境変数
+│   ├── terraform/             # Terraform 設定・モジュール・テスト
+│   ├── api-costs/             # API コスト集計設定
+│   ├── checkov/               # IaC セキュリティスキャン設定
 │   └── karabiner/             # キーリマッパー（macOS）
 │
 ├── dot_local/bin/             # カスタムスクリプト
-│   ├── executable_verify-setup
-│   ├── executable_api-costs
-│   └── executable_clone-all-repos
+│   ├── executable_verify-setup      # セットアップ検証
+│   ├── executable_api-costs         # API コスト集計
+│   ├── executable_clone-all-repos   # GitHub リポジトリ一括クローン
+│   ├── executable_agent-skills      # エージェントスキル管理
+│   ├── executable_gh-repo-init      # GitHub リポジトリ初期化
+│   ├── executable_git-localinfo     # Git ローカル情報表示
+│   ├── executable_tf-new            # Terraform プロジェクト雛形
+│   └── executable_gtr-*             # GTR タスクランナー（5種）
 │
 ├── nix/
-│   └── home.nix               # Home Manager（Linux/WSL）
+│   ├── home.nix               # Home Manager（Linux/WSL）
+│   └── agent-skills.nix       # エージェントスキル Nix パッケージ
 │
 ├── run_onchange_before_*      # インストール前スクリプト
 ├── run_once_after_*           # インストール後スクリプト
@@ -300,6 +408,8 @@ dotfiles/
     ├── ARCHITECTURE.md        # アーキテクチャ解説
     ├── api-key-management.md  # APIキー運用（1Password CLI/direnv/gitleaks）
     ├── api-costs.md           # APIコスト集計コマンド
+    ├── gcloud.md              # gcloud 接続先管理
+    ├── obsidian-qmd.md        # Obsidian QMD 連携
     ├── TROUBLESHOOTING.md     # トラブルシューティング
     ├── new-pc-setup.md        # 新規 PC セットアップ
     └── zellij.md              # Zellij ガイド
@@ -546,9 +656,11 @@ home-manager switch
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 全体設計、フロー図、ディレクトリ構造 |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | よくある問題と解決策 |
 | [api-key-management.md](docs/api-key-management.md) | APIキー登録・運用手順（1Password CLI + direnv + gitleaks） |
+| [api-costs.md](docs/api-costs.md) | API コスト集計コマンドの使い方 |
 | [new-pc-setup.md](docs/new-pc-setup.md) | 新規 PC セットアップの詳細ガイド |
 | [zellij.md](docs/zellij.md) | Zellij の使い方ガイド |
 | [gcloud.md](docs/gcloud.md) | gcloud 接続先管理（fzf スイッチャー + ディレクトリ自動切り替え） |
+| [obsidian-qmd.md](docs/obsidian-qmd.md) | Obsidian QMD 連携設定 |
 
 ---
 
