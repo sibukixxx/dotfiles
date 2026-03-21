@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+# =============================================================================
+# macOS Defaults - システム設定の自動化
+# =============================================================================
+# macOS のシステム設定を宣言的に適用する。
+# 冪等性あり（何度実行しても同じ結果）。
+#
+# Usage:
+#   macos-defaults              # すべての設定を適用
+#   macos-defaults --dry-run    # 変更内容を表示するだけ
+#   macos-defaults --diff       # 現在値との差分を表示
+# =============================================================================
+
+set -euo pipefail
+
+# macOS 以外では実行しない
+if [[ "$(uname)" != "Darwin" ]]; then
+  echo "macOS 以外では実行できません"
+  exit 1
+fi
+
+DRY_RUN=false
+DIFF_MODE=false
+CHANGED=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=true ;;
+    --diff)    DIFF_MODE=true ;;
+  esac
+done
+
+# -----------------------------------------------------------------------------
+# Helper: defaults を安全に適用
+# -----------------------------------------------------------------------------
+apply_default() {
+  local domain="$1"
+  local key="$2"
+  local type="$3"
+  local value="$4"
+  local description="$5"
+
+  # 現在値を取得
+  local current
+  current=$(defaults read "$domain" "$key" 2>/dev/null || echo "__UNSET__")
+
+  if [[ "$current" == "$value" ]]; then
+    if $DIFF_MODE; then
+      echo "  ✓ $description ($domain $key = $value)"
+    fi
+    return
+  fi
+
+  CHANGED=$((CHANGED + 1))
+
+  if $DIFF_MODE; then
+    echo "  ✗ $description"
+    echo "    現在: $current → 期待: $value ($domain $key)"
+    return
+  fi
+
+  if $DRY_RUN; then
+    echo "  [dry-run] defaults write $domain $key $type $value"
+    echo "            $description"
+    return
+  fi
+
+  defaults write "$domain" "$key" "$type" "$value"
+  echo "  ✓ $description"
+}
+
+# =============================================================================
+# キーボード
+# =============================================================================
+echo "==> キーボード設定"
+apply_default "-g" "KeyRepeat" "-int" "1" \
+  "キーリピート速度を最速に"
+apply_default "-g" "InitialKeyRepeat" "-int" "10" \
+  "キーリピート開始までの待機時間を最短に"
+apply_default "-g" "ApplePressAndHoldEnabled" "-bool" "false" \
+  "長押しでアクセント文字ではなくキーリピートを使用"
+
+# =============================================================================
+# Dock
+# =============================================================================
+echo "==> Dock 設定"
+apply_default "com.apple.dock" "autohide" "-bool" "true" \
+  "Dock を自動的に隠す"
+apply_default "com.apple.dock" "autohide-delay" "-float" "0" \
+  "Dock 表示の遅延をなくす"
+apply_default "com.apple.dock" "autohide-time-modifier" "-float" "0.3" \
+  "Dock のアニメーション速度"
+apply_default "com.apple.dock" "show-recents" "-bool" "false" \
+  "最近使用したアプリを Dock に表示しない"
+apply_default "com.apple.dock" "tilesize" "-int" "48" \
+  "Dock のアイコンサイズ"
+apply_default "com.apple.dock" "mineffect" "-string" "scale" \
+  "ウインドウ最小化のエフェクトをスケールに"
+
+# =============================================================================
+# Finder
+# =============================================================================
+echo "==> Finder 設定"
+apply_default "com.apple.finder" "AppleShowAllFiles" "-bool" "true" \
+  "隠しファイルを表示"
+apply_default "com.apple.finder" "ShowPathbar" "-bool" "true" \
+  "パスバーを表示"
+apply_default "com.apple.finder" "ShowStatusBar" "-bool" "true" \
+  "ステータスバーを表示"
+apply_default "com.apple.finder" "FXPreferredViewStyle" "-string" "Nlsv" \
+  "デフォルトをリスト表示に"
+apply_default "com.apple.finder" "FXDefaultSearchScope" "-string" "SCcf" \
+  "検索時にデフォルトで現在のフォルダを検索"
+apply_default "com.apple.finder" "_FXShowPosixPathInTitle" "-bool" "true" \
+  "タイトルバーにフルパスを表示"
+apply_default "com.apple.finder" "FXEnableExtensionChangeWarning" "-bool" "false" \
+  "拡張子変更時の警告を無効化"
+
+# =============================================================================
+# スクリーンショット
+# =============================================================================
+echo "==> スクリーンショット設定"
+apply_default "com.apple.screencapture" "location" "-string" "$HOME/Desktop" \
+  "スクリーンショットの保存先をデスクトップに"
+apply_default "com.apple.screencapture" "type" "-string" "png" \
+  "スクリーンショットの形式を PNG に"
+apply_default "com.apple.screencapture" "disable-shadow" "-bool" "true" \
+  "ウインドウスクリーンショットの影を無効化"
+
+# =============================================================================
+# トラックパッド
+# =============================================================================
+echo "==> トラックパッド設定"
+apply_default "com.apple.AppleMultitouchTrackpad" "Clicking" "-bool" "true" \
+  "タップでクリック"
+apply_default "-g" "com.apple.trackpad.scaling" "-float" "2.5" \
+  "トラッキング速度を高速に"
+
+# =============================================================================
+# その他
+# =============================================================================
+echo "==> その他の設定"
+apply_default "-g" "NSAutomaticSpellingCorrectionEnabled" "-bool" "false" \
+  "自動スペル修正を無効化"
+apply_default "-g" "NSAutomaticCapitalizationEnabled" "-bool" "false" \
+  "自動大文字化を無効化"
+apply_default "-g" "NSAutomaticPeriodSubstitutionEnabled" "-bool" "false" \
+  "ピリオド自動挿入を無効化"
+apply_default "com.apple.desktopservices" "DSDontWriteNetworkStores" "-bool" "true" \
+  "ネットワークドライブに .DS_Store を作成しない"
+apply_default "com.apple.desktopservices" "DSDontWriteUSBStores" "-bool" "true" \
+  "USB ドライブに .DS_Store を作成しない"
+apply_default "com.apple.LaunchServices" "LSQuarantine" "-bool" "false" \
+  "ダウンロードしたアプリの確認ダイアログを無効化"
+
+# =============================================================================
+# 反映
+# =============================================================================
+if ! $DRY_RUN && ! $DIFF_MODE && [[ $CHANGED -gt 0 ]]; then
+  echo ""
+  echo "==> 設定を反映するため Dock と Finder を再起動..."
+  killall Dock Finder 2>/dev/null || true
+fi
+
+echo ""
+if [[ $CHANGED -eq 0 ]]; then
+  echo "すべての設定は期待通りです。変更なし。"
+else
+  if $DRY_RUN; then
+    echo "$CHANGED 件の設定が変更されます (--dry-run のため未適用)"
+  elif $DIFF_MODE; then
+    echo "$CHANGED 件の設定が期待値と異なります"
+  else
+    echo "$CHANGED 件の設定を適用しました"
+  fi
+fi
