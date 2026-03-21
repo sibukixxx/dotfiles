@@ -27,13 +27,13 @@ bindkey '^f' peco-src
 
 # ignore duplicates from history
 function peco-select-history() {
-  local tac
-  if which tac > /dev/null; then
-    tac="tac"
+  local tac_cmd
+  if command -v tac > /dev/null 2>&1; then
+    tac_cmd="tac"
   else
-    tac="tail -r"
+    tac_cmd="tail -r"
   fi
-  BUFFER=$(history -n 1 | eval $tac | awk '!a[$0]++' | peco --query "$LBUFFER")
+  BUFFER=$(fc -rl 1 | sed 's/^ *[0-9]*\** *//' | awk '!a[$0]++' | peco --query "$LBUFFER")
   CURSOR=$#BUFFER
 }
 zle -N peco-select-history
