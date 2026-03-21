@@ -1,4 +1,4 @@
-.PHONY: all bootstrap update verify packages edit diff lint lint-shell lint-yaml lint-toml lint-unicode clean help
+.PHONY: all bootstrap update verify packages edit diff lint lint-shell lint-yaml lint-toml lint-unicode ai-rules clean help
 
 # OS検出
 UNAME := $(shell uname -s)
@@ -32,6 +32,9 @@ help:
 	@echo "  make lint-yaml  - YAMLファイルのリント"
 	@echo "  make lint-toml  - TOMLファイルのチェック"
 	@echo "  make lint-unicode - 不可視Unicode文字の検出 (GlassWorm対策)"
+	@echo ""
+	@echo "AI ルール:"
+	@echo "  make ai-rules   - 各AIツール向けルールファイルを生成"
 	@echo ""
 	@echo "その他:"
 	@echo "  make clean      - キャッシュをクリア"
@@ -168,6 +171,13 @@ lint-unicode:
 	else \
 		exit 1; \
 	fi
+
+# =============================================================================
+# AI ルール生成
+# =============================================================================
+
+ai-rules:
+	@bash ai-rules/generate.sh
 
 # =============================================================================
 # その他
