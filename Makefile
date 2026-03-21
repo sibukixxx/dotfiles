@@ -70,11 +70,22 @@ verify:
 packages:
 	@echo "==> Syncing packages..."
 ifeq ($(OS),macos)
+	@echo "  [1/2] Homebrew (GUI apps & macOS-only tools)..."
 	@if [ -f "$(CURDIR)/Brewfile" ]; then \
 		brew bundle --file=$(CURDIR)/Brewfile; \
 	else \
 		echo "Brewfile が見つかりません"; \
 		exit 1; \
+	fi
+	@echo "  [2/2] Nix Home Manager (CLI tools)..."
+	@if command -v home-manager >/dev/null 2>&1; then \
+		home-manager switch; \
+	else \
+		echo "⚠️  home-manager が見つかりません (スキップ)"; \
+		echo "  CLI ツールの Nix 管理を有効にするには:"; \
+		echo "    1. curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh"; \
+		echo "    2. nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager"; \
+		echo "    3. nix-channel --update && nix-shell '<home-manager>' -A install"; \
 	fi
 else
 	@if command -v home-manager >/dev/null 2>&1; then \

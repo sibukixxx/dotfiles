@@ -14,39 +14,10 @@
   programs.home-manager.enable = true;
 
   # =============================================================================
-  # Packages
+  # Module Imports
   # =============================================================================
-  home.packages = with pkgs; [
-    # Shell & Terminal
-    zsh
-    zellij
-
-    # Modern CLI tools
-    ripgrep      # rg - fast grep
-    fd           # fast find
-    bat          # cat with syntax highlighting
-    eza          # modern ls replacement
-    fzf          # fuzzy finder
-
-    # Development
-    git
-    gh           # GitHub CLI
-    ghq          # remote repository management
-    neovim
-
-    # Shell plugin manager
-    sheldon
-
-    # Utils
-    jq
-    tree
-    curl
-    wget
-    peco
-
-    # Build tools
-    gcc
-    gnumake
+  imports = [
+    ./cli-tools.nix
   ];
 
   # =============================================================================
@@ -80,6 +51,11 @@
   programs.eza = {
     enable = true;
     enableZshIntegration = false;  # We handle aliases ourselves
+  };
+
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;  # faster nix-shell integration
   };
 
   # =============================================================================
