@@ -1,4 +1,4 @@
-.PHONY: all bootstrap update verify packages edit diff lint lint-shell lint-yaml lint-toml clean help
+.PHONY: all bootstrap update verify packages edit diff lint lint-shell lint-yaml lint-toml lint-unicode clean help
 
 # OS検出
 UNAME := $(shell uname -s)
@@ -31,6 +31,7 @@ help:
 	@echo "  make lint-shell - シェルスクリプトのリント (shellcheck)"
 	@echo "  make lint-yaml  - YAMLファイルのリント"
 	@echo "  make lint-toml  - TOMLファイルのチェック"
+	@echo "  make lint-unicode - 不可視Unicode文字の検出 (GlassWorm対策)"
 	@echo ""
 	@echo "その他:"
 	@echo "  make clean      - キャッシュをクリア"
@@ -101,7 +102,7 @@ diff:
 # 品質チェック
 # =============================================================================
 
-lint: lint-shell lint-yaml lint-toml
+lint: lint-shell lint-yaml lint-toml lint-unicode
 	@echo "==> All lint checks completed"
 
 lint-shell:
@@ -138,6 +139,23 @@ lint-toml:
 	else \
 		echo "taplo が見つかりません (スキップ)"; \
 		echo "  インストール: cargo install taplo-cli"; \
+	fi
+
+lint-unicode:
+	@echo "==> Scanning for invisible Unicode characters (GlassWorm defense)..."
+	@FOUND=0; \
+	INVISIBLE_PATTERN='[\x{200B}\x{200C}\x{200D}\x{200E}\x{200F}\x{202A}\x{202B}\x{202C}\x{202D}\x{202E}\x{00AD}\x{061C}\x{180E}\x{2060}\x{2061}\x{2062}\x{2063}\x{2064}\x{2066}\x{2067}\x{2068}\x{2069}\x{206A}\x{206B}\x{206C}\x{206D}\x{206E}\x{206F}\x{FEFF}\x{2028}\x{2029}]'; \
+	TAG_PATTERN='[\x{E0001}-\x{E007F}]'; \
+	RESULTS=$$(grep -rnP "$$INVISIBLE_PATTERN|$$TAG_PATTERN" --include='*.sh' --include='*.zsh' --include='*.bash' --include='*.toml' --include='*.yaml' --include='*.yml' --include='*.json' --include='*.js' --include='*.ts' --include='*.py' --include='*.go' --include='*.rs' --include='*.rb' --include='*.lua' --include='*.vim' --include='*.conf' --include='*.cfg' --include='*.ini' --include='*.tmpl' --include='*.md' . 2>/dev/null | grep -v '.git/' || true); \
+	if [ -n "$$RESULTS" ]; then \
+		echo "🚨 不可視Unicode文字を検出:"; \
+		echo "$$RESULTS"; \
+		FOUND=1; \
+	fi; \
+	if [ "$$FOUND" -eq 0 ]; then \
+		echo "✅ 不可視Unicode文字は検出されませんでした"; \
+	else \
+		exit 1; \
 	fi
 
 # =============================================================================

@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# GlassWorm対策: 不可視Unicode文字をコミット前に検出するpre-commit hook
+#
+# 検出対象:
+#   - ゼロ幅スペース (U+200B)
+#   - ゼロ幅非接合子 (U+200C)
+#   - ゼロ幅接合子 (U+200D)
+#   - 左→右マーク / 右→左マーク (U+200E, U+200F)
+#   - 双方向テキスト制御文字 (U+202A-U+202E)
+#   - ソフトハイフン (U+00AD)
+#   - アラビア文字マーク (U+061C)
+#   - モンゴル母音区切り (U+180E)
+#   - ワードジョイナー (U+2060)
+#   - 不可視演算子 (U+2061-U+2064)
+#   - 不可視汎用句読点 (U+2066-U+206F)
+#   - BOM (U+FEFF, ファイル先頭以外)
+#   - 行区切り / 段落区切り (U+2028, U+2029)
+#   - Tag文字 (U+E0001-U+E007F) — GitHubユーザー名偽装に悪用される
+#
+# 参考: https://qiita.com/sarubot/items/df077776b293163e0a42
+
+set -euo pipefail
+
+# テキストファイルのみを対象にするための拡張子リスト (バイナリ除外)
+BINARY_EXTENSIONS='(png|jpg|jpeg|gif|ico|bmp|webp|svg|woff|woff2|ttf|eot|otf|mp3|mp4|avi|mov|pdf|zip|gz|tar|jar|war|class|pyc|pyo|o|so|dylib|a|lib|dll|exe|bin|dat|db|sqlite)'
+
+# 検出するUnicode文字のパターン (grep -P 用)
+# 各文字の意味をコメントで記載
+INVISIBLE_PATTERN='[\x{200B}\x{200C}\x{200D}\x{200E}\x{200F}\x{202A}\x{202B}\x{202C}\x{202D}\x{202E}\x{00AD}\x{061C}\x{180E}\x{2060}\x{2061}\x{2062}\x{2063}\x{2064}\x{2066}\x{2067}\x{2068}\x{2069}\x{206A}\x{206B}\x{206C}\x{206D}\x{206E}\x{206F}\x{FEFF}\x{2028}\x{2029}]'
+
+# Tag文字パターン (U+E0001-U+E007F)
+TAG_PATTERN='[\x{E0001}-\x{E007F}]'
+
+found_issues=0
+files_with_issues=()
+
+# ステージングされたファイルを取得 (追加・変更のみ、削除は除外)
+staged_files=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+
+if [ -z "$staged_files" ]; then
+    exit 0
+fi
+
+while IFS= read -r file; do
+    # バイナリファイルはスキップ
+    if echo "$file" | grep -qiE "\\.${BINARY_EXTENSIONS}$"; then
+        continue
+    fi
+
+    # ファイルが存在しない場合スキップ
+    if [ ! -f "$file" ]; then
+        continue
+    fi
+
+    # git show でステージング済みの内容を検査
+    staged_content=$(git show ":$file" 2>/dev/null || true)
+    if [ -z "$staged_content" ]; then
+        continue
+    fi
+
+    # 不可視文字の検出
+    matches=$(echo "$staged_content" | grep -nP "$INVISIBLE_PATTERN" 2>/dev/null || true)
+    tag_matches=$(echo "$staged_content" | grep -nP "$TAG_PATTERN" 2>/dev/null || true)
+
+    if [ -n "$matches" ] || [ -n "$tag_matches" ]; then
+        if [ "$found_issues" -eq 0 ]; then
+            echo ""
+            echo "🚨 GlassWorm防御: 不可視Unicode文字を検出しました!"
+            echo "=================================================="
+            echo ""
+        fi
+        found_issues=$((found_issues + 1))
+        files_with_issues+=("$file")
+
+        echo "📄 $file:"
+        if [ -n "$matches" ]; then
+            echo "$matches" | while IFS= read -r line; do
+                line_num=$(echo "$line" | cut -d: -f1)
+                # 不可視文字を可視化して表示
+                visible=$(echo "$line" | sed \
+                    -e 's/\xe2\x80\x8b/[ZWS]/g' \
+                    -e 's/\xe2\x80\x8c/[ZWNJ]/g' \
+                    -e 's/\xe2\x80\x8d/[ZWJ]/g' \
+                    -e 's/\xe2\x80\x8e/[LRM]/g' \
+                    -e 's/\xe2\x80\x8f/[RLM]/g' \
+                    -e 's/\xc2\xad/[SHY]/g' \
+                    -e 's/\xef\xbb\xbf/[BOM]/g' \
+                    -e 's/\xe2\x80\xa8/[LS]/g' \
+                    -e 's/\xe2\x80\xa9/[PS]/g')
+                echo "  行 $line_num: $visible"
+            done
+        fi
+        if [ -n "$tag_matches" ]; then
+            echo "  ⚠️  Tag文字 (U+E0001-E007F) を検出 — GitHub偽装攻撃の可能性"
+            echo "$tag_matches" | while IFS= read -r line; do
+                line_num=$(echo "$line" | cut -d: -f1)
+                echo "  行 $line_num"
+            done
+        fi
+        echo ""
+    fi
+done <<< "$staged_files"
+
+if [ "$found_issues" -gt 0 ]; then
+    echo "──────────────────────────────────────────────────"
+    echo "🛡️  ${#files_with_issues[@]} ファイルで不可視文字を検出"
+    echo ""
+    echo "対処方法:"
+    echo "  1. 意図しない文字の場合 → 該当行から不可視文字を削除"
+    echo "     sed -i 's/[\\x{200B}-\\x{200F}\\x{202A}-\\x{202E}\\x{2060}-\\x{206F}]//g' <file>"
+    echo "  2. 意図的な使用の場合 → git commit --no-verify でスキップ"
+    echo ""
+    echo "詳細: https://qiita.com/sarubot/items/df077776b293163e0a42"
+    echo ""
+    exit 1
+fi
+
+exit 0
