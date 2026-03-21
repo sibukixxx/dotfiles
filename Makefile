@@ -1,4 +1,4 @@
-.PHONY: all bootstrap update verify packages edit diff lint lint-shell lint-yaml lint-toml lint-unicode ai-rules clean help
+.PHONY: all bootstrap update verify packages macos-defaults edit diff lint lint-shell lint-yaml lint-toml lint-unicode ai-rules clean help
 
 # OS検出
 UNAME := $(shell uname -s)
@@ -21,6 +21,7 @@ help:
 	@echo "  make update     - dotfiles更新 (chezmoi update)"
 	@echo "  make verify     - セットアップ検証"
 	@echo "  make packages   - パッケージ同期 (brew bundle / home-manager)"
+	@echo "  make macos-defaults - macOS システム設定を適用"
 	@echo ""
 	@echo "編集:"
 	@echo "  make edit       - 設定編集 (chezmoi edit)"
@@ -82,17 +83,25 @@ ifeq ($(OS),macos)
 	fi
 	@echo "  [2/2] Nix Home Manager (CLI tools)..."
 	@if command -v home-manager >/dev/null 2>&1; then \
-		home-manager switch; \
+		if [ -f "$(CURDIR)/flake.nix" ]; then \
+			echo "    flake.nix 検出 → flake モードで実行"; \
+			home-manager switch --flake $(CURDIR); \
+		else \
+			home-manager switch; \
+		fi; \
 	else \
 		echo "⚠️  home-manager が見つかりません (スキップ)"; \
 		echo "  CLI ツールの Nix 管理を有効にするには:"; \
 		echo "    1. curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh"; \
-		echo "    2. nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager"; \
-		echo "    3. nix-channel --update && nix-shell '<home-manager>' -A install"; \
+		echo "    2. nix run home-manager -- switch --flake ."; \
 	fi
 else
 	@if command -v home-manager >/dev/null 2>&1; then \
-		home-manager switch; \
+		if [ -f "$(CURDIR)/flake.nix" ]; then \
+			home-manager switch --flake $(CURDIR); \
+		else \
+			home-manager switch; \
+		fi; \
 	else \
 		echo "home-manager が見つかりません"; \
 		echo "Nix + Home Manager をインストールしてください"; \
@@ -171,6 +180,17 @@ lint-unicode:
 	else \
 		exit 1; \
 	fi
+
+# =============================================================================
+# macOS 設定
+# =============================================================================
+
+macos-defaults:
+ifeq ($(OS),macos)
+	@macos-defaults
+else
+	@echo "macOS 以外では実行できません"
+endif
 
 # =============================================================================
 # AI ルール生成

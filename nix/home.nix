@@ -1,9 +1,9 @@
 { config, pkgs, ... }:
 
 {
-  # Home Manager needs a bit of information about you and the paths it should manage.
-  home.username = builtins.getEnv "USER";
-  home.homeDirectory = builtins.getEnv "HOME";
+  # home.username と home.homeDirectory は flake.nix から注入される。
+  # 非 flake 環境では home-manager switch 時に --extra-experimental-features
+  # を使うか、呼び出し元で設定すること。
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
