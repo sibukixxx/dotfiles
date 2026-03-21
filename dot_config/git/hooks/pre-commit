@@ -21,6 +21,27 @@
 
 set -euo pipefail
 
+# ---------------------------------------------------------------------------
+# ローカルhookチェーン: プロジェクト固有のpre-commit hookも実行する
+# core.hooksPath を設定するとリポジトリの .git/hooks/ が無視されるため、
+# ここで明示的に呼び出す。
+# ---------------------------------------------------------------------------
+LOCAL_HOOK="$(git rev-parse --git-dir 2>/dev/null)/hooks/pre-commit"
+if [ -x "$LOCAL_HOOK" ] && [ "$LOCAL_HOOK" != "$0" ]; then
+    "$LOCAL_HOOK" "$@"
+fi
+
+# Husky (v9+) / lefthook / pre-commit (python) などのツール連携
+# .husky/pre-commit が存在すれば実行
+HUSKY_HOOK="$(git rev-parse --show-toplevel 2>/dev/null)/.husky/pre-commit"
+if [ -f "$HUSKY_HOOK" ] && [ -x "$HUSKY_HOOK" ]; then
+    "$HUSKY_HOOK" "$@"
+fi
+
+# ---------------------------------------------------------------------------
+# GlassWorm防御: 不可視Unicode文字の検出
+# ---------------------------------------------------------------------------
+
 # テキストファイルのみを対象にするための拡張子リスト (バイナリ除外)
 BINARY_EXTENSIONS='(png|jpg|jpeg|gif|ico|bmp|webp|svg|woff|woff2|ttf|eot|otf|mp3|mp4|avi|mov|pdf|zip|gz|tar|jar|war|class|pyc|pyo|o|so|dylib|a|lib|dll|exe|bin|dat|db|sqlite)'
 
