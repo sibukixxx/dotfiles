@@ -196,14 +196,42 @@ export async function processErrorDetection(
   return errors;
 }
 
+/**
+ * Format errors as stderr message for Claude Code hook feedback.
+ * When exit code 2 is used, stderr is shown to Claude as blocking feedback.
+ */
+export function formatStderrFeedback(errors: ErrorInfo[], filePath: string): string {
+  const lines = [`⚠️ ${errors.length} error(s) detected in ${filePath}. Fix before continuing:`];
+  for (const error of errors.slice(0, 5)) {
+    lines.push(`  [${error.type}]${error.line ? ` L${error.line}` : ""} ${error.message}`);
+    if (error.suggestion) {
+      lines.push(`  → ${error.suggestion}`);
+    }
+  }
+  if (errors.length > 5) {
+    lines.push(`  ... and ${errors.length - 5} more`);
+  }
+  return lines.join("\n");
+}
+
 async function main() {
   try {
     const data = await readStdinWithTimeout<PostToolUseHookData<FileModificationToolParams>>();
     if (!data) return;
-    await processErrorDetection(data);
+    const errors = await processErrorDetection(data);
+
+    // Exit code 2 = blocking error: stderr is shown to Claude as feedback
+    // This forces Claude to fix errors before continuing
+    if (errors.length > 0) {
+      const filePath = data.tool_input?.file_path ?? "unknown";
+      const feedback = formatStderrFeedback(errors, filePath);
+      process.stderr.write(feedback);
+      process.exit(2);
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[error-detector]: ${errorMessage}`);
+    // Non-blocking: exit 1 means error is logged but doesn't block Claude
   }
 }
 

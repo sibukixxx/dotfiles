@@ -57,14 +57,18 @@ export type ToolResponse =
   | MultiEditToolResponse
   | Record<string, unknown>;
 
-// Correct PostToolUse hook data structure based on actual log data
+// PostToolUse hook data structure
+// See: https://docs.anthropic.com/en/docs/claude-code/hooks
 export type PostToolUseHookData<T = ToolParams, R = ToolResponse> = {
   session_id: string;
   transcript_path: string;
-  hook_event_name: string;
+  cwd: string;
+  permission_mode: string;
+  hook_event_name: "PostToolUse";
   tool_name: string;
   tool_input: T;
   tool_response: R;
+  tool_use_id: string;
 };
 
 // Base tool parameter types
@@ -185,11 +189,35 @@ export type PreCompactHookData = {
 };
 
 // ============================================
+// PreToolUse Hook Types
+// ============================================
+export type PreToolUseHookData<T = ToolParams> = {
+  session_id: string;
+  transcript_path: string;
+  cwd: string;
+  permission_mode: string;
+  hook_event_name: "PreToolUse";
+  tool_name: string;
+  tool_input: T;
+  tool_use_id: string;
+};
+
+// ============================================
+// Bash Tool Types
+// ============================================
+export type BashToolParams = {
+  command: string;
+  description?: string;
+  timeout?: number;
+};
+
+// ============================================
 // Union type for all hook data
 // ============================================
 export type HookData =
   | SessionStartHookData
   | UserPromptSubmitHookData
+  | PreToolUseHookData
   | PostToolUseHookData
   | StopHookData
   | PreCompactHookData;
