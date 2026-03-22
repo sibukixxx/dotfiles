@@ -1,71 +1,49 @@
-# Mac App Store CLI (for Xcode, etc.)
+# =============================================================================
+# Brewfile - macOS GUI Apps & macOS-only Tools
+# =============================================================================
+# CLI ツールは nix/cli-tools.nix で管理。
+# このファイルは Homebrew cask (GUI) と macOS 固有ツールのみ。
+# =============================================================================
+
+# Mac App Store CLI
 brew "mas"
-tap "manaflow-ai/cmux"   # cmux Homebrew tap
 
 # =============================================================================
-# Core CLI Tools
+# macOS-only CLI Tools (Nix で提供困難 or cask 依存)
 # =============================================================================
-brew "chezmoi"           # dotfiles manager
+brew "chezmoi"           # dotfiles manager (bootstrap 時に必要)
 brew "age"               # encryption for secrets
-brew "zsh"
-brew "git"
-brew "neovim"
-# brew "tmux"            # legacy (replaced by zellij)
-brew "wget"
-brew "curl"
-brew "jq"
-brew "tree"
-brew "colordiff"
 
-# =============================================================================
-# Navigation & Search
-# =============================================================================
-brew "fzf"               # fuzzy finder
-brew "peco"              # interactive filtering tool
-brew "ghq"               # remote repository management
+# Development tools (platform-specific or version-managed)
+brew "go"                # Go (brew の方がバージョン管理しやすい)
+brew "pyenv"             # Python version manager
+brew "nodebrew"          # Node.js version manager
+brew "fastlane"          # iOS automation
+brew "gogcli"            # GOG.com game library CLI
 
-# =============================================================================
-# Development Tools
-# =============================================================================
-brew "go"
-brew "pyenv"
-brew "nodebrew"
-brew "gh"                # GitHub CLI
-brew "direnv"            # per-directory environment variables
-brew "fastlane"          # iOS automation (screenshots, deploy)
-brew "gogcli"            # GOG.com game library CLI manager
+# Cloud CLI Tools (cask or brew tap 依存)
+brew "awscli"
+cask "gcloud-cli"
 
-# =============================================================================
-# Cloud CLI Tools
-# =============================================================================
-brew "awscli"            # AWS Command Line Interface
-cask "gcloud-cli"        # Google Cloud CLI (renamed from google-cloud-sdk)
-
-# =============================================================================
 # Infrastructure as Code
-# =============================================================================
-brew "terraform"         # Infrastructure as Code tool
-brew "tflint"            # Terraform linter
-brew "terraform-docs"    # Auto-generate documentation
-brew "tfsec"             # Security scanner
-brew "pre-commit"        # Git hooks framework
-# Note: checkov is recommended to install via pipx
+brew "terraform"
+brew "tflint"
+brew "terraform-docs"
+brew "tfsec"
+brew "pre-commit"
 
-# =============================================================================
-# Database Tools
-# =============================================================================
+# Database
 brew "mysql"
 
-# =============================================================================
-# Utilities
-# =============================================================================
+# macOS system dependencies
 brew "gibo"              # .gitignore boilerplates
 brew "openssl"
 brew "readline"
 
 # =============================================================================
-# Terminal Emulators
+# Terminal Emulators (GUI)
 # =============================================================================
+tap "manaflow-ai/cmux"
 cask "cmux"              # Agent-first terminal workspace manager
 cask "ghostty"           # Modern GPU-accelerated terminal (primary)
 cask "alacritty"         # GPU-accelerated terminal emulator (backup)
@@ -85,42 +63,39 @@ cask "discord"
 # Development - IDEs & Editors
 # =============================================================================
 cask "visual-studio-code"
-cask "jetbrains-toolbox" # Manages WebStorm, IntelliJ, etc.
+cask "jetbrains-toolbox"
 
 # =============================================================================
 # Development - Containers & Virtualization
 # =============================================================================
-cask "orbstack"          # Docker & Linux VMs (faster than Docker Desktop)
+cask "orbstack"
 
 # =============================================================================
 # Productivity
 # =============================================================================
-cask "alfred"            # Spotlight replacement
-cask "clipy"             # Clipboard manager
-cask "obsidian"          # Note-taking
-cask "dropbox"           # Cloud storage
-cask "1password-cli"     # 1Password CLI (op) for secrets management
+cask "alfred"
+cask "clipy"
+cask "obsidian"
+cask "dropbox"
+cask "1password-cli"
 
 # =============================================================================
 # AI Tools
 # =============================================================================
-brew "agent-browser"     # Headless browser automation CLI for AI agents
-cask "claude"            # Claude Desktop
+brew "agent-browser"
+cask "claude"
 
 # =============================================================================
-# Entertainment & Gaming
+# Entertainment
 # =============================================================================
-cask "steam"             # Gaming platform
-# Note: Kindle is not available via Homebrew - install from Mac App Store
+cask "steam"
 
 # =============================================================================
 # Fonts
 # =============================================================================
-cask "font-hackgen-nerd" # HackGen Nerd Font (for terminal)
+cask "font-hackgen-nerd"
 
 # =============================================================================
-# Mac App Store Apps (requires `mas signin` first)
+# Mac App Store
 # =============================================================================
-# To find app IDs: mas search <app_name>
-# mas "Xcode", id: 497799835         # Install manually - very large
 mas "Kindle", id: 302584613

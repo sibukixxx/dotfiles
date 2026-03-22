@@ -1,4 +1,7 @@
 # Shared tool lists for dotfiles scripts (bash/zsh compatible)
+#
+# CLI ツールは nix/cli-tools.nix で宣言的に管理。
+# このファイルは検証・フォールバック用のマニフェスト。
 
 # Core tools expected in day-to-day shell usage.
 DOTFILES_CORE_TOOLS=(
@@ -27,7 +30,8 @@ DOTFILES_VERIFY_EXTRA_TOOLS=(
   actrun
 )
 
-# Tools auto-installed from .zshrc on macOS if missing.
+# Fallback: macOS で home-manager 未導入時に brew でインストールするツール。
+# home-manager 導入後はこのリストは不要。
 DOTFILES_BREW_ESSENTIAL_TOOLS=(
   eza
   bat

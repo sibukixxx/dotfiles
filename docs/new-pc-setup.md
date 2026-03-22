@@ -472,18 +472,16 @@ brew install --cask raycast
 ### macOS システム設定
 
 ```bash
-# キーリピートを高速化
-defaults write -g KeyRepeat -int 1
-defaults write -g InitialKeyRepeat -int 10
+# すべてのシステム設定を一括適用
+macos-defaults
 
-# Dock を自動的に隠す
-defaults write com.apple.dock autohide -bool true
-
-# Finder で隠しファイルを表示
-defaults write com.apple.finder AppleShowAllFiles -bool true
-
-killall Dock Finder
+# 差分を確認してから適用する場合
+macos-defaults --diff
+macos-defaults --dry-run
 ```
+
+> 詳細は `dot_local/bin/executable_macos-defaults` を参照。
+> キーボード、Dock、Finder、スクリーンショット、トラックパッド等の設定を含む。
 
 ---
 

@@ -71,9 +71,11 @@ fi
 export NVM_DIR="$HOME/.config/nvm"
 [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
 
-# Nix (for WSL/Linux)
+# Nix (macOS / Linux / WSL)
 [[ -f /etc/profile.d/nix.sh ]] && source /etc/profile.d/nix.sh
 [[ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]] && source "$HOME/.nix-profile/etc/profile.d/nix.sh"
+# Determinate Systems installer uses a different path
+[[ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]] && source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 
 # =============================================================================
 # Zsh Options

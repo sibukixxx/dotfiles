@@ -86,7 +86,7 @@ fi
 # History search with fzf
 function fzf-history-widget() {
   local selected
-  selected=$(fc -rl 1 | fzf --no-sort --query="$LBUFFER" | sed 's/^ *[0-9]* *//')
+  selected=$(fc -rl 1 | fzf --no-sort --query="$LBUFFER" | sed 's/^ *[0-9]*\** *//')
   if [[ -n "$selected" ]]; then
     LBUFFER="$selected"
   fi

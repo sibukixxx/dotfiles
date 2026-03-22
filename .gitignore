@@ -9,3 +9,6 @@
 !.claude/commands/
 !.claude/hooks/
 !.claude/skills/
+
+# AI rules - generated files are not tracked
+ai-rules/generated/

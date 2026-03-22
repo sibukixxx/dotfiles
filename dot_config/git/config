@@ -4,6 +4,7 @@
 
 [core]
 	excludesfile = ~/.config/git/ignore
+	hooksPath = ~/.config/git/hooks
 	autoCRLF = false
 	precomposeunicode = true
 	editor = nvim
