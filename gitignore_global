@@ -1,0 +1,54 @@
+# ===========================================
+# Global gitignore - セキュリティ上の安全弁
+# ===========================================
+# Claude Code が誤ってコミットしないよう
+# 機密ファイルをグローバルで除外する
+#
+# Setup:
+#   git config --global core.excludesfile ~/dotfiles/gitignore_global
+# ===========================================
+
+# ------------------------------------------
+# Cloudflare Workers
+# ------------------------------------------
+.dev.vars
+dev.vars
+
+# ------------------------------------------
+# Environment / Secrets
+# ------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# ------------------------------------------
+# Cloud Provider Credentials
+# ------------------------------------------
+credentials.json
+service-account*.json
+*-credentials.json
+.aws/credentials
+.gcp/credentials
+
+# ------------------------------------------
+# IDE / Editor
+# ------------------------------------------
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ------------------------------------------
+# AI local workspace
+# ------------------------------------------
+z-ai/
