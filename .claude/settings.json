@@ -37,8 +37,9 @@
       "Read(**/*.key)",
       "Read(**/credentials.json)"
     ],
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "auto"
   },
+  "model": "opus[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -159,7 +160,6 @@
     "swift-lsp@claude-plugins-official": true,
     "go-lsp@claude-plugins-official": true
   },
-  "skipDangerousModePermissionPrompt": true,
   "extraKnownMarketplaces": {
     "claude-code-plugins": {
       "source": {
@@ -167,5 +167,7 @@
         "repo": "anthropics/claude-code"
       }
     }
-  }
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "skipAutoPermissionPrompt": true
 }
