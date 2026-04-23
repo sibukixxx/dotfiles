@@ -56,7 +56,7 @@ git diff --staged
 
 ```bash
 git commit -m "$(cat <<'EOF'
-✨ feat: ユーザー認証フローを追加
+feat: ユーザー認証フローを追加
 
 ログイン導線とトークン更新処理を実装し、認証状態を安定化。
 EOF
@@ -97,11 +97,11 @@ git push
 ## 完了サマリー
 
 ```text
-✓ コミット & プッシュが完了しました
+コミット & プッシュが完了しました
 
 コミット:
-- ✨ feat: ...
-- 🐛 fix: ...
+- feat: ...
+- fix: ...
 
 プッシュ先:
 - origin/<branch-name>
