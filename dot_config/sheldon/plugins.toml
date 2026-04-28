@@ -1,10 +1,14 @@
 # Sheldon configuration
 # https://sheldon.cli.rs/
 #
-# NOTE: All GitHub plugins use `proto = "https"` because:
-# - Git global config has `url.git@github.com:.insteadOf = https://github.com/`
-# - sheldon uses libgit2 which doesn't support the system SSH agent
-# - This forces sheldon to use HTTPS directly, bypassing the rewrite
+# NOTE: GitHub plugins keep `proto = "https"` as defense-in-depth.
+# sheldon uses libgit2, which cannot use the system SSH agent — any rewrite
+# from HTTPS to SSH (`url.<ssh>.insteadOf = https://...`) makes clone hang
+# forever on auth.
+#
+# Required gitconfig on every host:
+#   url."git@github.com:".pushInsteadOf = https://github.com/
+# (Use `pushInsteadOf`, NOT `insteadOf`, so fetch stays HTTPS for libgit2.)
 
 shell = "zsh"
 
