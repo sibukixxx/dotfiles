@@ -12,3 +12,7 @@
 
 # AI rules - generated files are not tracked
 ai-rules/generated/
+
+# Local zsh runtime files (do not commit)
+.zsh_history
+.zsh_sessions/
