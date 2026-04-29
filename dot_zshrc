@@ -96,10 +96,9 @@ bindkey -e
 # =============================================================================
 # Completion
 # =============================================================================
+fpath=(~/.zsh-completions $fpath)
 autoload -Uz compinit
 compinit -u
-
-fpath=(~/.zsh-completions $fpath)
 
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 zstyle ':completion:*:default' menu select=1
@@ -131,6 +130,24 @@ function history-all { history -E 1 }
 # =============================================================================
 # Prompt
 # =============================================================================
+_url_encode_path() {
+  local str="$1" out="" ch hex
+  local i
+  for (( i = 1; i <= ${#str}; i++ )); do
+    ch="${str[i]}"
+    case "$ch" in
+      [a-zA-Z0-9.~_/-]) out+="$ch" ;;
+      *) printf -v hex '%%%02X' "'$ch"; out+="$hex" ;;
+    esac
+  done
+  print -r -- "$out"
+}
+
+_emit_cwd_osc7() {
+  [[ -t 1 ]] || return 0
+  printf '\e]7;file://%s%s\a' "${HOST%%.*}" "$(_url_encode_path "$PWD")"
+}
+
 gcloud_project_prompt() {
   # New: show active configuration name (set by gcloud.zsh chpwd hook)
   if [[ -n "$CLOUDSDK_ACTIVE_CONFIG_NAME" ]]; then
@@ -222,6 +239,9 @@ _vcs_info_precmd() {
 }
 autoload -Uz add-zsh-hook
 add-zsh-hook precmd _vcs_info_precmd
+add-zsh-hook precmd _emit_cwd_osc7
+add-zsh-hook chpwd _emit_cwd_osc7
+_emit_cwd_osc7
 
 RPROMPT="%1(v|%F{magenta}%1v%f%F{green}[%~]%f|%F{green}[%~]%f)%T"
 
@@ -292,3 +312,17 @@ fi
 # Local overrides (optional)
 # =============================================================================
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+# Keep Tab on standard completion even if plugins override it.
+if [[ -o interactive ]]; then
+  bindkey '^I' expand-or-complete
+  bindkey -M emacs '^I' expand-or-complete
+  bindkey -M viins '^I' expand-or-complete
+fi
+
+# Keep Ctrl+V bound to peco history selection even if later init code overwrites it.
+if [[ -o interactive ]] && zle -la | grep -qx 'peco-select-history'; then
+  bindkey '^v' peco-select-history
+  bindkey -M emacs '^v' peco-select-history
+  bindkey -M viins '^v' peco-select-history
+fi

@@ -22,8 +22,6 @@ if [ -n "$selected_dir" ]; then
     fi
     zle clear-screen
 }
-zle -N peco-src
-bindkey '^f' peco-src
 
 # ignore duplicates from history
 function peco-select-history() {
@@ -36,11 +34,18 @@ function peco-select-history() {
   BUFFER=$(fc -rl 1 | sed 's/^ *[0-9]*\** *//' | awk '!a[$0]++' | peco --query "$LBUFFER")
   CURSOR=$#BUFFER
 }
-zle -N peco-select-history
-bindkey '^v' peco-select-history
+
+if [[ -o interactive ]]; then
+  zle -N peco-src
+  bindkey '^f' peco-src
+
+  zle -N peco-select-history
+  bindkey '^v' peco-select-history
+  bindkey -M emacs '^v' peco-select-history
+  bindkey -M viins '^v' peco-select-history
+fi
 
 # move to GPATH/src
 function cdgo() {
   cd ${GOPATH}/src
 }
-

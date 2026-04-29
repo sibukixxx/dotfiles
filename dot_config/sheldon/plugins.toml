@@ -32,11 +32,6 @@ use = ["{{ name }}.zsh"]
 apply = ["defer"]
 proto = "https"
 
-[plugins.zsh-syntax-highlighting]
-github = "zsh-users/zsh-syntax-highlighting"
-apply = ["defer"]
-proto = "https"
-
 [plugins.zsh-completions]
 github = "zsh-users/zsh-completions"
 apply = ["defer"]
@@ -119,3 +114,9 @@ use = ["gcloud.zsh"]
 [plugins.dotfiles-terraform]
 local = "~/.config/zsh"
 use = ["terraform.zsh"]
+
+# Load syntax highlighting last and without deferred sourcing.
+# It registers ZLE hooks and is sensitive to load order.
+[plugins.zsh-syntax-highlighting]
+github = "zsh-users/zsh-syntax-highlighting"
+proto = "https"
