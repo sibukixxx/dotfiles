@@ -59,12 +59,58 @@
 - [ ] `useRef` の型が DOM / mutable で適切に分かれているか
 - [ ] 新規で `React.FC` を使っていないか
 
-## React 19 関連
+## React 19 関連（基本）
 
 - [ ] 新 JSX transform が有効か（`tsconfig.json` の `"jsx": "react-jsx"`）
 - [ ] `@types/react` / `@types/react-dom` のバージョンが揃っているか
 - [ ] 不要な `import React from 'react'` が残っていないか（型参照以外で）
 - [ ] `defaultProps` を関数コンポーネントで使っていないか（React 19 で削除）
+
+## モダナイゼーション（最新 React API への追従）
+
+旧 API（残しておくと将来削除されるか、機会損失になる）：
+
+- [ ] `forwardRef(({...}, ref) => ...)` を新規で書いていないか
+  - React 19+ では `function X({ ref })` で受ける
+- [ ] `<Context.Provider value>` を新規で書いていないか
+  - React 19+ では `<Context value>` で十分
+- [ ] `defaultProps` を関数 component に付けていないか（React 19 で削除）
+- [ ] ref callback で `useEffect` に逃がす書き方をしていないか
+  - ref callback は cleanup 関数を返せる（React 19+）
+
+機会損失（自前で組んでいる箇所）：
+
+- [ ] フォーム送信 pending を自前 `useState` で管理していないか
+  - `useActionState` / `useFormStatus`（React 19）
+- [ ] 楽観 UI の更新 / rollback を自前で組んでいないか
+  - `useOptimistic`（React 19）
+- [ ] アンカー的な ID を `Math.random` / counter で生成していないか
+  - `useId`（React 18+）。SSR ハイドレーション安全
+- [ ] 外部ストア購読を `useEffect` + `useState` で書いていないか
+  - `useSyncExternalStore`（React 18+）。tearing 対策
+- [ ] `useEffect` + `fetch` で初回データ取得していないか
+  - `use(promise)` + Suspense / TanStack Query / SWR
+- [ ] `react-helmet` / 手動 `<head>` 操作 が残っていないか
+  - `<title>` / `<meta>` / `<link>` を JSX に直接書く（React 19）
+- [ ] `<link rel="preload">` を手動挿入していないか
+  - `preload` / `preinit`（`react-dom`）
+
+並行レンダリング機能：
+
+- [ ] 重い更新で UI がブロックされていないか
+  - `useTransition` / `useDeferredValue`
+- [ ] Loading / Error フラグが UI ツリーに散らばっていないか
+  - Suspense + ErrorBoundary に集約
+
+最適化：
+
+- [ ] React Compiler 適用環境で手動 `useMemo` / `useCallback` / `React.memo` が惰性で残っていないか
+  - 新規には付けず Compiler に任せる。`'use no memo'` ディレクティブが付いていたら原因（Rules 違反）を直す方が本筋
+
+例外的に class が残ってよい場所：
+
+- [ ] ErrorBoundary は class のままになっているか
+  - hooks では書けない。`componentDidCatch` を持つ class が React 19 でも正当
 
 ## stale closure 対策
 

@@ -160,9 +160,35 @@ function Button({ label = 'OK', size = 'md' }: Props) {
 
 `defaultProps` は関数コンポーネントでは非推奨。
 
-## forwardRef の型
+## ref を prop として受ける（React 19+ 推奨）
+
+新規コードでは `forwardRef` をラップせず、`ref` を普通の prop として宣言する。
 
 ```tsx
+type Props = {
+  label: string;
+  ref?: React.Ref<HTMLInputElement>;
+};
+
+function Input({ label, ref }: Props) {
+  return <input aria-label={label} ref={ref} />;
+}
+
+// 使用側
+const inputRef = useRef<HTMLInputElement | null>(null);
+<Input label="Email" ref={inputRef} />
+```
+
+### 型のポイント
+
+- 親が渡してくる ref を受ける側は `React.Ref<T>` （`RefObject<T>` か callback 関数の union）
+- 自分で作る ref は `useRef<T>` または `useRef<T | null>(null)`
+- React 19 で `RefObject<T>` は `current: T | null` ではなく `current: T` ベースに変わった点に注意（`useRef<T>(initial)` の型推論が変化）
+
+### forwardRef を残すケース（既存コード）
+
+```tsx
+// React 18 互換が必要、または既存の API を変えたくないとき
 type Props = { label: string };
 
 const Input = React.forwardRef<HTMLInputElement, Props>(function Input(
@@ -173,7 +199,81 @@ const Input = React.forwardRef<HTMLInputElement, Props>(function Input(
 });
 ```
 
-React 19 では `ref` を通常の prop として受け取れる（forwardRef 不要）。ただし既存コードベースで後方互換が必要なら forwardRef も引き続き使える。
+`forwardRef` は React 19 でも動くが、新規実装では使わない。
+
+## ref callback の cleanup（React 19+）
+
+ref callback は cleanup 関数を返せるようになった。型は `(node: T | null) => void | (() => void)`。
+
+```tsx
+<div
+  ref={(node: HTMLDivElement | null) => {
+    if (!node) return;
+    const observer = new IntersectionObserver(/* ... */);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }}
+/>
+```
+
+## React 19 新 API の型
+
+### useActionState
+
+```tsx
+type LoginState = { ok: boolean; error?: string };
+
+function LoginForm() {
+  const [state, action, isPending] = useActionState<LoginState, FormData>(
+    async (_prev, formData) => {
+      const res = await login(formData.get('email') as string);
+      return res.ok ? { ok: true } : { ok: false, error: res.error };
+    },
+    { ok: false },
+  );
+  // state: LoginState, action: (formData: FormData) => void, isPending: boolean
+}
+```
+
+### useFormStatus
+
+```tsx
+import { useFormStatus } from 'react-dom';
+
+function SubmitButton() {
+  const { pending, data, method, action } = useFormStatus();
+  // pending: boolean
+  // data: FormData | null
+  // method: 'get' | 'post' | null
+  // action: string | ((formData: FormData) => void | Promise<void>) | null
+  return <button disabled={pending}>Submit</button>;
+}
+```
+
+### useOptimistic
+
+```tsx
+const [optimistic, addOptimistic] = useOptimistic<Message[], Message>(
+  messages,
+  (state, newItem) => [...state, newItem],
+);
+// optimistic: Message[], addOptimistic: (newItem: Message) => void
+```
+
+### useId
+
+```tsx
+const id: string = useId(); // 戻り値は string
+```
+
+### use（promise / context）
+
+```tsx
+const user: User = use(userPromise); // Promise<T> を渡すと T が返る
+const theme = use(ThemeContext); // ContextValue が返る
+```
+
+`use` は `useState` などと違って **条件分岐の中で呼べる** が、型推論は通常の関数と同じ。
 
 ## useReducer の型
 

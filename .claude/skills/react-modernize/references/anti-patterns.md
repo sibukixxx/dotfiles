@@ -348,3 +348,227 @@ function List({ items }) {
 ```
 
 `items.sort` は破壊的なので注意。`[...items].sort(...)` やスプレッドで新配列にする。
+
+## 16. forwardRef を新規で書く（React 19 では不要）
+
+**悪い**（新規コード、React 19+ 環境）:
+```tsx
+const Input = forwardRef<HTMLInputElement, Props>((props, ref) => (
+  <input ref={ref} {...props} />
+));
+```
+
+**良い**（React 19+）:
+```tsx
+type Props = { ref?: React.Ref<HTMLInputElement>; placeholder?: string };
+
+function Input({ ref, ...rest }: Props) {
+  return <input ref={ref} {...rest} />;
+}
+```
+
+新規コードでは `forwardRef` のラップを書かない。既存の `forwardRef` も移行ついでに外す。
+
+## 17. Context.Provider を新規で書く（React 19 では不要）
+
+**悪い**（新規コード、React 19+ 環境）:
+```jsx
+<MyContext.Provider value={value}>
+  {children}
+</MyContext.Provider>
+```
+
+**良い**（React 19+）:
+```jsx
+<MyContext value={value}>
+  {children}
+</MyContext>
+```
+
+`.Provider` は引き続き動くが新規は短い形を使う。
+
+## 18. defaultProps を関数 component に付ける（React 19 で削除）
+
+**悪い**:
+```tsx
+function Button({ label, size }) { ... }
+Button.defaultProps = { size: 'md' };
+```
+
+**良い**:
+```tsx
+function Button({ label, size = 'md' }) { ... }
+```
+
+`defaultProps` のサポートは React 19 で関数 component から削除された。デフォルト引数で。
+
+## 19. submit pending を自前 useState で管理する（React 19 で不要）
+
+**悪い**:
+```tsx
+function CommentForm({ onSubmit }) {
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSending(true);
+    try { await onSubmit(text); setText(''); } finally { setSending(false); }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={text} onChange={e => setText(e.target.value)} />
+      <button disabled={sending}>{sending ? '...' : 'Send'}</button>
+    </form>
+  );
+}
+```
+
+**良い**（React 19+）:
+```tsx
+import { useFormStatus } from 'react-dom';
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return <button disabled={pending}>{pending ? '...' : 'Send'}</button>;
+}
+
+function CommentForm({ onSubmit }) {
+  return (
+    <form action={async (formData) => onSubmit(formData.get('text'))}>
+      <input name="text" defaultValue="" />
+      <SubmitButton />
+    </form>
+  );
+}
+```
+
+`useState` 3 つの代わりに `useFormStatus` 1 行。`useActionState` を使えば結果の保持も含めて集約できる。
+
+## 20. 楽観 UI を自前で組む（React 19 で不要）
+
+**悪い**:
+```tsx
+const [items, setItems] = useState(initial);
+
+async function add(text) {
+  const optimistic = { id: 'temp', text, sending: true };
+  setItems(prev => [...prev, optimistic]);
+  try {
+    const real = await api.create(text);
+    setItems(prev => prev.map(i => i.id === 'temp' ? real : i));
+  } catch {
+    setItems(prev => prev.filter(i => i.id !== 'temp')); // rollback
+  }
+}
+```
+
+**良い**（React 19+）:
+```tsx
+const [optimistic, addOptimistic] = useOptimistic(
+  items,
+  (state, newItem) => [...state, { ...newItem, sending: true }],
+);
+
+async function add(text) {
+  addOptimistic({ id: 'temp', text });
+  await api.create(text);
+}
+```
+
+rollback は React が自動でやる。失敗時の整合性管理が消える。
+
+## 21. 自前 ID 生成（useId を使う）
+
+**悪い**:
+```tsx
+const id = useState(() => `field-${Math.random()}`)[0]; // SSR でハイドレーション不一致
+```
+
+**良い**:
+```tsx
+const id = useId();
+```
+
+`useId` は SSR ハイドレーション安全な ID を返す。label / aria 用は必ず `useId`。
+
+## 22. 外部ストア購読を useEffect + useState で書く
+
+**悪い**:
+```tsx
+function useOnline() {
+  const [online, setOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
+  return online;
+}
+```
+
+問題: concurrent rendering 中に値が割れる（tearing）可能性。
+
+**良い**（React 18+）:
+```tsx
+function useOnline() {
+  return useSyncExternalStore(
+    (cb) => {
+      window.addEventListener('online', cb);
+      window.addEventListener('offline', cb);
+      return () => {
+        window.removeEventListener('online', cb);
+        window.removeEventListener('offline', cb);
+      };
+    },
+    () => navigator.onLine,
+    () => true, // SSR snapshot
+  );
+}
+```
+
+## 23. react-helmet で `<title>` / `<meta>` を操作（React 19 で不要）
+
+**悪い**（React 19+ 環境）:
+```tsx
+import { Helmet } from 'react-helmet-async';
+
+<Helmet>
+  <title>{article.title}</title>
+  <meta name="description" content={article.summary} />
+</Helmet>
+```
+
+**良い**（React 19+）:
+```tsx
+<>
+  <title>{article.title}</title>
+  <meta name="description" content={article.summary} />
+  <article>{article.body}</article>
+</>
+```
+
+React 19 は `<head>` への hoist を自動で行う。`react-helmet` 依存が消える。
+
+## 24. 手動 useMemo / useCallback / React.memo（Compiler 適用環境）
+
+**悪い**（Compiler 適用済み環境で新規に書く）:
+```tsx
+const handleClick = useCallback(() => doSomething(x), [x]);
+const filtered = useMemo(() => items.filter(...), [items]);
+export default React.memo(Component);
+```
+
+**良い**:
+```tsx
+function handleClick() { doSomething(x); }
+const filtered = items.filter(...);
+export default Component;
+```
+
+Compiler が自動でメモ化する。`'use no memo'` ディレクティブが付いていたら原因（Rules of React 違反）を直すのが本筋。
