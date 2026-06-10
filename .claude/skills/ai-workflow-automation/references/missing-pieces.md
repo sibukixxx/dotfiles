@@ -6,19 +6,20 @@
 
 ## 1. Observability（観測性）
 
-`.claude/CLAUDE.md` の「AIエージェントつくるなら初手 o11y」を遵守する。
+スパン設計の基本（`llm.call` / `tool.call` / `agent.delegate` の3層、属性一覧、コスト集約、記録禁止リスト）は **`rules/core/ai-agent-o11y.md` に従う**。セットアップは `/ai-agent-o11y` スキルで実行。ここではワークフロー自動化に固有の差分のみ示す。
 
-### 必須スパン階層
+### ワークフロー固有のスパン階層
+
+o11y ルールの3層の上に、5コンポーネントをルートとして被せる：
 
 ```
 agent.workflow_run (root)
 ├── workflow.input_processing
 │   ├── api.fetch (per data source)
 │   └── pii.mask
-├── workflow.ai_processing
-│   ├── llm.call (per LLM invocation)
-│   │   ├── model, tokens.input/output, cost, latency, stop_reason
-│   ├── tool.call (per tool)
+├── workflow.ai_processing      ← この下が rules/core/ai-agent-o11y.md の3層
+│   ├── llm.call
+│   ├── tool.call
 │   └── agent.delegate (sub-workflow)
 ├── workflow.output_routing
 │   └── delivery.send
@@ -35,25 +36,6 @@ agent.workflow_run (root)
 | Phoenix (Arize) | OSS、ローカル可 | UI は素朴 | プライバシー重視 |
 | OpenTelemetry + Jaeger | 業界標準、汎用 | LLM メタデータは自前 | 既存 OTel 環境がある |
 | Helicone | 開発が楽 | 簡易的 | 小規模・早期立ち上げ |
-
-### コスト・トークンの自動集計
-
-```python
-# 各 llm.call スパンに記録
-span.set_attribute("llm.tokens.input", input_tokens)
-span.set_attribute("llm.tokens.output", output_tokens)
-span.set_attribute("llm.cost_usd", calculated_cost)
-
-# ルートスパンに集約
-root_span.set_attribute("workflow.total_cost_usd", total_cost)
-root_span.set_attribute("workflow.total_tokens", total_tokens)
-```
-
-### 記録してはいけないもの
-
-- プロンプト全文（本番）→ ハッシュで代替
-- ユーザーの個人情報 → マスク
-- API キー / シークレット → 絶対に記録しない
 
 ---
 
@@ -84,6 +66,8 @@ budget:
 | プロンプトキャッシュ | 入力トークン 90% 削減（cache hit 時） | キャッシュ可能な構造に書く |
 | 出力トークン削減（指示で簡潔化） | 10-30% 削減 | 過度に短くすると品質劣化 |
 | Batch API 使用 | 50% 削減 | リアルタイムには使えない |
+
+開発環境（Claude Code 自体）のトークン削減は別領域。`token-optimization-toolkit` スキルを参照（外部ツールの選定・削減率主張の検証方法を含む）。
 
 ---
 

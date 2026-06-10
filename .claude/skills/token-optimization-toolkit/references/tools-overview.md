@@ -27,7 +27,7 @@
   - thinking トークンには影響しない
   - GitHub 5K star（2025末時点）でバズ枠
 - **落とし穴**:
-  - 既存 `.claude/CLAUDE.md` の "Tone and style" ルールと **完全に重複**
+  - Claude Code 既定の簡潔出力スタイルと **実質重複**（CLAUDE.md の簡潔ルール1行で代替可能）
   - レビュー文書・PR 説明など人間が読む出力で可読性を損なう
   - 文体の極端化により、後続ターンでユーザー指示を誤解しやすくなる懸念
 
@@ -171,7 +171,7 @@
   - **コードゼロ・ドロップインのテンプレート**
   - 持続セッション・大量出力タスク向け（一発質問では benefit 薄い）
 - **落とし穴**:
-  - 既存 `.claude/CLAUDE.md` と **強く重複**。マージするとルール衝突の可能性
+  - Claude Code 既定の簡潔出力スタイルや既存 CLAUDE.md の指示と **重複しやすい**。マージするとルール衝突の可能性
   - 短時間 / フレッシュセッション中心の使い方では恩恵なし
 
 ---
@@ -206,4 +206,4 @@
 | B | alexgreensh Token Optimizer | 監査用、診断目的で時々起動 |
 | C | ooples Token Optimizer MCP | MCP 経由のトークン消費が問題化したとき |
 | C | Token Savior | 永続メモリが必要になったら |
-| 不要 | Caveman, Claude Token Efficient | 既存 CLAUDE.md と重複 |
+| 不要 | Caveman, Claude Token Efficient | 既定の簡潔出力スタイルと重複 |
