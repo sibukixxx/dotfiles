@@ -1,3 +1,8 @@
+---
+name: commit-conventions
+description: Conventional Commit のフォーマット、コミット粒度、Tidy First (STRUCTURAL / BEHAVIORAL) 分割、HEREDOC でのメッセージ整形といったコミットルールを適用するスキル。commit-pusher / shipper agent から参照する詳細リファレンス。
+---
+
 # コミットルール
 
 ## コミット条件
@@ -39,7 +44,7 @@
 
 ### 変更タイプのプレフィックス
 
-Tidy Firstアプローチに基づき、変更タイプを明示する（詳細は `rules/core/tdd.md` 参照）：
+Tidy Firstアプローチに基づき、変更タイプを明示する（詳細は `skills/tdd-architect/references/rules.md` 参照）：
 
 - `[STRUCTURAL]`: 動作を変更しないコミット
 - `[BEHAVIORAL]`: 動作を変更するコミット

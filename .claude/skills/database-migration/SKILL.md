@@ -38,7 +38,7 @@ references:
 DBスキーマ変更は本番障害・データ消失の最大リスク領域。
 このスキルは **「7つの絶対ルール」** をユーザーの作業に適用する。
 
-> グローバルルール本体: `~/dotfiles/.claude/rules/core/database-migration.md`
+> グローバルルール本体: `~/dotfiles/.claude/skills/database-migration/references/rules.md`
 
 ## 7つの絶対ルール（要約）
 

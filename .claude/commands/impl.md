@@ -365,10 +365,10 @@ AskUserQuestion({
 ## 重要な注意事項
 
 ### 参照ルール
-- TDDルール: `rules/core/tdd.md`
-- コミットルール: `rules/core/commit.md`
-- 設計原則: `rules/core/design.md`
-- テストルール: `rules/core/testing.md`
+- TDDルール: `skills/tdd-architect/references/rules.md`
+- コミットルール: `skills/commit-conventions/SKILL.md`
+- 設計原則: `skills/design-principles/SKILL.md`
+- テストルール: `skills/tdd-architect/references/testing-rules.md`
 
 ### フェーズ管理のルール
 

@@ -294,4 +294,4 @@ PR:
 
 ## 参照ルール
 
-コミットルールの詳細は `rules/core/commit.md` を参照。
+コミットルールの詳細は `skills/commit-conventions/SKILL.md` を参照。

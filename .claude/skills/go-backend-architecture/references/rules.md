@@ -202,7 +202,7 @@ func (p *XxxPersistence) Create(ctx context.Context, m *model.Xxx) (*model.Xxx, 
 ### マイグレーション
 
 `migrates/` （または `migrations/`）配下、`YYYYMMDDHHMMSS_<snake_description>.sql` 形式。
-詳細は `rules/core/database-migration.md` を参照。
+詳細は `skills/database-migration/references/rules.md` を参照。
 
 ---
 
@@ -230,7 +230,7 @@ internal/graph/
 - `log/slog` 構造化ログ。フォーマットは config で json/text 切替
 - リクエスト単位で `request_id` を context に注入
 - `internal/infra/sentry/` でエラートラッキング
-- LLM / ツール呼び出しがある場合は `rules/core/ai-agent-o11y.md` に従いトレース
+- LLM / ツール呼び出しがある場合は `skills/ai-agent-o11y/references/rules.md` に従いトレース
 
 ログに**出してはいけないもの**：
 - 秘密情報（AppID / API key / token / password）
@@ -250,7 +250,7 @@ internal/graph/
   ```
 - **e2e**：`test/e2e/` 配下、build tag `e2e`、実 DB / 実 API 接続前提
 - **テスト名**：t-wada 流。`Test<Receiver><Method>Should<Result>When<Condition>` を推奨
-- 詳細は `rules/core/tdd.md`、`rules/core/testing.md` を参照
+- 詳細は `skills/tdd-architect/references/rules.md`、`skills/tdd-architect/references/testing-rules.md` を参照
 
 ---
 

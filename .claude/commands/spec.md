@@ -325,9 +325,9 @@ Skill({
 
 ### 参照ルール
 計画ドキュメントは以下のルールを参照します：
-- TDDルール: `rules/core/tdd.md`
-- コミットルール: `rules/core/commit.md`
-- 設計原則: `rules/core/design.md`
+- TDDルール: `skills/tdd-architect/references/rules.md`
+- コミットルール: `skills/commit-conventions/SKILL.md`
+- 設計原則: `skills/design-principles/SKILL.md`
 
 ### 更新モードの動作
 更新モードが選択された場合：
