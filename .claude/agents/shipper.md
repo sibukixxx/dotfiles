@@ -85,13 +85,9 @@ git add <files>
 
 # HEREDOCを使用してコミット
 git commit -m "$(cat <<'EOF'
-✨ feat: add user authentication system
+feat: ユーザー認証システムを追加
 
-Implement JWT-based authentication with refresh tokens.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
+リフレッシュトークン対応の JWT ベース認証を実装。
 EOF
 )"
 ```
@@ -101,19 +97,7 @@ EOF
 - 関心事が混在している場合は分割して複数コミットにする
 - 生成物、lockfile、設定変更は意図が明確な時だけ含める
 - 最低限の検証コマンドを可能なら実行し、PR本文に記載する
-
-**Emoji と Type の対応:**
-
-| Type | Emoji | 説明 |
-|------|-------|------|
-| feat | ✨ | 新機能追加 |
-| fix | 🐛 | バグ修正 |
-| docs | 📝 | ドキュメント更新 |
-| style | 🎨 | フォーマット変更 |
-| refactor | ♻️ | リファクタリング |
-| test | ✅ | テスト追加・修正 |
-| chore | 🔧 | ビルド・設定ファイル変更 |
-| perf | ⚡ | パフォーマンス改善 |
+- コミットメッセージは type は英語、件名・本文は日本語。絵文字なし、Co-Authored-By なし
 
 ---
 
@@ -167,7 +151,7 @@ git log --oneline ${BASE_BRANCH}..HEAD
 - 残るリスク1
 - ロールバック方針
 
-🤖 Generated with [Claude Code](https://claude.ai/code)
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
 ### 4-3. PR作成コマンド
@@ -184,7 +168,7 @@ gh pr create --title "PR title" --body "$(cat <<'EOF'
 ## Risks
 - Residual risk and rollback note
 
-🤖 Generated with [Claude Code](https://claude.ai/code)
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
 )"
 
@@ -254,8 +238,8 @@ git pull
 ✓ Ship 完了！
 
 コミット:
-- ✨ feat: add new feature
-- 🐛 fix: resolve bug
+- feat: 新機能を追加
+- fix: バグを修正
 
 PR:
 - #123: PR title
