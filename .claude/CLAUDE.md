@@ -20,18 +20,18 @@
 
 ## 必ず守る一行ルール（詳細は skill / agent に委譲）
 
-- **TDD**: テストファースト、Red→Green→Refactor。詳細は `/tdd`, `/impl` skill。
-- **Go バックエンド**: handler→usecase→domain ←(impl)← infra のオニオン依存。interface は domain に置く。`internal/errors` 使用、`fmt.Errorf("%w")` 不可。詳細は `/go-backend-architecture` skill。
+- **TDD**: テストファースト、Red→Green→Refactor。詳細は `/impl` command と `tdd-architect` skill。
+- **Go バックエンド**: handler→usecase→domain ←(impl)← infra のオニオン依存。interface は domain に置く。`internal/errors` 使用、`fmt.Errorf("%w")` 不可（オニオン構成のアプリのみ。ライブラリ/CLI は `%w` ラップ可）。詳細は `/go-backend-architecture` skill。
 - **DB マイグレーション**: 手動 ALTER 禁止、Git 管理、forward-only、本番直 SQL 禁止。詳細は `/database-migration` skill。
 - **AI エージェント**: トレース（LLM/Tool/SubAgent 3層）を最初に組み込む。詳細は `/ai-agent-o11y` skill。
-- **セキュリティ**: 秘密はコミットしない、env 経由。詳細は `security-reviewer` agent / `/security-review`。
+- **セキュリティ**: 秘密はコミットしない、env 経由。詳細は `security-reviewer` agent / `/security-scan`。
 - **コミット**: Conventional Commit、subject/body は日本語、絵文字なし、Co-Authored-By なし。詳細は `commit-pusher` / `shipper` agent。
 
 ## Worktree
 - ブランチ: `<type>/<kebab-case>`（例: `feat/user-auth`）
 - 配置: `../<repo>-wt-<branch>/`
 - マージ後 `git worktree remove`、forward マージ
-- 詳細は `/worktree` skill
+- 詳細は `/worktree` command
 
 ## Claude Code 運用（Opus 4.7+）
 - effort level は既定 `xhigh` で十分。`max` は本当に難しい時のみ

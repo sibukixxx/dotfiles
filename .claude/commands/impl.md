@@ -6,7 +6,7 @@ argument-hint: "[タスク説明]"
 # /impl - TDD開発コマンド
 
 このコマンドは、Kent BeckのTDD方法論と高凝集度・低結合度・コロケーションの原則に従って開発を行います。
-developingスキルを活用し、RED→GREEN→REFACTORサイクルをテストファーストアプローチで厳格に遵守します。
+tdd-architectスキルを活用し、RED→GREEN→REFACTORサイクルをテストファーストアプローチで厳格に遵守します。
 
 ## 使い方
 
@@ -358,7 +358,7 @@ AskUserQuestion({
 ```
 
 **「コミット」を選択された場合**：
-- committerスキルを使用してコミットを作成
+- commit-pusher agentを使用してコミットを作成
 
 ---
 
