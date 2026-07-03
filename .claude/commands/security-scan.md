@@ -51,7 +51,7 @@ disable-model-invocation: true
 
 以下を順番に実行し、結果を `security-report.md` の「静的診断」セクションに書き出す：
 
-1. **依存関係スキャン**: `npm audit --json` または `yarn audit --json` を実行（`package.json` があれば）。High / Critical のみ抽出
+1. **依存関係スキャン**: `pnpm audit --json` を実行（`package.json` があれば。pnpm 非対応プロジェクトのみ `npm audit --json`）。High / Critical のみ抽出
 2. **シークレット漏洩チェック**: `gitleaks detect --source . --report-format json` または `trufflehog filesystem .` を実行（ツールがなければスキップして記録）
 3. **HTTPヘッダー・TLS設定チェック**: `curl -I -s {base_url}` でレスポンスヘッダーを取得。`Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy` の有無を確認
 

@@ -275,9 +275,9 @@ AskUserQuestion({
 
 ```bash
 # プロジェクトに応じたコマンドを実行
-npm run lint     # または cargo clippy, go vet など
-npm run format   # または cargo fmt, gofmt など
-npm run build    # または cargo build, go build など
+pnpm lint     # または cargo clippy, go vet など
+pnpm format   # または cargo fmt, gofmt など
+pnpm build    # または cargo build, go build など
 npm test         # または cargo test, go test など
 ```
 
