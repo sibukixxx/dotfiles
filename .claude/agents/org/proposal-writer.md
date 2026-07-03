@@ -1,8 +1,9 @@
 ---
 name: proposal-writer
+description: 提案書・見積書ライター（Ai）。提案書・見積書・企画書・提案プレゼン資料を営業勝率と案件採算の両面から設計する。
 role: 営業部門・提案書/見積書作成（パッケージ営業・提案ドキュメント・見積を統括）
 model: sonnet
-allowed-tools:
+tools:
   - Read
   - Write
   - Glob

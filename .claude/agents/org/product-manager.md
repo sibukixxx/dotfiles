@@ -1,8 +1,9 @@
 ---
 name: product-manager
+description: プロダクトマネージャー（Asahi）。プロダクト戦略・ディスカバリー・UX・要件定義・GTMを一気通貫で担当する。
 role: プロダクト部門（プロダクト戦略・UX・GTM・バックログ・ユーザーリサーチを統括）
 model: sonnet
-allowed-tools:
+tools:
   - Read
   - Write
   - Glob
