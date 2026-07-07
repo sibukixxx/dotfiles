@@ -1,5 +1,5 @@
 ---
-name: ios-screenshot
+name: ios-screenshot-skill
 description: >
   iOS App Store 審査用スクリーンショットの自動化。Fastlane（snapshot + deliver）を使った
   スクショ撮影・App Store Connect アップロードの設定生成・トラブル解決に使う。

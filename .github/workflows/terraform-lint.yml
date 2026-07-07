@@ -22,26 +22,29 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   terraform-fmt:
     name: Terraform Format
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.5.0"
 
       - name: Check Format
         run: |
-          # Find all .tf and .tf.tmpl files and check format
-          find dot_config/terraform -name "*.tf" -o -name "*.tf.tmpl" | while read -r file; do
-            # Skip .tmpl files for direct terraform fmt (they have placeholders)
+          status=0
+          while IFS= read -r file; do
             if [[ "$file" == *.tmpl ]]; then
-              # Create a temporary file with placeholders replaced for validation
+              # .tmpl はプレースホルダ置換後にチェックし、警告のみ
               temp_file=$(mktemp)
               sed -e 's/{{[^}]*}}/placeholder/g' "$file" > "$temp_file"
               if ! terraform fmt -check "$temp_file" > /dev/null 2>&1; then
@@ -51,21 +54,21 @@ jobs:
             else
               if ! terraform fmt -check "$file"; then
                 echo "::error file=$file::Format check failed"
-                exit 1
+                status=1
               fi
             fi
-          done
-        continue-on-error: true
+          done < <(find dot_config/terraform \( -name "*.tf" -o -name "*.tf.tmpl" \))
+          exit "$status"
 
   tflint:
     name: TFLint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup TFLint
-        uses: terraform-linters/setup-tflint@v4
+        uses: terraform-linters/setup-tflint@v6
         with:
           tflint_version: latest
 
@@ -112,24 +115,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Validate GitHub Actions templates
         run: |
           for file in dot_config/terraform/ci-templates/github-actions/*.yml.tmpl; do
             if [[ -f "$file" ]]; then
               echo "Validating: $file"
-              # Replace placeholders and validate YAML
               temp_file=$(mktemp)
               sed -e 's/{{[^}]*}}/placeholder/g' "$file" > "$temp_file"
               if ! python3 -c "import yaml; yaml.safe_load(open('$temp_file'))"; then
                 echo "::error file=$file::Invalid YAML syntax"
+                rm "$temp_file"
                 exit 1
               fi
               rm "$temp_file"
             fi
           done
-        continue-on-error: true
 
       - name: Validate GitLab CI templates
         run: |
@@ -140,22 +142,22 @@ jobs:
               sed -e 's/{{[^}]*}}/placeholder/g' "$file" > "$temp_file"
               if ! python3 -c "import yaml; yaml.safe_load(open('$temp_file'))"; then
                 echo "::error file=$file::Invalid YAML syntax"
+                rm "$temp_file"
                 exit 1
               fi
               rm "$temp_file"
             fi
           done
-        continue-on-error: true
 
   shellcheck:
     name: ShellCheck Scripts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
+        uses: ludeeus/action-shellcheck@2.0.0
         with:
           scandir: 'dot_config/terraform/testing/scripts'
           severity: warning
