@@ -26,22 +26,6 @@ deny() {
 
 # Check for forbidden commands
 # Use word boundary matching to avoid false positives (e.g., "category" matching "cat")
-if echo "$command" | grep -qE '\bawk\b'; then
-  deny "Use of 'awk' is prohibited. Use 'perl' instead. Example: perl -lane 'print \$F[0]' file.txt"
-fi
-
-if echo "$command" | grep -qE '\bsed\b'; then
-  deny "Use of 'sed' is prohibited. Use 'perl' instead. Example: perl -pi -e 's/old/new/g' file.txt"
-fi
-
-if echo "$command" | grep -qE '\bpush\b'; then
-  deny "Do not execute 'git push'. Please ask the user to execute it."
-fi
-
-if echo "$command" | grep -qE '\bgit add (-A|--all|\.($|[ ;|&]))'; then
-  deny "Do not git-add all files. Specify the file name(s) to add."
-fi
-
 if echo "$command" | grep -qE '\brm\s+-rf\b'; then
   deny "Use of 'rm -rf' is prohibited. Remove files individually or use a safer alternative."
 fi
