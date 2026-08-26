@@ -1,0 +1,31 @@
+# security-agent.config.yml
+# このファイルを security-agent.config.yml にコピーして使ってください
+# 認証情報は必ず環境変数で注入してください（直書き禁止）
+
+target:
+  type: rest_api              # rest_api / web_app / graphql / grpc / db / auth_service
+  base_url: ${STAGING_URL}    # 環境変数で注入（本番URLは記載禁止）
+  auth:
+    type: bearer_token        # bearer_token / basic / api_key / none
+    token: ${TEST_TOKEN}      # 環境変数で注入
+
+scope:
+  include:
+    - /api/**
+  exclude:
+    - /api/admin/**           # 管理系は除外
+    - /health                 # ヘルスチェックは除外
+
+agents:
+  - owasp_top10               # 必須
+  # - auth_bypass             # 認証機能がある場合
+  # - injection               # DB・外部コマンド実行がある場合
+  # - prompt_injection        # LLM機能がある場合
+  # - multi_tenant            # マルチテナント構成の場合
+  # - file_exposure           # ファイルアップロードがある場合
+
+schedule: manual              # pr_gate / weekly / release_gate / manual
+report:
+  format: file                # file / github_issue / slack
+  severity_gate: critical     # この深刻度以上でCIを止める（critical / high / medium）
+  output_path: ./security-report.md

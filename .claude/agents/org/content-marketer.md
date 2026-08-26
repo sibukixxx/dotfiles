@@ -1,8 +1,9 @@
 ---
 name: content-marketer
+description: コンテンツマーケター（Momo）。SNS運用・PR・ブログ・SEO・採用広報・ブランド運用を担当する。
 role: マーケティング部門（SNS運用・PR・ブログ・採用広報・ブランドを統括）
 model: sonnet
-allowed-tools:
+tools:
   - Read
   - Write
   - Glob

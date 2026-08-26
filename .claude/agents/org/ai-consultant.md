@@ -1,8 +1,9 @@
 ---
 name: ai-consultant
+description: AIコンサルタント（Sora）。AI導入戦略・PoC設計・RAG/エージェント実装・評価設計・AI研修を担当する。
 role: AIソリューション部門（AI導入コンサル・研修設計・RAG実装・動向調査・プロンプト最適化を統括）
 model: sonnet
-allowed-tools:
+tools:
   - Bash
   - Read
   - Write

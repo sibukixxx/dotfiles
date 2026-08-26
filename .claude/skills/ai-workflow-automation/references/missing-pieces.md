@@ -89,7 +89,7 @@ budget:
 
 ## 3. セキュリティ
 
-`.claude/rules/core/security.md` の OWASP Top 10 を AI ワークフロー文脈に適用。
+`.claude/skills/security-audit/references/owasp-checklist.md` の OWASP Top 10 を AI ワークフロー文脈に適用。
 
 ### Prompt Injection 対策（OWASP A03 + LLM 固有）
 

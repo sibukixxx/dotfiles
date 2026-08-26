@@ -46,11 +46,11 @@ improve 120 \
   --qa-cmd "./scripts/improve-qa.sh" \
   --fix-cmd "./scripts/improve-fix.sh" \
   --refactor-cmd "./scripts/improve-refactor.sh" \
-  --e2e-cmd "npm run test:e2e" \
+  --e2e-cmd "pnpm test:e2e" \
   --issue-count-cmd "gh issue list --state open --json number --limit 500 | jq 'length'"
 ```
 
 補足:
 - `--issue-count-cmd` 未指定時は `gh issue list` を自動で試す
-- `--e2e-cmd` 未指定時は `npm run test:e2e` / `pnpm test:e2e` / `make e2e` を自動探索
+- `--e2e-cmd` 未指定時は `pnpm test:e2e` / `npm run test:e2e` / `make e2e` を自動探索
 - `--qa-cmd` / `--fix-cmd` / `--refactor-cmd` 未指定時は `scripts/improve-*.sh` を探索（なければ `true`）

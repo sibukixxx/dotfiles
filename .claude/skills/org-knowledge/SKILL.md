@@ -18,6 +18,16 @@ references:
   - references/roic-management.md
   - references/group-tax-consolidation.md
   - references/mbo-legal-tax.md
+  - references/accounting-standards.md
+  - references/cfo-operations.md
+  - references/financial-accounting.md
+  - references/ifrs-practical.md
+  - references/subscription-accounting.md
+  - references/statistics-foundations.md
+  - references/cs-data-systems.md
+  - references/cs-networking.md
+  - references/cs-os-systems.md
+  - references/cs-security.md
 ---
 
 # org-knowledge: 組織共有ナレッジ

@@ -1,8 +1,9 @@
 ---
 name: accountant
+description: 会計・財務スペシャリスト（Rin）。収益認識・IFRS/J-GAAP・税務・財務分析・経理実務を担当する。
 role: 管理部門・会計財務（収益認識・税務・財務分析・経理実務を統括）
 model: sonnet
-allowed-tools:
+tools:
   - Read
   - Write
   - Glob

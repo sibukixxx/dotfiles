@@ -6,7 +6,7 @@ argument-hint: "[タスク説明]"
 # /impl - TDD開発コマンド
 
 このコマンドは、Kent BeckのTDD方法論と高凝集度・低結合度・コロケーションの原則に従って開発を行います。
-developingスキルを活用し、RED→GREEN→REFACTORサイクルをテストファーストアプローチで厳格に遵守します。
+tdd-architectスキルを活用し、RED→GREEN→REFACTORサイクルをテストファーストアプローチで厳格に遵守します。
 
 ## 使い方
 
@@ -275,9 +275,9 @@ AskUserQuestion({
 
 ```bash
 # プロジェクトに応じたコマンドを実行
-npm run lint     # または cargo clippy, go vet など
-npm run format   # または cargo fmt, gofmt など
-npm run build    # または cargo build, go build など
+pnpm lint     # または cargo clippy, go vet など
+pnpm format   # または cargo fmt, gofmt など
+pnpm build    # または cargo build, go build など
 npm test         # または cargo test, go test など
 ```
 
@@ -358,17 +358,17 @@ AskUserQuestion({
 ```
 
 **「コミット」を選択された場合**：
-- committerスキルを使用してコミットを作成
+- commit-pusher agentを使用してコミットを作成
 
 ---
 
 ## 重要な注意事項
 
 ### 参照ルール
-- TDDルール: `rules/core/tdd.md`
-- コミットルール: `rules/core/commit.md`
-- 設計原則: `rules/core/design.md`
-- テストルール: `rules/core/testing.md`
+- TDDルール: `skills/tdd-architect/references/rules.md`
+- コミットルール: `skills/commit-conventions/SKILL.md`
+- 設計原則: `skills/design-principles/SKILL.md`
+- テストルール: `skills/tdd-architect/references/testing-rules.md`
 
 ### フェーズ管理のルール
 

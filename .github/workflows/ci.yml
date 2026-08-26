@@ -6,16 +6,23 @@ on:
   pull_request:
     branches: [master, main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
+        uses: ludeeus/action-shellcheck@2.0.0
         with:
           scandir: '.'
           severity: warning
@@ -30,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install chezmoi
         run: |
@@ -42,34 +49,36 @@ jobs:
           chezmoi execute-template < /dev/null || true
 
           # .tmpl ファイルの基本的な構文チェック
-          find . -name "*.tmpl" -type f | while read -r file; do
+          unclosed=0
+          while IFS= read -r file; do
             echo "Checking: $file"
-            # Go template の基本構文チェック
             if grep -qE '\{\{[^}]*$' "$file"; then
-              echo "Warning: Unclosed template tag in $file"
+              echo "::error file=$file::Unclosed template tag"
+              unclosed=1
             fi
-          done
+          done < <(find . -name "*.tmpl" -type f)
+          exit "$unclosed"
 
   yaml-lint:
     name: YAML Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install yamllint
-        run: pip install yamllint
+        run: pip install --user yamllint
 
       - name: Run yamllint
         run: |
-          yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .github/workflows/*.yml || true
+          yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .github/workflows/*.yml
 
   toml-check:
     name: TOML Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install taplo
         run: |
@@ -79,20 +88,24 @@ jobs:
 
       - name: Check TOML files
         run: |
-          find . -name "*.toml" -type f | while read -r file; do
+          status=0
+          while IFS= read -r file; do
             echo "Checking: $file"
-            taplo check "$file" || true
-          done
+            if ! taplo check "$file"; then
+              status=1
+            fi
+          done < <(find . -name "*.toml" -type f)
+          exit "$status"
 
   markdown-lint:
     name: Markdown Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@v16
+        uses: DavidAnson/markdownlint-cli2-action@v23
         with:
           globs: '**/*.md'
           config: |
@@ -109,11 +122,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Check Brewfile syntax
         run: |
           if [ -f Brewfile ]; then
-            # Ruby 構文チェック
             ruby -c Brewfile
           fi
