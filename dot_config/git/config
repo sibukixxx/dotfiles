@@ -65,6 +65,12 @@
 [url "git@github.com:"]
 	insteadOf = https://github.com/
 
+[filter "jsonsort"]
+	; Claude Code 等の外部ツールが settings.json のキー順や整形を書き換えても
+	; 差分が出ないよう index 側をキー順ソート + 2 スペース整形で正規化する
+	; （worktree のファイルはそのまま。.gitattributes で対象を指定する）
+	clean = jq -S .
+
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f

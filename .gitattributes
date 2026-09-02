@@ -1,0 +1,3 @@
+# 外部ツール（Claude Code 本体など）が settings.json のキー順や整形を書き換えても
+# 実際の変更だけが差分に出るよう、index 側を jq で正規化する（filter は ~/.config/git/config）
+.claude/settings.json filter=jsonsort
