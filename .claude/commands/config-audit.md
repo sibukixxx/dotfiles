@@ -1,7 +1,7 @@
 ---
 description: "Claude Code 設定（skills / commands / agents / hooks / rules）の棚卸し。使用実績と有効性を調べて削除・統合候補を提案する。四半期〜半年に1回"
 argument-hint: "[--days <N>]  既定 180"
-allowed-tools: ["Read", "Glob", "Grep", "Bash(ls:*)", "Bash(find:*)", "Bash(grep:*)", "Bash(jq:*)", "Bash(wc:*)", "Bash(claude --version)", "Bash(git -C /Users/sibukixxx/workspace/sibukixxx/dotfiles log:*)"]
+allowed-tools: ["Read", "Glob", "Grep", "Bash(ls:*)", "Bash(find:*)", "Bash(grep:*)", "Bash(jq:*)", "Bash(wc:*)", "Bash(claude --version)", "Bash(git log:*)"]
 ---
 
 # /config-audit - Claude Code 設定の棚卸し
@@ -11,7 +11,7 @@ allowed-tools: ["Read", "Glob", "Grep", "Bash(ls:*)", "Bash(find:*)", "Bash(grep
 
 ## 対象
 
-グローバル設定の正は `~/workspace/sibukixxx/dotfiles/.claude/`（`~/.claude/` はそこへの symlink）。
+グローバル設定の正は、この dotfiles リポジトリ内の `.claude/`（`~/.claude/` の管理対象ファイルから symlink）。
 
 | 種別 | 場所 |
 |------|------|

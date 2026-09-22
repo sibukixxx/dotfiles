@@ -168,9 +168,11 @@ brew bundle --file=~/dotfiles/Brewfile
 
 ---
 
-## Claude Code 統合
+## Claude Code / Codex 統合
 
-`.claude/` ディレクトリで Claude Code の開発ワークフローを管理。
+`.claude/` と `.codex/` を chezmoi の source directory で一元管理する。
+`chezmoi apply` 時の `run_onchange` スクリプトが管理対象だけをリンクし、認証情報、
+履歴、SQLite、キャッシュ、OAuth、プラグイン生成物などの実行時データは各マシンに残す。
 
 ### カスタムコマンド（15種）
 
@@ -210,6 +212,13 @@ brew bundle --file=~/dotfiles/Brewfile
 | `tdd.md` | t-wada 流 TDD（Red→Green→Refactor） |
 | `security.md` | OWASP Top 10 チェックリスト |
 | `ai-agent-o11y.md` | AI エージェントの Observability 設計 |
+
+### Codex
+
+`.codex/` では `AGENTS.md`、`config.default.toml`、エージェント、フック、ルール、
+ユーザースキルを管理する。`config.default.toml` は初回のみローカルの `config.toml` へコピーし、
+Codex が追記する端末固有状態は同期しない。`auth.json` やセッション履歴、`.system` スキルも管理しない。
+既存ファイルを切り替える際は削除せず `.bak`（重複時は連番）へ退避する。
 
 ---
 
@@ -360,6 +369,14 @@ dotfiles/
 │   └── rules/                 # コーディングルール
 │       ├── core/              # 共通（TDD, commit, security, o11y）
 │       └── backend/           # バックエンド（Go, Rust）
+│
+├── .codex/                    # Codex の宣言的設定
+│   ├── AGENTS.md              # グローバル指示
+│   ├── config.default.toml    # 新規PC用のポータブルな Codex 初期設定
+│   ├── agents/                # サブエージェント定義
+│   ├── hooks/                 # フック実装
+│   ├── rules/                 # 実行ルール
+│   └── skills/                # ユーザー管理スキル（.system を除外）
 │
 ├── .github/workflows/         # CI/CD
 │   ├── ci.yml                 # ShellCheck, lint, Brewfile 検証
@@ -643,7 +660,7 @@ home.packages = with pkgs; [
 ];
 
 # 適用
-home-manager switch
+home-manager switch --impure --flake .#current
 ```
 
 ---
@@ -672,7 +689,7 @@ chezmoi の初期セットアップ時に、GitHub の全リポジトリを `~/w
 
 ```
 セットアップ時のプロンプト:
-GitHub username? sibukixxx
+GitHub username? yourusername
 Clone all GitHub repositories to ~/workspace? (y/n) y
 ```
 
@@ -680,7 +697,7 @@ Clone all GitHub repositories to ~/workspace? (y/n) y
 ```
 ~/workspace/
 └── github.com/
-    └── sibukixxx/
+    └── yourusername/
         ├── dotfiles/
         ├── project-a/
         └── project-b/
@@ -690,10 +707,10 @@ Clone all GitHub repositories to ~/workspace? (y/n) y
 
 ```bash
 # 全リポジトリをクローン
-clone-all-repos sibukixxx
+clone-all-repos yourusername
 
 # 個別にクローン
-ghq get github.com/sibukixxx/repo-name
+ghq get github.com/yourusername/repo-name
 ```
 
 ### リポジトリへのアクセス

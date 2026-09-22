@@ -14,6 +14,20 @@ NC='\033[0m' # No Color
 CLAUDE_DIR="$HOME/.claude"
 DOTFILES_CLAUDE="$(cd "$(dirname "$0")" && pwd)"
 
+# Older installations linked ~/.claude to a separate dotfiles clone. Replace
+# that root link with a real runtime directory so only the explicit config
+# paths below are managed and caches/history remain local to this machine.
+if [ -L "$CLAUDE_DIR" ]; then
+    CLAUDE_BACKUP="${CLAUDE_DIR}.bak"
+    CLAUDE_BACKUP_SUFFIX=1
+    while [ -e "$CLAUDE_BACKUP" ] || [ -L "$CLAUDE_BACKUP" ]; do
+        CLAUDE_BACKUP="${CLAUDE_DIR}.bak.${CLAUDE_BACKUP_SUFFIX}"
+        CLAUDE_BACKUP_SUFFIX=$((CLAUDE_BACKUP_SUFFIX + 1))
+    done
+    mv "$CLAUDE_DIR" "$CLAUDE_BACKUP"
+    echo "Backed up legacy Claude link to $CLAUDE_BACKUP"
+fi
+
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  Claude Code Configuration Setup${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

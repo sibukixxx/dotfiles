@@ -1,6 +1,12 @@
+{{- if or .name .email }}
 [user]
-	name = sibukixxx
-	email = sibukixxx@gmail.com
+{{- if .name }}
+	name = {{ .name | quote }}
+{{- end }}
+{{- if .email }}
+	email = {{ .email | quote }}
+{{- end }}
+{{- end }}
 
 [core]
 	excludesfile = ~/.config/git/ignore
@@ -39,8 +45,10 @@
 	interactive = auto
 	grep = auto
 
-[url "git@github.com:sibukixxx/"]
+{{- if .githubUser }}
+[url "git@github.com:{{ .githubUser }}/"]
 	insteadof = gh:
+{{- end }}
 
 [commit]
 	template = ~/.config/git/message

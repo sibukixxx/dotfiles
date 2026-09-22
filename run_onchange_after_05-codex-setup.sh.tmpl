@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Codex configuration setup
+# Runs automatically when .codex/install.sh changes
+# install.sh hash: {{ include ".codex/install.sh" | sha256sum }}
+
+set -euo pipefail
+
+AI_CONFIG_SOURCE_DIR="{{ .chezmoi.sourceDir }}" \
+    bash "{{ .chezmoi.sourceDir }}/.codex/install.sh"

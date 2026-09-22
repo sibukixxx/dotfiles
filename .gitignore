@@ -10,6 +10,21 @@
 !.claude/hooks/
 !.claude/skills/
 
+# Codex - keep declarative configuration only. Runtime state, credentials,
+# caches, plugin payloads, and session databases must never enter git.
+.codex/*
+!.codex/AGENTS.md
+!.codex/config.default.toml
+!.codex/hooks.json
+!.codex/install.sh
+!.codex/agents/
+!.codex/hooks/
+!.codex/rules/
+!.codex/skills/
+.codex/skills/.system/
+.codex/**/__pycache__/
+*.pyc
+
 # AI rules - generated files are not tracked
 ai-rules/generated/
 

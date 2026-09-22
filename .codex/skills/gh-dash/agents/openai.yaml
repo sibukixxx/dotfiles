@@ -1,0 +1,4 @@
+interface:
+  display_name: "gh dash"
+  short_description: "gh dashの導入・設定・PR/Issue運用を支援"
+  default_prompt: "Use $gh-dash to set up or improve my gh dash workflow."

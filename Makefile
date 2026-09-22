@@ -1,4 +1,4 @@
-.PHONY: all bootstrap update verify packages macos-defaults edit diff lint lint-shell lint-yaml lint-toml lint-unicode ai-rules clean help
+.PHONY: all bootstrap update verify test packages macos-defaults edit diff lint lint-shell lint-yaml lint-toml lint-unicode ai-rules clean help
 
 # OS検出
 UNAME := $(shell uname -s)
@@ -20,6 +20,7 @@ help:
 	@echo "  make bootstrap  - 初回セットアップ (chezmoi init + apply)"
 	@echo "  make update     - dotfiles更新 (chezmoi update)"
 	@echo "  make verify     - セットアップ検証"
+	@echo "  make test       - dotfiles の自動テスト"
 	@echo "  make packages   - パッケージ同期 (brew bundle / home-manager)"
 	@echo "  make macos-defaults - macOS システム設定を適用"
 	@echo ""
@@ -70,6 +71,9 @@ verify:
 		echo "先に 'make bootstrap' を実行してください"; \
 		exit 1; \
 	fi
+
+test:
+	@bash tests/ai-config-setup.test.sh
 
 packages:
 	@echo "==> Syncing packages..."

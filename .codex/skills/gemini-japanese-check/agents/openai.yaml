@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gemini 日本語チェック"
+  short_description: "Gemini 3.8 Flashで成果物の日本語だけを校正"
+  default_prompt: "Use $gemini-japanese-check to review and improve only the Japanese text in this deliverable."

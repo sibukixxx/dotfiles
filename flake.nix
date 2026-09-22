@@ -1,5 +1,5 @@
 {
-  description = "sibukixxx dotfiles - Home Manager configuration via Nix Flakes";
+  description = "Portable Home Manager configuration via Nix Flakes";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -22,6 +22,17 @@
 
       # 各システムで関数を実行するヘルパー
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+
+      # `--impure` で実行し、利用中のアカウント情報を環境から取得する。
+      # これによりユーザー名やホームパスをリポジトリへ固定しない。
+      requireEnv = name:
+        let value = builtins.getEnv name;
+        in if value == ""
+        then throw "${name} is required; run Home Manager with --impure"
+        else value;
+      currentUsername = requireEnv "USER";
+      currentHomeDirectory = requireEnv "HOME";
+      currentSystem = builtins.currentSystem;
 
       # Home Manager 設定を生成する関数
       mkHome = { system, username, homeDirectory ? null }:
@@ -49,38 +60,13 @@
       # Home Manager configurations
       # =======================================================================
       # Usage:
-      #   home-manager switch --flake .
-      #   home-manager switch --flake .#aarch64-darwin  (explicit system)
+      #   home-manager switch --impure --flake .#current
       # =======================================================================
       homeConfigurations = {
-        # macOS Apple Silicon (default for most users)
-        "aarch64-darwin" = mkHome {
-          system = "aarch64-darwin";
-          username = "sibukixxx";
-        };
-
-        # macOS Intel
-        "x86_64-darwin" = mkHome {
-          system = "x86_64-darwin";
-          username = "sibukixxx";
-        };
-
-        # Linux x86_64 (WSL / native)
-        "x86_64-linux" = mkHome {
-          system = "x86_64-linux";
-          username = "sibukixxx";
-        };
-
-        # Linux ARM64
-        "aarch64-linux" = mkHome {
-          system = "aarch64-linux";
-          username = "sibukixxx";
-        };
-
-        # ユーザー名でのアクセス用エイリアス (home-manager switch --flake . で使用)
-        "sibukixxx" = mkHome {
-          system = "aarch64-darwin";
-          username = "sibukixxx";
+        current = mkHome {
+          system = currentSystem;
+          username = currentUsername;
+          homeDirectory = currentHomeDirectory;
         };
       };
 

@@ -40,3 +40,9 @@ nix/
 .vim/dein/
 .local/share/sheldon/
 .cache/
+
+# AI configuration is installed by the run_onchange scripts. Ignoring the
+# source directories here prevents chezmoi from also copying runtime state or
+# bypassing the installers' backup and per-machine state handling.
+.claude/
+.codex/
