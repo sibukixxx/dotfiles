@@ -26,6 +26,8 @@ cache/
 
 # Claude Code
 **/.claude/settings.local.json
+# Local AI working docs (plans/progress) kept outside git in every repo
+z-ai/
 
 # Secrets / local env
 .env
