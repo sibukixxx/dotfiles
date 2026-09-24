@@ -38,6 +38,12 @@ if [ -f "$HUSKY_HOOK" ] && [ -x "$HUSKY_HOOK" ]; then
     "$HUSKY_HOOK" "$@"
 fi
 
+# `make hooks` などがリポジトリにコミットする .githooks/pre-commit も実行する
+REPO_HOOK="$(git rev-parse --show-toplevel 2>/dev/null)/.githooks/pre-commit"
+if [ -x "$REPO_HOOK" ]; then
+    "$REPO_HOOK" "$@"
+fi
+
 # ---------------------------------------------------------------------------
 # GlassWorm防御: 不可視Unicode文字の検出
 # ---------------------------------------------------------------------------
