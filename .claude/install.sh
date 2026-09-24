@@ -107,6 +107,25 @@ install_bun() {
     fi
 }
 
+# bun installed from bun.sh lives in ~/.bun/bin, which is not on PATH inside
+# chezmoi run scripts. Make it visible so an existing install is not repeated.
+export PATH="$HOME/.bun/bin:$PATH"
+
+# settings.json calls ~/.bun/bin/bun by fixed path. When bun comes from Homebrew,
+# nix or another manager, expose it under that path so hooks work on every machine.
+ensure_bun_path() {
+    if [ -x "$HOME/.bun/bin/bun" ]; then
+        return 0
+    fi
+    local found
+    found="$(command -v bun 2>/dev/null || true)"
+    if [ -n "$found" ]; then
+        mkdir -p "$HOME/.bun/bin"
+        ln -sf "$found" "$HOME/.bun/bin/bun"
+        echo -e "${GREEN}✓ Linked ~/.bun/bin/bun -> $found (hooks use this fixed path)${NC}"
+    fi
+}
+
 # Check dependencies
 echo -e "\n${BLUE}Checking dependencies...${NC}"
 has_errors=0
@@ -115,9 +134,11 @@ has_errors=0
 if ! check_tool "bun" "required"; then
     install_bun || has_errors=1
 fi
+ensure_bun_path
 
-# Optional tools (for hooks)
-check_tool "jq" "optional"
+# jq is required by the PreToolUse validators (validate-bash.sh / validate-read.sh);
+# without it they silently allow everything.
+check_tool "jq" "required" || has_errors=1
 check_tool "git" "optional"
 
 # Language-specific formatters (optional)

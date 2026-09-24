@@ -46,3 +46,14 @@ nix/
 # bypassing the installers' backup and per-machine state handling.
 .claude/
 .codex/
+
+# Repository-only files (docs, tests, nix flake, issue notes). These describe the
+# dotfiles repo itself and must never be deployed into $HOME: a stray ~/CLAUDE.md
+# or ~/AGENTS.md would be picked up as parent instructions by every project.
+AGENTS.md
+CLAUDE.md
+tests/
+issues/
+ai-rules/
+flake.nix
+flake.lock

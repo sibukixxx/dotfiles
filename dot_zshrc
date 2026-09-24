@@ -1,3 +1,8 @@
+    if [[ -d $PNPM_HOME/bin ]]; then
+      path=($PNPM_HOME/bin $path)
+    else
+      path=($PNPM_HOME $path)
+    fi
 # =============================================================================
 # Environment Variables
 # =============================================================================
@@ -48,6 +53,27 @@ fi
 
 # Node.js (nodebrew)
 [[ -d $HOME/.nodebrew/current/bin ]] && path=($HOME/.nodebrew/current/bin $path)
+
+# bun (~/.claude/install.sh が bun.sh 経由で入れる。Claude hooks は ~/.bun/bin/bun を固定パスで呼ぶ)
+if [[ -d $HOME/.bun/bin ]]; then
+  export BUN_INSTALL="$HOME/.bun"
+  path=($BUN_INSTALL/bin $path)
+  [[ -s $BUN_INSTALL/_bun ]] && source "$BUN_INSTALL/_bun"
+fi
+
+# pnpm standalone install (macOS: ~/Library/pnpm, Linux: ${XDG_DATA_HOME:-~/.local/share}/pnpm)
+for _pnpm_home in "$HOME/Library/pnpm" "${XDG_DATA_HOME:-$HOME/.local/share}/pnpm"; do
+  if [[ -d $_pnpm_home ]]; then
+    export PNPM_HOME="$_pnpm_home"
+    if [[ -d $PNPM_HOME/bin ]]; then
+      path=($PNPM_HOME/bin $path)
+    else
+      path=($PNPM_HOME $path)
+    fi
+    break
+  fi
+done
+unset _pnpm_home
 
 # pyenv
 if [[ -d $HOME/.pyenv ]]; then
