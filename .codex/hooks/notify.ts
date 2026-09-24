@@ -22,14 +22,32 @@ export function parseNotifyFlags(args: string[]): NotifyFlags {
   return values;
 }
 
+// macOS 標準の osascript で通知する (追加インストール不要)。
+// title / message は AppleScript のソースに埋め込まず argv で渡す (クォートによるインジェクション防止)
+export function buildNotificationArgs(title: string, message: string): string[] {
+  return [
+    "osascript",
+    "-e", "on run argv",
+    "-e", 'display notification (item 2 of argv) with title (item 1 of argv) sound name "default"',
+    "-e", "end run",
+    title,
+    message,
+  ];
+}
+
+// 通知は補助機能なので、失敗 (通知が OFF 等) しても hook をエラーにしない
+async function sendNotification(title: string, message: string): Promise<void> {
+  await $`${buildNotificationArgs(title, message)}`.nothrow().quiet();
+}
+
 // When called from Notification hooks
 export async function notify(input: Notification): Promise<void> {
-  await $`terminal-notifier -title ${input.title} -message ${input.message} -sound default`;
+  await sendNotification(input.title, input.message);
 }
 
 // When called from Stop hooks
 export async function notifyWhenStop(): Promise<void> {
-  await $`terminal-notifier -title "Claude Code" -message "Wait next action" -sound default`;
+  await sendNotification("Claude Code", "Wait next action");
 }
 
 export async function main(flags: NotifyFlags): Promise<void> {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { parseNotifyFlags } from "./notify.ts";
+import { buildNotificationArgs, parseNotifyFlags } from "./notify.ts";
 import type { Notification, NotifyFlags } from "./notify.ts";
 
 // ============================================
@@ -49,6 +49,26 @@ describe("parseNotifyFlags", () => {
   it("handles --type=value syntax", () => {
     const flags = parseNotifyFlags(["--type=notify"]);
     expect(flags.type).toBe("notify");
+  });
+});
+
+// ============================================
+// buildNotificationArgs
+// ============================================
+
+describe("buildNotificationArgs", () => {
+  it("builds osascript args passing title and message via argv", () => {
+    const args = buildNotificationArgs("Claude Code", "Wait next action");
+    expect(args[0]).toBe("osascript");
+    expect(args.slice(-2)).toEqual(["Claude Code", "Wait next action"]);
+  });
+
+  it("does not embed title or message in the AppleScript source when they contain quotes", () => {
+    const args = buildNotificationArgs('a"b', 'x" & do shell script "id');
+    const script = args.filter((_, i) => args[i - 1] === "-e").join("\n");
+    expect(script).not.toContain('a"b');
+    expect(script).not.toContain("do shell script");
+    expect(args.slice(-2)).toEqual(['a"b', 'x" & do shell script "id']);
   });
 });
 

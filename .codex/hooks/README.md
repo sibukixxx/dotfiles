@@ -179,6 +179,6 @@ Detects TypeScript and lint errors after file edits:
 
 ## Notify Hook
 
-The notify hook (`notify.ts`, requires `terminal-notifier`) sends desktop notifications when:
+The notify hook (`notify.ts`, uses the built-in macOS `osascript`; failures are ignored) sends desktop notifications when:
 - Claude Code stops execution (`Stop` event) — `--type stop`
 - Claude Code needs user attention (`Notification` event) — `--type notify`

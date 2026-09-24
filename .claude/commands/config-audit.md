@@ -30,7 +30,7 @@ allowed-tools: ["Read", "Glob", "Grep", "Bash(ls:*)", "Bash(find:*)", "Bash(grep
    - 出現ゼロのものを「未使用候補」として列挙する
 2. **壊れているものを探す**
    - `settings.json` の `hooks[].command` が指すファイルが存在し実行権限があるか
-   - `hooks` が参照するコマンド（bun / jq / terminal-notifier 等）が PATH にあるか
+   - `hooks` が参照するコマンド（bun / jq 等）が PATH にあるか
    - commands / agents の frontmatter が現在の Claude Code の書式（`claude --version` を確認）に合っているか
    - `.skill` の zip 残骸や `*.bak` など、参照されないファイル
 3. **重複・冗長を探す**
