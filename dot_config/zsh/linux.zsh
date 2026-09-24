@@ -8,20 +8,33 @@ if grep -qi microsoft /proc/version 2>/dev/null; then
 
   # WSL-specific settings
   # Access Windows home directory
-  export WIN_HOME="/mnt/c/Users/$(cmd.exe /c 'echo %USERNAME%' 2>/dev/null | tr -d '\r')"
+  # (プロファイルのフォルダ名はユーザー名と一致しないことがあるため %USERPROFILE% から解決)
+  if command -v cmd.exe &>/dev/null && command -v wslpath &>/dev/null; then
+    export WIN_HOME="$(wslpath "$(cmd.exe /c 'echo %USERPROFILE%' 2>/dev/null | tr -d '\r')" 2>/dev/null)"
+  fi
 
   # Open files/URLs with Windows default application
-  alias open='wslview'
-  alias xdg-open='wslview'
-
-  # Clipboard integration (requires win32yank or similar)
-  if command -v win32yank.exe &>/dev/null; then
-    alias pbcopy='win32yank.exe -i'
-    alias pbpaste='win32yank.exe -o'
-  elif command -v clip.exe &>/dev/null; then
-    alias pbcopy='clip.exe'
-    alias pbpaste='powershell.exe -command "Get-Clipboard"'
+  if command -v wslview &>/dev/null; then
+    alias open='wslview'
+    alias xdg-open='wslview'
+    [[ -z "$BROWSER" ]] && export BROWSER=wslview
+  elif command -v explorer.exe &>/dev/null; then
+    function open() {
+      # explorer.exe は Windows パスを要求する。URL はそのまま渡す
+      if [[ -e "$1" ]]; then
+        explorer.exe "$(wslpath -w "$1")"
+      else
+        explorer.exe "$1"
+      fi
+      return 0  # explorer.exe は成功時も終了コード 1 を返す
+    }
   fi
+
+  # Clipboard integration
+  # win32yank.exe / clip.exe (UTF-16LE 変換で日本語対応) / powershell.exe の選択は
+  # ~/.local/bin/clipcopy / clippaste が行う (tmux のコピーも同じスクリプトを使う)
+  alias pbcopy='clipcopy'
+  alias pbpaste='clippaste'
 
   # Explorer integration
   alias explorer='explorer.exe'

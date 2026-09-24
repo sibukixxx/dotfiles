@@ -6,8 +6,14 @@
 # =============================================================================
 # Environment Variables
 # =============================================================================
-export LANG=ja_JP.UTF-8
-export LC_CTYPE=ja_JP.UTF-8
+# ja_JP ロケールが生成されていない環境 (素の WSL / Linux 等) では C.UTF-8 にフォールバック
+if locale -a 2>/dev/null | grep -qiE '^ja_JP\.utf-?8$'; then
+  export LANG=ja_JP.UTF-8
+  export LC_CTYPE=ja_JP.UTF-8
+else
+  export LANG=C.UTF-8
+  export LC_CTYPE=C.UTF-8
+fi
 export DOTFILES=$HOME/dotfiles
 export XDG_CONFIG_HOME=$HOME/.config
 [[ -f ${XDG_CONFIG_HOME}/zsh/tool-manifest.sh ]] && source ${XDG_CONFIG_HOME}/zsh/tool-manifest.sh

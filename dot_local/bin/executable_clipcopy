@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# 標準入力をシステムのクリップボードへコピーする (macOS / WSL2 / Wayland / X11)
+# usage: echo foo | clipcopy
+#        clipcopy file.txt
+
+is_wsl() {
+  [ -n "${WSL_DISTRO_NAME:-}" ] || grep -qi microsoft /proc/version 2>/dev/null
+}
+
+has() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+copy() {
+  if has pbcopy; then
+    pbcopy
+  elif is_wsl && has win32yank.exe; then
+    win32yank.exe -i --crlf
+  elif is_wsl && has clip.exe; then
+    # clip.exe は UTF-8 を正しく扱えないため BOM 付き UTF-16LE に変換して渡す
+    if has iconv; then
+      { printf '\377\376'; iconv -f UTF-8 -t UTF-16LE; } | clip.exe
+    else
+      clip.exe
+    fi
+  elif [ -n "${WAYLAND_DISPLAY:-}" ] && has wl-copy; then
+    wl-copy
+  elif [ -n "${DISPLAY:-}" ] && has xclip; then
+    xclip -in -selection clipboard
+  elif [ -n "${DISPLAY:-}" ] && has xsel; then
+    xsel --clipboard --input
+  else
+    echo "clipcopy: クリップボードコマンドが見つかりません" 1>&2
+    return 1
+  fi
+}
+
+if [ $# -gt 0 ]; then
+  cat "$@" | copy
+else
+  copy
+fi

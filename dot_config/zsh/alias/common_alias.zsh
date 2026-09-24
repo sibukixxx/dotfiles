@@ -10,7 +10,12 @@ if command -v eza &>/dev/null; then
   alias lt='eza --tree --icons --level=2'
   alias lta='eza --tree --icons -a --level=2'
 else
-  alias ls='ls -G'
+  # BSD ls (macOS) と GNU ls (Linux / WSL) で色付けオプションが異なる (GNU の -G はグループ非表示)
+  if ls --color=auto -d . &>/dev/null; then
+    alias ls='ls --color=auto'
+  else
+    alias ls='ls -G'
+  fi
   alias ll='ls -la'
   alias la='ls -A'
 fi

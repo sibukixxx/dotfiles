@@ -1,0 +1,30 @@
+#!/bin/sh
+#
+# システムのクリップボードの内容を標準出力へ書き出す (macOS / WSL2 / Wayland / X11)
+# usage: clippaste > file.txt
+
+is_wsl() {
+  [ -n "${WSL_DISTRO_NAME:-}" ] || grep -qi microsoft /proc/version 2>/dev/null
+}
+
+has() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+if has pbpaste; then
+  pbpaste
+elif is_wsl && has win32yank.exe; then
+  win32yank.exe -o --lf
+elif is_wsl && has powershell.exe; then
+  powershell.exe -NoProfile -NonInteractive -Command \
+    '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-Clipboard -Raw' | tr -d '\r'
+elif [ -n "${WAYLAND_DISPLAY:-}" ] && has wl-paste; then
+  wl-paste --no-newline
+elif [ -n "${DISPLAY:-}" ] && has xclip; then
+  xclip -out -selection clipboard
+elif [ -n "${DISPLAY:-}" ] && has xsel; then
+  xsel --clipboard --output
+else
+  echo "clippaste: クリップボードコマンドが見つかりません" 1>&2
+  exit 1
+fi
