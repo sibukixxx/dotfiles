@@ -51,11 +51,13 @@ set shiftwidth=4
 
 "setting rust
 let g:rustfmt_autosave = 1
-let g:rustfmt_command = '$HOME/.cargo/bin/rustfmt'
+let g:rustfmt_command = expand('~/.cargo/bin/rustfmt')
 "setting racer
 set hidden
-let g:racer_cmd = '$HOME/.cargo/bin/racer'
-let $RUST_SRC_PATH="/usr/local/src/rustc-1.5.0/src"
+let g:racer_cmd = expand('~/.cargo/bin/racer')
+if executable('rustc')
+  let $RUST_SRC_PATH = trim(system('rustc --print sysroot')) . '/lib/rustlib/src/rust/library'
+endif
 
 runtime! userautoload/*.vim
 runtime! userautoload/init/*.vim
