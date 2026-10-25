@@ -43,3 +43,8 @@ Personal development-environment source repository. Files under `.claude/` are d
 - Tracked config parses and changed scripts pass their checks.
 - Installation remains non-destructive.
 - No private machine secret/path was newly embedded.
+
+
+- When a repository's documentation and its existing code disagree, follow the conventions used in the existing code, and in your final reply point out each inconsistency you found between the documentation and the code.
+
+- 不要なセカンダリラベルや説明を避ける。レイアウトに説明させる。
