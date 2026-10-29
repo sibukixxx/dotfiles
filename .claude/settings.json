@@ -3,15 +3,35 @@
   "agentPushNotifEnabled": true,
   "effortLevel": "xhigh",
   "enabledPlugins": {
+    "cloudflare@cloudflare": true,
     "document-skills@anthropic-agent-skills": true,
     "example-skills@anthropic-agent-skills": true,
     "go-lsp@claude-plugins-official": true,
-    "swift-lsp@claude-plugins-official": true
+    "i-have-adhd@i-have-adhd": true,
+    "swift-lsp@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
     "claude-code-plugins": {
       "source": {
         "repo": "anthropics/claude-code",
+        "source": "github"
+      }
+    },
+    "cloudflare": {
+      "source": {
+        "repo": "cloudflare/skills",
+        "source": "github"
+      }
+    },
+    "i-have-adhd": {
+      "source": {
+        "repo": "ayghri/i-have-adhd",
+        "source": "github"
+      }
+    },
+    "openai-codex": {
+      "source": {
+        "repo": "openai/codex-plugin-cc",
         "source": "github"
       }
     }
@@ -304,7 +324,15 @@
       }
     ]
   },
-  "model": "fable[1m]",
+  "model": "fable",
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "autoCompactWindow": 400000
+    },
+    "claude-opus-5-5": {
+      "autoCompactWindow": 400000
+    }
+  },
   "permissions": {
     "allow": [
       "Bash(docker-compose:*)",
@@ -333,6 +361,7 @@
     ],
     "defaultMode": "auto",
     "deny": [
+      "Bash(sudo:*)",
       "Bash(rm -rf *)",
       "Bash(curl *)",
       "Bash(wget *)",
@@ -345,11 +374,53 @@
       "Read(**/credentials.json)"
     ]
   },
+  "showThinkingSummaries": true,
+  "skillOverrides": {
+    "ai-agent-o11y": "off",
+    "ai-workflow-automation": "off",
+    "audit-assertion-improvement": "off",
+    "autonomous-improve-loop": "off",
+    "breakdown": "off",
+    "business-to-requirements": "off",
+    "cli-implementation": "off",
+    "cloudwatch-report": "off",
+    "cmux-ecosystem": "off",
+    "csv-validator": "off",
+    "database-migration": "off",
+    "e2e-test-impl": "off",
+    "export-gdoc": "off",
+    "fake-type-safety": "off",
+    "feedback": "off",
+    "follow-up": "off",
+    "gov-system-modernization": "off",
+    "improve-english-prompt": "off",
+    "ios-screenshot-skill": "off",
+    "legal-docs": "off",
+    "migration-review": "off",
+    "mtg-prep": "off",
+    "org-knowledge": "off",
+    "persistence-code-review": "off",
+    "pm-folder-system": "off",
+    "pm-layer-separation": "off",
+    "promo-video": "off",
+    "react-class-to-function": "off",
+    "research": "off",
+    "retro": "off",
+    "security-audit": "off",
+    "sentry-batch-fix": "off",
+    "sqlite-to-xlsx": "off",
+    "task-diary": "off",
+    "token-optimization-toolkit": "off",
+    "translate-commits": "off",
+    "trend-macro": "off",
+    "xcode-mcp-hybrid": "off"
+  },
   "skipAutoPermissionPrompt": true,
   "skipDangerousModePermissionPrompt": true,
   "statusLine": {
     "command": "~/.claude/hooks/statusline.sh",
     "type": "command"
   },
+  "tui": "fullscreen",
   "viewMode": "focus"
 }
