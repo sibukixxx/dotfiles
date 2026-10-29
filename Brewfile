@@ -47,7 +47,8 @@ brew "readline"
 tap "manaflow-ai/cmux"
 cask "cmux"              # Agent-first terminal workspace manager
 cask "ghostty"           # Modern GPU-accelerated terminal (primary)
-cask "alacritty"         # GPU-accelerated terminal emulator (backup)
+# Homebrew が 2026-09-01 に Gatekeeper 非対応で無効化。brew bundle 全体が失敗するため外す（インストール済みの 0.16.1 はそのまま使える）
+# cask "alacritty"         # GPU-accelerated terminal emulator (backup)
 
 # =============================================================================
 # Browsers
