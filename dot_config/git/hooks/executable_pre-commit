@@ -51,7 +51,7 @@ fi
 # テキストファイルのみを対象にするための拡張子リスト (バイナリ除外)
 BINARY_EXTENSIONS='(png|jpg|jpeg|gif|ico|bmp|webp|svg|woff|woff2|ttf|eot|otf|mp3|mp4|avi|mov|pdf|zip|gz|tar|jar|war|class|pyc|pyo|o|so|dylib|a|lib|dll|exe|bin|dat|db|sqlite)'
 
-# 検出するUnicode文字のパターン (grep -P 用)
+# 検出するUnicode文字のパターン (perl 正規表現。macOS 標準の BSD grep は -P 非対応)
 # 各文字の意味をコメントで記載
 INVISIBLE_PATTERN='[\x{200B}\x{200C}\x{200D}\x{200E}\x{200F}\x{202A}\x{202B}\x{202C}\x{202D}\x{202E}\x{00AD}\x{061C}\x{180E}\x{2060}\x{2061}\x{2062}\x{2063}\x{2064}\x{2066}\x{2067}\x{2068}\x{2069}\x{206A}\x{206B}\x{206C}\x{206D}\x{206E}\x{206F}\x{FEFF}\x{2028}\x{2029}]'
 
@@ -86,8 +86,8 @@ while IFS= read -r file; do
     fi
 
     # 不可視文字の検出
-    matches=$(echo "$staged_content" | grep -nP "$INVISIBLE_PATTERN" 2>/dev/null || true)
-    tag_matches=$(echo "$staged_content" | grep -nP "$TAG_PATTERN" 2>/dev/null || true)
+    matches=$(printf '%s\n' "$staged_content" | perl -CSD -ne 'print "$.:$_" if /'"$INVISIBLE_PATTERN"'/' 2>/dev/null || true)
+    tag_matches=$(printf '%s\n' "$staged_content" | perl -CSD -ne 'print "$.:$_" if /'"$TAG_PATTERN"'/' 2>/dev/null || true)
 
     if [ -n "$matches" ] || [ -n "$tag_matches" ]; then
         if [ "$found_issues" -eq 0 ]; then
