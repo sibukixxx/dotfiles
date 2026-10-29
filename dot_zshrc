@@ -57,9 +57,6 @@ if command -v go &>/dev/null; then
   fi
 fi
 
-# Node.js (nodebrew)
-[[ -d $HOME/.nodebrew/current/bin ]] && path=($HOME/.nodebrew/current/bin $path)
-
 # bun (~/.claude/install.sh が bun.sh 経由で入れる。Claude hooks は ~/.bun/bin/bun を固定パスで呼ぶ)
 if [[ -d $HOME/.bun/bin ]]; then
   export BUN_INSTALL="$HOME/.bun"
@@ -99,7 +96,8 @@ elif [[ -d /opt/homebrew/Caskroom/google-cloud-sdk ]]; then
   [[ -n "$gcloud_bin" ]] && path=($gcloud_bin $path)
 fi
 
-# NVM
+# Node.js: バージョン管理は nvm に一本化（node / npm / pnpm はすべて nvm 管理下）。
+# Homebrew の node は agent-browser の依存として入るだけで、PATH 上は nvm が優先される
 export NVM_DIR="$HOME/.config/nvm"
 [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
 

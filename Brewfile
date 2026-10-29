@@ -19,7 +19,6 @@ brew "tree-sitter-cli"   # Neovim の nvim-treesitter (main) が parser のビ�
 # Development tools (platform-specific or version-managed)
 brew "go"                # Go (brew の方がバージョン管理しやすい)
 brew "pyenv"             # Python version manager
-brew "nodebrew"          # Node.js version manager
 brew "fastlane"          # iOS automation
 brew "gogcli"            # GOG.com game library CLI
 
