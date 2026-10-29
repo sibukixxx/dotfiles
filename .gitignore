@@ -30,3 +30,6 @@ ai-rules/generated/
 # Local zsh runtime files (do not commit)
 .zsh_history
 .zsh_sessions/
+
+# claude.ai から同期される skills のキャッシュ (端末ごとの実行時状態)
+.claude/skills/synced/
