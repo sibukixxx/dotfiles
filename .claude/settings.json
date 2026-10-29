@@ -324,7 +324,7 @@
       }
     ]
   },
-  "model": "fable",
+  "model": "opus",
   "modelSettings": {
     "claude-fable-5-1": {
       "autoCompactWindow": 400000
