@@ -14,7 +14,6 @@ else
   export LANG=C.UTF-8
   export LC_CTYPE=C.UTF-8
 fi
-export DOTFILES=$HOME/dotfiles
 export XDG_CONFIG_HOME=$HOME/.config
 [[ -f ${XDG_CONFIG_HOME}/zsh/tool-manifest.sh ]] && source ${XDG_CONFIG_HOME}/zsh/tool-manifest.sh
 
@@ -46,22 +45,16 @@ elif [[ -d /usr/local/Homebrew ]]; then
   eval "$(/usr/local/bin/brew shellenv 2>/dev/null)"
 fi
 
-# Go
+# Go（GOROOT は go 本体が自分で解決する。固定すると go の更新時に壊れるので設定しない）
 if command -v go &>/dev/null; then
   export GOPATH=$HOME/godev
   path=($GOPATH/bin $path)
-  if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
-    export GOROOT="$(brew --prefix go)/libexec"
-  elif [[ -d /usr/local/go ]]; then
-    export GOROOT=/usr/local/go
-  fi
 fi
 
 # bun (~/.claude/install.sh が bun.sh 経由で入れる。Claude hooks は ~/.bun/bin/bun を固定パスで呼ぶ)
 if [[ -d $HOME/.bun/bin ]]; then
   export BUN_INSTALL="$HOME/.bun"
   path=($BUN_INSTALL/bin $path)
-  [[ -s $BUN_INSTALL/_bun ]] && source "$BUN_INSTALL/_bun"
 fi
 
 # pnpm standalone install (macOS: ~/Library/pnpm, Linux: ${XDG_DATA_HOME:-~/.local/share}/pnpm)
@@ -78,13 +71,6 @@ for _pnpm_home in "$HOME/Library/pnpm" "${XDG_DATA_HOME:-$HOME/.local/share}/pnp
 done
 unset _pnpm_home
 
-# pyenv
-if [[ -d $HOME/.pyenv ]]; then
-  export PYENV_ROOT="$HOME/.pyenv"
-  path=($PYENV_ROOT/bin $path)
-  eval "$(pyenv init -)" 2>/dev/null
-fi
-
 
 # Google Cloud CLI
 if [[ -d /opt/homebrew/Caskroom/gcloud-cli ]]; then
@@ -99,7 +85,22 @@ fi
 # Node.js: バージョン管理は nvm に一本化（node / npm / pnpm はすべて nvm 管理下）。
 # Homebrew の node は agent-browser の依存として入るだけで、PATH 上は nvm が優先される
 export NVM_DIR="$HOME/.config/nvm"
-[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+# nvm.sh の読み込みは約 0.9 秒かかるので遅延させる。default の node だけ先に PATH へ載せ、
+# nvm コマンドを初めて使ったときに nvm.sh を読む
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+  _nvm_default="$(<"$NVM_DIR/alias/default" 2>/dev/null)"
+  case "$_nvm_default" in
+    ""|node|stable|lts/*) _nvm_bins=("$NVM_DIR"/versions/node/v*/bin(N/nOn)) ;;
+    *) _nvm_bins=("$NVM_DIR"/versions/node/v${_nvm_default#v}*/bin(N/nOn)) ;;
+  esac
+  (( ${#_nvm_bins} )) && path=($_nvm_bins[1] $path)
+  nvm() {
+    unfunction nvm
+    source "$NVM_DIR/nvm.sh" --no-use
+    nvm "$@"
+  }
+  unset _nvm_default _nvm_bins
+fi
 
 # Nix (macOS / Linux / WSL)
 [[ -f /etc/profile.d/nix.sh ]] && source /etc/profile.d/nix.sh
@@ -128,7 +129,16 @@ bindkey -e
 # =============================================================================
 fpath=(~/.zsh-completions $fpath)
 autoload -Uz compinit
-compinit -u
+# ダンプが 24 時間以内なら検査を省いて読み込む（毎回の再生成で約 0.2 秒かかるため）
+_zcompdump=(${ZDOTDIR:-$HOME}/.zcompdump(N.mh-24))
+if (( ${#_zcompdump} )); then
+  compinit -C -u
+else
+  compinit -u
+fi
+unset _zcompdump
+# bun の補完は compinit 未実行だと自前で compinit を走らせるので、compinit の後に読む
+[[ -s $HOME/.bun/_bun ]] && source "$HOME/.bun/_bun"
 
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 zstyle ':completion:*:default' menu select=1
