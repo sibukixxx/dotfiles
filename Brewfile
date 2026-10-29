@@ -14,6 +14,7 @@ brew "mas"
 brew "chezmoi"           # dotfiles manager (bootstrap 時に必要)
 brew "age"               # encryption for secrets
 brew "jq"                # JSON processor (Claude hooks validate-bash.sh / validate-read.sh が依存)
+brew "tree-sitter-cli"   # Neovim の nvim-treesitter (main) が parser のビルドに使う
 
 # Development tools (platform-specific or version-managed)
 brew "go"                # Go (brew の方がバージョン管理しやすい)

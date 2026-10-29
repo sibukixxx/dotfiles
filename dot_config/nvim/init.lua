@@ -1,7 +1,7 @@
 -- =========================
 -- Neovim 快適セット (macOS)
 -- - テーマ: tokyonight-moon（青弱め）
--- - LSP: 0.11 の新API互換シムで非推奨回避
+-- - LSP: Neovim 0.11+ の vim.lsp.config / vim.lsp.enable
 -- - LuaSnip: 正しい require 名で読込
 -- - プラグイン管理: lazy.nvim
 -- =========================
@@ -48,7 +48,7 @@ map("n", "<leader>.", "<cmd>Oil<CR>", { desc = "ディレクトリ編集(Oil)" }
 
 -- 4) lazy.nvim ブートストラップ
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
     "git","clone","--filter=blob:none",
     "https://github.com/folke/lazy.nvim.git","--branch=stable",lazypath
@@ -83,7 +83,8 @@ require("lazy").setup({
   { "nvim-telescope/telescope.nvim", branch = "0.1.x", dependencies = { "nvim-lua/plenary.nvim" } },
 
   -- Treesitter
-  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+  -- main ブランチは parser のビルドに tree-sitter-cli と C コンパイラが要る（Brewfile で導入）
+  { "nvim-treesitter/nvim-treesitter", branch = "main", lazy = false, build = ":TSUpdate" },
 
   -- LSP & ツール
   { "williamboman/mason.nvim" },
@@ -161,8 +162,10 @@ map("n", "<leader>fg", tb.live_grep,  { desc = "ripgrep 検索" })
 map("n", "<leader>fb", tb.buffers,    { desc = "バッファ一覧" })
 map("n", "<leader>fh", tb.help_tags,  { desc = "ヘルプ検索" })
 
--- 9) Treesitter (new API: highlight/indent are built-in since Neovim 0.10+)
-vim.treesitter.start = vim.treesitter.start or function() end
+-- 9) Treesitter（nvim-treesitter main: parser とクエリの導入だけを担い、ハイライトは Neovim 本体）
+local ts_langs = { "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline",
+  "javascript", "typescript", "tsx", "python", "json", "yaml", "bash" }
+require("nvim-treesitter").install(ts_langs)
 vim.api.nvim_create_autocmd("FileType", {
   callback = function(ev)
     if pcall(vim.treesitter.start, ev.buf) then
@@ -170,53 +173,33 @@ vim.api.nvim_create_autocmd("FileType", {
     end
   end,
 })
--- Install parsers via :TSInstall or uncomment below:
--- vim.api.nvim_create_autocmd("VimEnter", {
---   callback = function()
---     local ensure = { "lua","vim","vimdoc","javascript","typescript","tsx","python","json","yaml","markdown" }
---     require("nvim-treesitter.install").install(ensure)
---   end,
--- })
 
--- 10) Mason
+-- 10) LSP（Neovim 0.11+ の vim.lsp.config / vim.lsp.enable）
+-- サーバー定義は nvim-lspconfig の lsp/*.lua が提供し、ここでは差分だけを上書きする。
+-- mason-lspconfig は ensure_installed で導入し、導入済みサーバーを自動で vim.lsp.enable する
+local lsp_servers = { "lua_ls", "ts_ls", "pyright" }
+
+vim.lsp.config("*", { capabilities = require("cmp_nvim_lsp").default_capabilities() })
+vim.lsp.config("lua_ls", {
+  settings = { Lua = { diagnostics = { globals = { "vim" } }, workspace = { checkThirdParty = false } } },
+})
+
 require("mason").setup()
-require("mason-lspconfig").setup({
-  ensure_installed = { "lua_ls", "tsserver", "pyright" },
-  automatic_installation = true,
+require("mason-lspconfig").setup({ ensure_installed = lsp_servers })
+
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(ev)
+    local b = function(mode, lhs, rhs, desc)
+      vim.keymap.set(mode, lhs, rhs, { buffer = ev.buf, desc = desc })
+    end
+    b("n", "gd", vim.lsp.buf.definition, "定義へ")
+    b("n", "gr", vim.lsp.buf.references, "参照")
+    b("n", "K",  vim.lsp.buf.hover, "ホバー")
+    b("n", "<leader>rn", vim.lsp.buf.rename, "リネーム")
+    b("n", "<leader>ca", vim.lsp.buf.code_action, "コードアクション")
+    b("n", "<leader>f", function() vim.lsp.buf.format({ async = true }) end, "整形")
+  end,
 })
-
--- 11) LSP（0.11互換シム：vim.lsp.config/旧lspconfig両対応）
-local has_new = (vim.lsp and vim.lsp.config) and true or false
-local ok_old, lspconfig = pcall(require, "lspconfig")
-local function lsp_setup(server, opts)
-  if has_new and vim.lsp.config[server] and vim.lsp.config[server].setup then
-    vim.lsp.config[server].setup(opts)
-  else
-    vim.schedule(function()
-      vim.notify(("LSP server '%s' not found"):format(server), vim.log.levels.WARN)
-    end)
-  end
-end
-
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
-local on_attach = function(_, bufnr)
-  local b = function(mode, lhs, rhs, desc)
-    vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
-  end
-  b("n", "gd", vim.lsp.buf.definition, "定義へ")
-  b("n", "gr", vim.lsp.buf.references, "参照")
-  b("n", "K",  vim.lsp.buf.hover, "ホバー")
-  b("n", "<leader>rn", vim.lsp.buf.rename, "リネーム")
-  b("n", "<leader>ca", vim.lsp.buf.code_action, "コードアクション")
-  b("n", "<leader>f", function() vim.lsp.buf.format({ async = true }) end, "整形")
-end
-
-lsp_setup("lua_ls", {
-  capabilities = capabilities, on_attach = on_attach,
-  settings = { Lua = { diagnostics = { globals = { "vim" } }, workspace = { checkThirdParty = false } } }
-})
-lsp_setup("tsserver", { capabilities = capabilities, on_attach = on_attach })
-lsp_setup("pyright",  { capabilities = capabilities, on_attach = on_attach })
 
 -- 12) 補完（nvim-cmp + LuaSnip）
 local cmp = require("cmp")
@@ -259,14 +242,12 @@ require("conform").setup({
     python = { "ruff_format", "black" },
   },
 })
-map("n", "<leader>p", function() require("conform").format({ async = true, lsp_fallback = true }) end, { desc = "Format" })
+map("n", "<leader>p", function() require("conform").format({ async = true, lsp_format = "fallback" }) end, { desc = "Format" })
 
 -- 14) 便利
 map("n", "<leader>s", "<cmd>write<CR>", { desc = "保存" })
 map("n", "<leader>x", "<cmd>bdelete<CR>", { desc = "バッファ閉じる" })
 map("n", "<leader>tt", "<cmd>tabnew<CR>", { desc = "新規タブ" })
 
--- 起動メッセージ抑制
-vim.schedule(function() vim.notify = function() end end)
 
 
