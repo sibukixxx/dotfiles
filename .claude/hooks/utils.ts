@@ -82,13 +82,20 @@ const DEFAULT_STDIN_TIMEOUT_MS = 5000;
 export async function readStdinWithTimeout<T>(
   timeoutMs: number = DEFAULT_STDIN_TIMEOUT_MS
 ): Promise<T | null> {
+  // タイマーを clear しないと、race 決着後も pending タイマーがイベントループを
+  // 保持し、プロセス終了が timeoutMs まで遅延する（全 hook が毎回 ~5s かかる原因）
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const stdinPromise = Bun.stdin.text();
-  const timeoutPromise = new Promise<null>((resolve) =>
-    setTimeout(() => resolve(null), timeoutMs)
-  );
-  const input = await Promise.race([stdinPromise, timeoutPromise]);
-  if (input === null || input.trim() === "") {
-    return null;
+  const timeoutPromise = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), timeoutMs);
+  });
+  try {
+    const input = await Promise.race([stdinPromise, timeoutPromise]);
+    if (input === null || input.trim() === "") {
+      return null;
+    }
+    return JSON.parse(input) as T;
+  } finally {
+    clearTimeout(timer);
   }
-  return JSON.parse(input) as T;
 }

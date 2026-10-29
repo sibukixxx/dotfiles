@@ -263,3 +263,44 @@ describe("ensureStatusDir", () => {
     expect(() => ensureStatusDir()).not.toThrow();
   });
 });
+
+// ============================================
+// readStdinWithTimeout
+// ============================================
+
+describe("readStdinWithTimeout", () => {
+  // Runs the function in a real child process: the defect under test is the
+  // process lingering on a pending timer, which is only observable at exit.
+  const runInChild = async (stdinBody: string | null) => {
+    const script = `
+      const { readStdinWithTimeout } = await import(${JSON.stringify(import.meta.dir + "/utils.ts")});
+      const data = await readStdinWithTimeout();
+      console.log(JSON.stringify(data));
+    `;
+    const start = performance.now();
+    const proc = Bun.spawn([process.execPath, "-e", script], {
+      stdin: stdinBody === null ? "ignore" : new Response(stdinBody),
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const stdout = await new Response(proc.stdout).text();
+    await proc.exited;
+    return { elapsedMs: performance.now() - start, stdout: stdout.trim() };
+  };
+
+  it("returns parsed JSON when stdin provides valid JSON", async () => {
+    const { stdout } = await runInChild('{"ok": true}');
+    expect(JSON.parse(stdout)).toEqual({ ok: true });
+  }, 10000);
+
+  it("exits promptly after stdin closes instead of waiting out the timeout", async () => {
+    const { elapsedMs } = await runInChild('{"ok": true}');
+    expect(elapsedMs).toBeLessThan(2000);
+  }, 10000);
+
+  it("returns null and exits promptly when stdin is empty", async () => {
+    const { elapsedMs, stdout } = await runInChild("");
+    expect(stdout).toBe("null");
+    expect(elapsedMs).toBeLessThan(2000);
+  }, 10000);
+});
