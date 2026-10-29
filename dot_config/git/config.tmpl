@@ -15,13 +15,21 @@
 	precomposeunicode = true
 	editor = nvim
 	quotepath = false
+	# [2.56 推奨・任意] macOS 組み込み fsmonitor で status/add を高速化。
+	# IDE が古い git を同梱している場合は競合するので、必要になったら有効化する
+	# fsmonitor = true
+	# untrackedCache = true
 
 [init]
 	defaultBranch = main
+	# [3.0 で既定化予定] reftable。JetBrains/libgit2 系ツールの対応待ちなので当面保留
+	# defaultRefFormat = reftable
 
 [push]
 	default = simple
 	autoSetupRemote = true
+	# --force-with-lease を「取得済みの ref を含む」場合だけ通す（push -f の事故防止）
+	useForceIfIncludes = true
 
 [pull]
 	rebase = true
@@ -31,12 +39,32 @@
 
 [rebase]
 	autoStash = true
+	# スタックした分岐を rebase したとき、途中のブランチも一緒に動かす（2.38+）
+	updateRefs = true
+	# fixup!/squash! コミットを rebase -i で自動並べ替え
+	autoSquash = true
+	# rebase -i の todo から行を消してしまったら止める
+	missingCommitsCheck = error
 
 [merge]
-	conflictstyle = diff3
+	# diff3 の改良版。両側で一致する行を衝突領域から除く（2.35+）
+	conflictstyle = zdiff3
 
 [diff]
 	colorMoved = default
+	# 移動・再配置を含む diff が読みやすくなる
+	algorithm = histogram
+
+[branch]
+	# git branch の一覧を最近コミットした順に
+	sort = -committerdate
+
+[tag]
+	# v1.10 を v1.9 の後に並べる
+	sort = version:refname
+
+[column]
+	ui = auto
 
 [color]
 	status = auto
@@ -52,19 +80,32 @@
 
 [commit]
 	template = ~/.config/git/message
+	# コミットメッセージ編集画面に diff を表示
+	verbose = true
+
+[help]
+	# typo したコマンドを「これ?」と聞いてから実行（typo alias にないものも拾う）
+	autocorrect = prompt
+
+[safe]
+	# Git 3.0 で既定になる。ディレクトリ探索で暗黙に見つけた bare repo を拒否する
+	bareRepository = explicit
 
 [log]
 	decorate = true
 
 [rerere]
 	enabled = true
+	# 記録済みの解決を自動で index に適用
+	autoUpdate = true
 
 [i18n]
 	commitEncoding = utf-8
 	logOutputEncoding = utf-8
 
 [credential]
-	helper = store
+	# 旧: store（平文 ~/.git-credentials）。Homebrew の system 設定と同じ osxkeychain に統一
+	helper = osxkeychain
 
 [ghq]
 	root = ~/workspace
@@ -84,6 +125,33 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
+
+# ---------------------------------------------------------------------------
+# [Phase 2・別作業] config 定義 hook（2.54+）への移行案
+# core.hooksPath を外し、下記を有効化すると:
+#   - リポジトリ側 .git/hooks や husky のローカル core.hooksPath がそのまま動く
+#     （今は husky リポジトリで global hooksPath が上書きされ GlassWorm 検査が走らない）
+#   - hooks/pre-commit 内の LOCAL_HOOK / HUSKY_HOOK チェーン処理は削除する（二重実行になる）
+# 実行順は config hook → hooks ディレクトリの hook（検証済み）
+# 前提: hooks/pre-commit に実行ビットが付いていること（chezmoi chattr +executable）。
+#       0644 のままだと全リポジトリの commit が exit 127 で止まる
+# 未検証: LFS pre-push への stdin 受け渡し。実際の LFS リポジトリで試してから有効化する
+# ---------------------------------------------------------------------------
+# [hook "glassworm"]
+# 	command = ~/.config/git/hooks/pre-commit
+# 	event = pre-commit
+# [hook "lfs-post-checkout"]
+# 	command = git lfs post-checkout
+# 	event = post-checkout
+# [hook "lfs-post-commit"]
+# 	command = git lfs post-commit
+# 	event = post-commit
+# [hook "lfs-post-merge"]
+# 	command = git lfs post-merge
+# 	event = post-merge
+# [hook "lfs-pre-push"]
+# 	command = git lfs pre-push
+# 	event = pre-push
 
 [alias]
 	# status
@@ -122,7 +190,8 @@
 	invert = revert
 
 	# log
-	wc = whatchanged
+	# whatchanged は 2.56 で実行拒否（exit 128）。git 公式の代替に置換
+	wc = log --raw --no-merges
 	ls = log --stat
 	lp = log -p
 	la = log --pretty=\"format:%ad %h (%an): %s\" --date=short
@@ -130,7 +199,8 @@
 	oneline = log --pretty=oneline
 	ranking = shortlog -s -n --no-merges
 	last = log -1 HEAD --format=format:"%Cred%H"
-	history = log -10 --format=format:'%Cgreen%h %Creset* %s (%cN, %ar)'
+	# 2.54 で builtin の `git history` が追加され alias が無視されるようになったので改名
+	hist = log -10 --format=format:'%Cgreen%h %Creset* %s (%cN, %ar)'
 	contributors = shortlog -s -n
 
 	# log graph
