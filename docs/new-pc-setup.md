@@ -230,7 +230,7 @@ chezmoi cd && git remote set-url origin git@github.com:sibukixxx/dotfiles.git
 
 | カテゴリ | アプリ | 説明 |
 |----------|--------|------|
-| **ターミナル** | Ghostty, Alacritty | GPU高速ターミナル |
+| **ターミナル** | Ghostty | GPU高速ターミナル |
 | **ブラウザ** | Google Chrome | |
 | **コミュニケーション** | Slack, Discord | |
 | **IDE・エディタ** | VS Code, JetBrains Toolbox | WebStorm等はToolbox経由 |
@@ -336,18 +336,6 @@ brew install --cask ghostty
 # https://ghostty.org/
 ```
 
-### Alacritty
-
-GPU アクセラレーション対応のターミナルエミュレータ。
-
-```bash
-# macOS
-brew install --cask alacritty
-
-# Linux
-sudo apt install alacritty
-```
-
 ### フォントのインストール
 
 ```bash
@@ -441,21 +429,6 @@ git remote set-url origin git@github.com:YOUR_USERNAME/dotfiles.git
 ---
 
 ## オプション設定
-
-### Hammerspoon（macOS のみ）
-
-```bash
-brew install --cask hammerspoon
-```
-
-**基本設定 (`~/.hammerspoon/init.lua`)**
-
-```lua
--- Alacritty 透過切り替え
-hs.hotkey.bind({ "cmd" }, "U", function()
-    hs.execute("toggle_opacity", true)
-end)
-```
 
 ### Karabiner-Elements（macOS のみ）
 

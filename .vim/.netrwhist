@@ -1,7 +1,0 @@
-let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =5
-let g:netrw_dirhist_1='/Users/shibukixxx/workspace/hugo/blog.sibukixxx.net/layouts'
-let g:netrw_dirhist_2='/Users/shibukixxx/workspace/sibukixxx-sandbox/scraping/.git'
-let g:netrw_dirhist_3='/Users/shibukixxx/godev/src/incubase/quantify-setup/playbooks/roles/apache2/tasks'
-let g:netrw_dirhist_4='/Users/shibukixxx/workspace/borders/ScoopBoard/board_takada0609/app/Service'
-let g:netrw_dirhist_5='/Users/shibukixxx/godev/src/xica/dev-magellan-local/home-xica/xica/magellan'

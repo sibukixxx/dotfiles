@@ -108,7 +108,6 @@ macOS / Linux / WSL 対応の開発環境設定ファイル。[chezmoi](https://
 | ツール | 説明 | 代替 | 選定理由 |
 |--------|------|------|----------|
 | **[Ghostty](https://ghostty.org/)** | ターミナルエミュレータ | iTerm2 | GPU高速、ネイティブ |
-| **[Alacritty](https://alacritty.org/)** | ターミナルエミュレータ | - | フォールバック用 |
 | **[Zellij](https://zellij.dev/)** | ターミナルマルチプレクサ | tmux | モダン UI、設定が容易 |
 
 ### モダン CLI ツール（Rust製）
@@ -149,7 +148,7 @@ Brewfile で管理されているアプリケーション:
 
 | カテゴリ | アプリ |
 |----------|--------|
-| **ターミナル** | Ghostty, Alacritty |
+| **ターミナル** | Ghostty |
 | **ブラウザ** | Google Chrome |
 | **コミュニケーション** | Slack, Discord |
 | **IDE・エディタ** | VS Code, JetBrains Toolbox |
@@ -394,7 +393,6 @@ dotfiles/
 │   │   ├── mac.zsh            # macOS 固有
 │   │   └── linux.zsh          # Linux 固有
 │   ├── ghostty/               # Ghostty 設定
-│   ├── alacritty/             # Alacritty 設定
 │   ├── zellij/                # Zellij 設定
 │   ├── sheldon/               # プラグイン管理
 │   ├── git/                   # Git 設定（XDG準拠）
@@ -595,7 +593,7 @@ chezmoi init --apply YOUR_GITHUB_USERNAME
 
 ## フォント
 
-Ghostty / Alacritty で使用するフォント（HackGen Nerd Font）:
+Ghostty で使用するフォント（HackGen Nerd Font）:
 
 ```bash
 # macOS

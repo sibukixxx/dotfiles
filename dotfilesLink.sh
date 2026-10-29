@@ -77,7 +77,6 @@ link_file "$DOTFILES_PATH/.zshrc" ~/.zshrc ".zshrc"
 link_file "$DOTFILES_PATH/.vimrc" ~/.vimrc ".vimrc"
 link_file "$DOTFILES_PATH/.tmux.conf" ~/.tmux.conf ".tmux.conf"
 link_file "$DOTFILES_PATH/.psqlrc" ~/.psqlrc ".psqlrc"
-link_file "$DOTFILES_PATH/.screenrc" ~/.screenrc ".screenrc"
 
 # =============================================================================
 # Common: XDG Base Directory configs (~/.config/*)
@@ -100,8 +99,6 @@ link_dir "$DOTFILES_PATH/.config/sheldon" ~/.config/sheldon ".config/sheldon"
 # Zellij (terminal multiplexer)
 link_dir "$DOTFILES_PATH/.config/zellij" ~/.config/zellij ".config/zellij"
 
-# Alacritty (terminal emulator)
-link_dir "$DOTFILES_PATH/.config/alacritty" ~/.config/alacritty ".config/alacritty"
 
 # Ghostty (terminal emulator)
 link_dir "$DOTFILES_PATH/.config/ghostty" ~/.config/ghostty ".config/ghostty"

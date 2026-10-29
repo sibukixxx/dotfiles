@@ -318,7 +318,6 @@ fc-cache -fv
 
 **3. ターミナルのフォント設定を確認**
 - Ghostty: `~/.config/ghostty/config` の `font-family`
-- Alacritty: `~/.config/alacritty/alacritty.toml` の `font.normal.family`
 
 **4. フォントを再インストール**
 ```bash
@@ -355,24 +354,6 @@ mv ~/.config/ghostty/config ~/.config/ghostty/config.bak
 open -a Console
 # Ghostty で検索
 ```
-
-### Alacritty の透過が効かない
-
-#### 症状
-背景が透過しない。
-
-#### 解決策
-
-**1. 設定を確認**
-```toml
-# ~/.config/alacritty/alacritty.toml
-[window]
-opacity = 0.9
-```
-
-**2. コンポジターを確認（Linux）**
-- Wayland: 通常はサポート
-- X11: コンポジターが必要（picom など）
 
 ### Zellij のキーバインドが効かない
 

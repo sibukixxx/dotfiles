@@ -1,64 +1,16 @@
+" 最小限の Vim 設定
+" 普段の編集は Neovim（zsh で vim は nvim の alias、設定は ~/.config/nvim/init.lua）。
+" この ~/.vimrc は /usr/bin/vim が直接起動される場面（sudo vi、サーバー上の作業など）だけで読まれる。
+set nocompatible
 set backspace=indent,eol,start
-set t_BE=
 set number
-set paste
-set runtimepath+=~/.vim/
 set hlsearch
+set incsearch
+set ignorecase
+set smartcase
 set autoread
-set paste
-syntax enable
-
-" start dein 
-if &compatible
-  set nocompatible
-endif
-set runtimepath+=~/.vim/dein/repos/github.com/Shougo/dein.vim
-
-call dein#begin(expand('~/.vim/dein'))
-call dein#add('Shougo/dein.vim')
-" interface
-" :call dein#install() # install dein
-  " unite
-    call dein#add('Shougo/unite.vim') "http: //qiita.com/hide/items/77b9c1b0f29577d60397
-    call dein#add('Shougo/neomru.vim')
-    call dein#add('Shougo/unite-outline')
-    call dein#add('Shougo/unite-session')
-  " filer
-    call dein#add('Shougo/vimfiler.vim')
-  " color
-    call dein#add('jonathanfilip/vim-lucius')
-    call dein#add('h1mesuke/vim-alignta')
-    "call dein#add('aereal/vim-colors-japanesque')
-
-call dein#add('Shougo/neosnippet-snippets')
-call dein#add('vim-jp/vim-go-extra')
-call dein#add('mattn/emmet-vim')
-call dein#end()
-let g:dein#types#git#clone_depth = 1
-" もし、未インストールものものがあったらインストール
-if dein#check_install()
-  call dein#install()
-endif
-
-"" end dein
-
-filetype plugin indent on
-
-"setting golang
-set noexpandtab
-set tabstop=4
-set shiftwidth=4
-
-"setting rust
-let g:rustfmt_autosave = 1
-let g:rustfmt_command = expand('~/.cargo/bin/rustfmt')
-"setting racer
 set hidden
-let g:racer_cmd = expand('~/.cargo/bin/racer')
-if executable('rustc')
-  let $RUST_SRC_PATH = trim(system('rustc --print sysroot')) . '/lib/rustlib/src/rust/library'
-endif
-
-runtime! userautoload/*.vim
-runtime! userautoload/init/*.vim
-runtime! userautoload/plugins/*.vim
+set noswapfile
+set title
+syntax enable
+filetype plugin indent on

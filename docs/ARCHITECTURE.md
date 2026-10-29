@@ -462,15 +462,12 @@ dotfiles/
 │   ├── ghostty/             # 推奨ターミナル
 │   │   └── config
 │   │
-│   ├── alacritty/           # フォールバックターミナル
-│   │   └── alacritty.toml
 │   │
 │   └── karabiner/           # キーリマッパー（macOS）
 │
 ├── dot_local/bin/           # カスタムスクリプト
 │   ├── executable_verify-setup      # セットアップ検証
 │   ├── executable_clone-all-repos   # リポジトリ一括クローン
-│   ├── executable_toggle_opacity    # 透過度切り替え
 │   └── executable_git-localinfo     # Git 情報表示
 │
 ├── dot_ssh/                 # SSH 設定
@@ -511,7 +508,7 @@ dotfiles/
 | キーバインド | Karabiner-Elements | - | - |
 | フォント管理 | `brew install --cask` | Nix fonts | Nix fonts |
 | クリップボード | `pbcopy`/`pbpaste` | `xclip` | Windows 統合 |
-| ターミナル | Ghostty/Alacritty | Ghostty/Alacritty | Windows Terminal |
+| ターミナル | Ghostty | Ghostty | Windows Terminal |
 
 ### OS 分岐の実装
 
@@ -744,9 +741,7 @@ echo "Installing..."
 │                                                                 │
 │  ターミナル                                                      │
 │     │                                                           │
-│     ├── Ghostty (推奨)                                         │
-│     │                                                           │
-│     └── Alacritty (フォールバック)                             │
+│     └── Ghostty                                                │
 │                                                                 │
 │  zellij (マルチプレクサ)                                        │
 │                                                                 │
