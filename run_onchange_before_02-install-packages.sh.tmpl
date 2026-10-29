@@ -39,8 +39,32 @@ echo "    Homebrew: OK"
 # Install packages from Brewfile
 BREWFILE="{{ .chezmoi.sourceDir }}/Brewfile"
 if [[ -f "$BREWFILE" ]]; then
+    BREW_TMP="$(mktemp -d)"
+    cleanup_brew() {
+        [[ -n "${SUDO_KEEPALIVE_PID:-}" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
+        rm -f "$BREW_TMP/transferrc" && rmdir "$BREW_TMP"
+    }
+    trap cleanup_brew EXIT
+
+    # cask の更新は途中で sudo を求め、Password: が brew の出力に埋もれて止まって見える。
+    # 最初に一度だけ認証し、brew が終わるまで認証を延長し続ける（端末が無ければ飛ばす）
+    if [[ -t 0 ]] && sudo -v; then
+        ( while kill -0 "$$" 2>/dev/null; do sudo -n true; sleep 50; done ) 2>/dev/null &
+        SUDO_KEEPALIVE_PID=$!
+    fi
+
+    # ネットワークが一瞬切れると、ダウンロードが無通信のまま永久に待ち続ける。
+    # 60 秒間 1KB/s を下回ったら打ち切り、Homebrew のリトライに回す
+    printf 'speed-limit = 1024\nspeed-time = 60\n' > "$BREW_TMP/transferrc"
+    export HOMEBREW_CURLRC="$BREW_TMP/transferrc"
+
+    # 1 つの cask が失敗しても、後続の Claude / Codex セットアップは止めない
     echo "    Installing packages from Brewfile..."
-    brew bundle --file="$BREWFILE"
+    if ! brew bundle --file="$BREWFILE"; then
+        echo "    WARNING: brew bundle が失敗しました。未インストールのもの:" >&2
+        brew bundle check --verbose --file="$BREWFILE" >&2 || true
+        echo "    原因を直してから 'make packages' で再実行してください" >&2
+    fi
 fi
 
 {{ else if or (eq .chezmoi.os "linux") (env "WSL_DISTRO_NAME") -}}

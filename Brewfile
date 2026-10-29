@@ -27,7 +27,10 @@ brew "awscli"
 cask "gcloud-cli"
 
 # Infrastructure as Code
-brew "terraform"
+# terraform は BSL ライセンス化で homebrew/core から外れたため HashiCorp 公式 tap から入れる。
+# Homebrew 7 は公式以外の tap を信頼するまで読み込まないので、terraform だけを信頼する
+tap "hashicorp/tap", trusted: { formula: ["terraform"] }
+brew "hashicorp/tap/terraform"
 brew "tflint"
 brew "terraform-docs"
 brew "tfsec"
@@ -44,8 +47,7 @@ brew "readline"
 # =============================================================================
 # Terminal Emulators (GUI)
 # =============================================================================
-tap "manaflow-ai/cmux"
-cask "cmux"              # Agent-first terminal workspace manager
+cask "cmux"              # Agent-first terminal workspace manager (公式 homebrew/cask にあるので tap 不要)
 cask "ghostty"           # Modern GPU-accelerated terminal (primary)
 # Homebrew が 2026-09-01 に Gatekeeper 非対応で無効化。brew bundle 全体が失敗するため外す（インストール済みの 0.16.1 はそのまま使える）
 # cask "alacritty"         # GPU-accelerated terminal emulator (backup)
