@@ -170,7 +170,6 @@
 	cam = commit -a --amend
 	amend = commit --amend
 	save = commit -m
-	resave = commit --amend
 
 	# checkout/branch
 	co = checkout
@@ -183,11 +182,10 @@
 	back = checkout "-"
 
 	# reset/revert
-	unstage = reset -q HEAD --
-	discard = checkout --
+	unstage = restore --staged --
+	discard = restore --
 	nevermind = !git reset --hard HEAD && git clean -d -f
 	uncommit = reset --mixed HEAD~
-	invert = revert
 
 	# log
 	# whatchanged は 2.56 で実行拒否（exit 128）。git 公式の代替に置換
@@ -201,7 +199,6 @@
 	last = log -1 HEAD --format=format:"%Cred%H"
 	# 2.54 で builtin の `git history` が追加され alias が無視されるようになったので改名
 	hist = log -10 --format=format:'%Cgreen%h %Creset* %s (%cN, %ar)'
-	contributors = shortlog -s -n
 
 	# log graph
 	graph = log --graph -10 --branches --remotes --tags --format=format:'%Cgreen%h %Creset* %<(75,trunc)%s (%cN, %ar) %Cred%d' --date-order
@@ -209,10 +206,9 @@
 	gra = log --graph --all --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
 
 	# diff
-	dm = diff master
+	dm = diff origin/HEAD
 	dw = diff --color-words
 	dc = diff --cached
-	ds = diff --staged
 	d1 = diff HEAD~
 	d2 = diff HEAD~~
 	d3 = diff HEAD~~~
@@ -221,7 +217,6 @@
 	what = show -w
 
 	# grep
-	gr = grep
 	gn = grep -n
 
 	# stash
@@ -230,29 +225,22 @@
 
 	# remote
 	remotes = remote -v
-	tags = tag
-	branches = branch -a
 
 	# file operations
-	move = mv
-	remove = rm
 	untrack = rm -r --cached
 
 	# rebase
-	rbm = rebase master
+	rbm = rebase origin/HEAD
 	rewrite = rebase -i
 
 	# merge conflict
 	unmerged = diff --name-only --diff-filter=U
-	edit-unmerged = "!f() { git ls-files --unmerged | cut -f2 | sort -u ; }; vim `f`"
+	edit-unmerged = "!f() { git ls-files --unmerged | cut -f2 | sort -u ; }; $(git var GIT_EDITOR) `f`"
 	add-unmerged = "!f() { git ls-files --unmerged | cut -f2 | sort -u ; }; git add `f`"
 
 	# branch cleanup
 	delete-merged-branches = !git branch --merged | grep -vE \"^\\*|master$|main$|develop$\" | xargs -I % git branch -d %
 	delete-merged-branches-list = !git branch --merged | grep -vE \"^\\*|master$|main$|develop$\"
 
-	# typo fixes
-	puhs = push
-	psuh = push
+	# typo は help.autocorrect=prompt に任せる。pus だけ短縮形として使っている
 	pus = push
-	puh = push

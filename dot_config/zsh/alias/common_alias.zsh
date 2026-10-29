@@ -26,15 +26,7 @@ if command -v bat &>/dev/null; then
   alias catp='bat'  # with pager
 fi
 
-# fd (modern find replacement)
-if command -v fd &>/dev/null; then
-  alias find='fd'
-fi
-
-# ripgrep (modern grep replacement)
-if command -v rg &>/dev/null; then
-  alias grep='rg'
-fi
+# find / grep は上書きしない。fd / rg とはフラグ互換がなく、パイプ中の grep -E などが壊れるため直接 fd / rg を打つ
 
 # =============================================================================
 # Safe Operations

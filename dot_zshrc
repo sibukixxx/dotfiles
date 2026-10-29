@@ -326,11 +326,6 @@ if command -v zellij &>/dev/null; then
   zs() { zellij attach "${1:-main}" 2>/dev/null || zellij -s "${1:-main}" }
 fi
 
-# Haskell (via stack)
-alias ghc='stack ghc --'
-alias ghci='stack ghci --'
-alias runhaskell='stack runhaskell --'
-
 # =============================================================================
 # direnv (must be near the end, after all PATH/env modifications)
 # =============================================================================

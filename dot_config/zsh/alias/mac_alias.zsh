@@ -13,7 +13,7 @@ alias hidefiles='defaults write com.apple.finder AppleShowAllFiles NO; killall F
 alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
 
 # Lock screen
-alias afk='/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend'
+alias afk="pmset displaysleepnow"
 
 # Quick Look
 alias ql='qlmanage -p'
