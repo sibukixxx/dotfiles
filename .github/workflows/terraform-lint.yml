@@ -12,6 +12,7 @@ on:
       - 'dot_config/terraform/**'
       - '.github/workflows/terraform-lint.yml'
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
       - master
@@ -22,10 +23,17 @@ on:
 permissions:
   contents: read
 
+# Superseded PR checks are expendable; manual/default-branch work is not interrupted.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   terraform-fmt:
     name: Terraform Format
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -60,6 +68,8 @@ jobs:
   tflint:
     name: TFLint
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -110,6 +120,8 @@ jobs:
   validate-yaml:
     name: Validate CI Templates
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -150,6 +162,8 @@ jobs:
   shellcheck:
     name: ShellCheck Scripts
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
